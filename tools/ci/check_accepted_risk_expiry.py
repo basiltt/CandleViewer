@@ -7,8 +7,9 @@ when one falls inside the next `WARN_DAYS` days:
 1. `security/accepted-risks.yaml` entries (`expires`, `approver`, `id`).
 2. `Status **Accepted** (expires YYYY-MM-DD)` lines of every `### RSK-nnn` entry
    in `docs/plan/32-risk-register.md`.
-3. Justified in-source `nosemgrep: ... review=YYYY-MM-DD` suppressions
-   (grammar shared with `suppressions.py`).
+3. In-source `nosemgrep: ... review=YYYY-MM-DD` suppressions (grammar and the
+   `REVIEW_MAX_DAYS` cap shared with `suppressions.py`); a marker without `review=`
+   fails. Files outside SCAN_SUFFIXES holding a marker are listed as "not scanned".
 
 4. Exception rows (`| EX-nn | ... | approved-by | YYYY-MM-DD | ticket |`) of
    `docs/plan/04-security-program.md` §16.2 (exceptions not expressible as scanner findings).
@@ -28,6 +29,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -35,7 +37,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from tools.ci.suppressions import field, parse_nosemgrep
+from tools.ci.suppressions import REVIEW_MAX_DAYS, field, parse_nosemgrep
 
 WARN_DAYS = 30
 REGISTER = Path("docs/plan/32-risk-register.md")
@@ -66,6 +68,7 @@ class Item:
 class Result:
     items: list[Item]
     errors: list[str]
+    not_scanned: list[str] = dataclass_field(default_factory=list)
 
     def classify(self, today: date) -> tuple[list[str], list[str]]:
         """(failures, warnings) as human-readable lines."""
@@ -76,6 +79,10 @@ class Result:
             tag = f"[{it.source}] {it.ident} owner={it.owner} expires={it.expires} ({it.where})"
             if left <= 0:
                 fails.append(f"EXPIRED {tag}: elapsed {-left} day(s)")
+            elif it.source == "in-source" and left > REVIEW_MAX_DAYS:
+                fails.append(
+                    f"TOO-FAR [in-source] {tag}: {left} days ahead, cap is {REVIEW_MAX_DAYS}"
+                )
             elif left < WARN_DAYS:
                 warns.append(f"WARN {tag}: {left} day(s) left")
         return fails, warns
@@ -199,6 +206,7 @@ def parse_exceptions(path: Path) -> Result:
 
 
 def _tracked_files(root: Path) -> list[Path]:
+    """All tracked files (callers filter by suffix)."""
     try:
         out = subprocess.run(
             ["git", "ls-files"], cwd=root, capture_output=True, text=True, check=True
@@ -210,13 +218,27 @@ def _tracked_files(root: Path) -> list[Path]:
             for p in root.rglob("*")
             if "node_modules" not in p.parts and ".venv" not in p.parts
         ]
-    return [p for p in files if p.suffix in SCAN_SUFFIXES and p.is_file()]
+    return [p for p in files if p.is_file()]
 
 
-def parse_in_source(root: Path) -> Result:
+def _has_marker(path: Path) -> bool:
+    try:
+        if path.stat().st_size > 1_000_000:
+            return False
+        return "nosemgrep:" in path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def parse_in_source(root: Path, covered: frozenset[str] = frozenset()) -> Result:
     res = Result([], [])
     for path in _tracked_files(root):
         if path.name == "check_accepted_risk_expiry.py":
+            continue
+        rel = path.relative_to(root).as_posix()
+        if path.suffix not in SCAN_SUFFIXES:
+            if not rel.startswith(SKIP_PREFIXES) and _has_marker(path):
+                res.not_scanned.append(rel)
             continue
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
@@ -235,8 +257,24 @@ def parse_in_source(root: Path) -> Result:
                 continue
             for mk in parse_nosemgrep(line):
                 raw = field(mk.rest, "review")
+                # a comment-only marker suppresses the next line, so the finding id may use n+1
+                lines_ok = (
+                    (n, n + 1) if line.lstrip().startswith(("--", "#", "//")) else (n,)
+                )
+                if (
+                    raw is None
+                    and any(  # prose after the rule parses as extra rule tokens
+                        f"semgrep.{r}:{rel}:{k}" in covered
+                        for r in mk.rules
+                        for k in lines_ok
+                    )
+                ):
+                    continue  # un-fielded marker covered by a live accepted-risks.yaml entry
                 if raw is None:
-                    continue  # unfielded legacy marker: CI-SEC-006 / yaml entry covers it
+                    res.errors.append(
+                        f"MISSING-REVIEW [in-source] {rel}:{n}: no review= (CI-SEC-006 grammar)"
+                    )
+                    continue
                 exp = _to_date(raw)
                 owner = field(mk.rest, "owner") or ""
                 where = f"{rel}:{n}"
@@ -254,15 +292,27 @@ def parse_in_source(root: Path) -> Result:
 
 
 def run(root: Path, today: date) -> tuple[Result, list[str], list[str]]:
+    yaml_res = parse_yaml(root / YAML_PATH)
+    covered = frozenset(i.ident for i in yaml_res.items if i.expires > today)
     parts = [
-        parse_yaml(root / YAML_PATH),
+        yaml_res,
         parse_register(root / REGISTER),
         parse_exceptions(root / SECURITY_PLAN),
-        parse_in_source(root),
+        parse_in_source(root, covered),
     ]
     merged = Result(
-        [i for p in parts for i in p.items], [e for p in parts for e in p.errors]
+        [i for p in parts for i in p.items],
+        [e for p in parts for e in p.errors],
+        [x for p in parts for x in p.not_scanned],
     )
+    seen: set[tuple[str, str]] = set()
+    for it in merged.items:
+        if it.source in ("yaml", "register", "exception"):
+            if (it.source, it.ident) in seen:
+                merged.errors.append(
+                    f"DUPLICATE-ID [{it.source}] {it.ident}: appears twice"
+                )
+            seen.add((it.source, it.ident))
     fails, warns = merged.classify(today)
     return merged, fails, warns
 
@@ -280,6 +330,8 @@ def render_report(res: Result, fails: list[str], warns: list[str], today: date) 
     out += [f"- {x}" for x in fails] or ["- none"]
     out += ["", f"## Expiring within {WARN_DAYS} days ({len(warns)})"]
     out += [f"- {x}" for x in warns] or ["- none"]
+    out += ["", f"## Not scanned ({len(res.not_scanned)})"]
+    out += [f"- {x} (unscanned file type)" for x in res.not_scanned] or ["- none"]
     out += [
         "",
         (
@@ -304,7 +356,8 @@ def main(argv: list[str] | None = None) -> int:
     for line in [*fails, *warns]:
         print(line)
     print(
-        f"accepted-risk expiry: {len(res.items)} checked, {len(fails)} failing, {len(warns)} warning(s)"
+        f"accepted-risk expiry: {len(res.items)} checked, {len(fails)} failing, "
+        f"{len(warns)} warning(s), {len(res.not_scanned)} file(s) not scanned"
     )
     if args.report:
         args.report.write_text(

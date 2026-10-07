@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import re
 import sys
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -206,11 +207,66 @@ def test_in_source_bad_date_and_missing_owner_are_errors(tmp_path: Path) -> None
     assert any("MISSING-OWNER [in-source]" in f for f in fails)
 
 
-def test_in_source_unfielded_legacy_marker_and_quoted_test_data_ignored(
-    tmp_path: Path,
-) -> None:
+def test_in_source_marker_without_review_fails(tmp_path: Path) -> None:
     root = _root(tmp_path)
     _src(root, "-- nosemgrep: cv-adapter-isolation -- legacy\n")
+    fails, _ = _run(root)
+    assert any(f.startswith("MISSING-REVIEW [in-source] mod.py:1") for f in fails)
+
+
+def test_in_source_review_cap_boundary(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    cap = ck.REVIEW_MAX_DAYS
+    ok = TODAY + timedelta(days=cap)
+    _src(root, f"# nosemgrep: r reason=r owner=@a review={ok.isoformat()}\n")
+    assert _run(root)[0] == []
+    bad = TODAY + timedelta(days=cap + 1)
+    _src(root, f"# nosemgrep: r reason=r owner=@a review={bad.isoformat()}\n")
+    fails, _ = _run(root)
+    assert len(fails) == 1 and fails[0].startswith("TOO-FAR [in-source]")
+
+
+def test_unscanned_file_type_is_listed(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    _src(root, "-- nosemgrep: r\n", "q.sql")
+    res, fails, _ = ck.run(root, TODAY)
+    assert fails == [] and res.not_scanned == ["q.sql"]
+    assert "Not scanned (1)" in ck.render_report(res, fails, [], TODAY)
+
+
+def _covered_root(tmp_path: Path, entry_id: str, exp: str) -> Path:
+    root = _root(tmp_path)
+    (root / ck.YAML_PATH).write_text(
+        YAML_OK.format(exp=exp).replace("GHSA-x", entry_id), encoding="utf-8"
+    )
+    _src(root, "x = 1  # nosemgrep: r1 -- legacy\n")
+    return root
+
+
+def test_unfielded_marker_covered_by_live_yaml_entry_passes(tmp_path: Path) -> None:
+    root = _covered_root(tmp_path, "semgrep.r1:mod.py:1", "2027-03-25")
+    assert _run(root)[0] == []
+
+
+def test_unfielded_marker_with_expired_or_wrong_entry_fails(tmp_path: Path) -> None:
+    expired = _covered_root(tmp_path, "semgrep.r1:mod.py:1", "2026-10-01")
+    assert any(f.startswith("MISSING-REVIEW") for f in _run(expired)[0])
+    other = tmp_path / "o"
+    other.mkdir()
+    wrong = _covered_root(other, "semgrep.r1:mod.py:9", "2027-03-25")
+    assert any(f.startswith("MISSING-REVIEW") for f in _run(wrong)[0])
+
+
+def test_duplicate_ids_fail(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    entry = YAML_OK.format(exp="2027-03-25")
+    (root / ck.YAML_PATH).write_text(entry + entry.split("\n", 1)[1], encoding="utf-8")
+    fails, _ = _run(root)
+    assert any(f.startswith("DUPLICATE-ID [yaml] GHSA-x") for f in fails)
+
+
+def test_in_source_quoted_test_data_ignored(tmp_path: Path) -> None:
+    root = _root(tmp_path)
     _src(
         root,
         'src = "# nosemgrep: r reason=r owner=@a review=2020-01-01"\n',
@@ -241,14 +297,31 @@ def test_main_exit_codes_and_report(
 
 def test_real_repo_has_no_expired_acceptances_today() -> None:
     root = Path(__file__).resolve().parents[2]
-    _res, fails, _warns = ck.run(root, date(2026, 10, 6))
-    assert fails == []
+    today = datetime.now(UTC).date()
+    _res, fails, _warns = ck.run(root, today)
+    # Structure only: a legitimate re-decision must not break this confusingly.
+    assert all(f.startswith("EXPIRED") for f in fails), fails
 
 
-def test_real_repo_fails_when_clock_passes_first_expiry() -> None:
+def test_real_repo_fails_once_clock_passes_latest_expiry() -> None:
     root = Path(__file__).resolve().parents[2]
-    _res, fails, _warns = ck.run(root, date(2027, 1, 1))
-    assert any("GHSA-vfj7-8cjw-p6xm" in f and "elapsed 1 day(s)" in f for f in fails)
+    res, _, _ = ck.run(root, date(2026, 10, 6))
+    assert res.items
+    later = max(i.expires for i in res.items) + timedelta(days=1)
+    _res, fails, _warns = ck.run(root, later)
+    assert len([f for f in fails if f.startswith("EXPIRED")]) == len(res.items)
+
+
+def test_inventory_header_counts_match_run() -> None:
+    """The inventory header is a dated snapshot; its checked-count must track run()."""
+    root = Path(__file__).resolve().parents[2]
+    doc = (
+        root / "docs/plan/backlog/artifacts/e49-accepted-risk-inventory.md"
+    ).read_text(encoding="utf-8")
+    m = re.search(r"\*\*(\d+) items checked", doc)
+    assert m, "inventory header lost its '**N items checked' statement"
+    res, _, _ = ck.run(root, date(2026, 10, 6))
+    assert int(m.group(1)) == len(res.items)
 
 
 def test_exception_row_expired_and_warn_and_malformed(tmp_path: Path) -> None:

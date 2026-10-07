@@ -6,7 +6,7 @@ The named decider for anything beyond re-stating an existing owner-approved expi
 No approver or expiry on an owner-approved entry was changed by this PR.
 
 Enforcement: `python tools/ci/check_accepted_risk_expiry.py` (governance job + weekly workflow) covers
-sources 1–4 below: **53 items checked, 0 expired, 0 inside 30 days** at 2026-10-06; soonest expiry
+sources 1–4 below: **56 items checked, 0 expired, 0 inside 30 days** at 2026-10-06; soonest expiry
 2026-12-31 (86 days).
 
 ## 1. Register `Accepted` rows (32-risk-register.md)
