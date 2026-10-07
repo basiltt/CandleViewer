@@ -20,7 +20,9 @@ Two questions blocked E12-S04 / E12-S12: what `renko` + `atr:14` means given tha
 The contract disagreement is real: `22-api` (param table) and `23-ws` §6.1 promise `atr:14`, while
 `24-internal-schemas` §3.1 has no ATR field and says nothing about the source series or cadence.
 
-**R1 rule:** `renko.param` is a base-10 integer tick count (`^[1-9][0-9]{0,8}$`). Anything else, including
+**R1 rule:** `renko.param` is a base-10 integer tick count. The merged E12-T01 parser (`bars/spec.py` `_UINT`) accepts
+`^[1-9][0-9]{0,17}$` within the 24-character `param` bound; **E12-T05 enforces that same pattern** (this ADR does not
+narrow it to fewer digits), and the 422 path applies to everything outside it. Anything else, including
 `atr:14`, is rejected with HTTP 422 `validation_failed` (WS: the matching subscribe error), `detail` =
 `"ATR bricks are not available yet. Enter a brick size in ticks."` (the UI renders this as text, no silent
 fallback). `BarSpec` is unchanged in R1; `atr` stays a reserved word in the param grammar.
@@ -46,13 +48,13 @@ costs nothing the roadmap promised for R1 (fixed-size Renko is intact).
 
 **R2 reservation (the only coherent design; prototyped and verified):**
 
-| Aspect                                          | Rule                                                                                                                                                                                                                                                                                                                                       |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| (a) Source series                               | ATR is Wilder ATR(`period`) over a **fixed 1m time series** of the same symbol/`price_source`, built from the same `TradeEvent`s. Never the renko series.                                                                                                                                                                                  |
-| (b) Cadence                                     | **Frozen at series construction**: brick size = `max(1, ATR_last_closed_1m_bar_before_series_start * mult)` in integer ticks, resolved once. No per-brick or per-minute recompute. A new size means a new series (new `spec_hash`).                                                                                                        |
-| (c) BI-4 / BI-5                                 | Hold, because the resolved size is a plain integer in the spec and a pure function of the (recorded) lookback trades; the builder never sees ATR. A drifting live ATR fails BI-5 whenever history is not replayed (verified, below).                                                                                                       |
-| (d) `BarSpec` fields (see R2 spec design below) | Add `renko_atr_period: int \| None` (2..100), `renko_atr_mult_x100: int` (default 100), `renko_atr_source_interval_ms: int` (default 60000) **and** the resolved `range_ticks`. All are in `spec_hash`; the request supplies the first three, the server fills `range_ticks`. Exactly-one validator: `renko_atr_*` only with `kind=renko`. |
-| Warmup                                          | Fewer than `period + 1` closed 1m bars before the start -> 422 (never a default size).                                                                                                                                                                                                                                                     |
+| Aspect            | Rule                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| (a) Source series | ATR is Wilder ATR(`period`) over a **fixed 1m time series** of the same symbol/`price_source`, built from the same `TradeEvent`s. Never the renko series.                                                                                                                                                                                                                                              |
+| (b) Cadence       | **Frozen at series construction**: brick size = `max(1, ATR_last_closed_1m_bar_before_series_start * mult)` in integer ticks, resolved once. No per-brick or per-minute recompute. A different RESOLVED size is a new series (new `spec_hash`, because `range_ticks` differs).                                                                                                                         |
+| (c) BI-4 / BI-5   | Hold, because the resolved size is a plain integer in the spec and a pure function of the (recorded) lookback trades; the builder never sees ATR. A drifting live ATR fails BI-5 whenever history is not replayed (verified, below).                                                                                                                                                                   |
+| (d) Fields        | **No new `BarSpec` fields and no `SPEC_HASH_VERSION` bump.** The request type `RenkoAtrRequest` carries `period` (2..100), `mult_x100` (default 100), `source_interval_ms` (default 60000); the service resolves it to a normal renko `BarSpec` whose only sizing field is the integer `range_ticks`. Only `range_ticks` is hashed; the request and its provenance are not (see R2 spec design below). |
+| Warmup            | Fewer than `period + 1` closed 1m bars before the start -> 422 (never a default size).                                                                                                                                                                                                                                                                                                                 |
 
 **R2 spec design (request spec vs resolved spec).** `24-internal` §3.1's `_exactly_one` (merged in E12-T01, `bars/models.py`, renko reuses `range_ticks`) stays true for every
 **resolved** `BarSpec` (what builders, `spec_hash`, storage and snapshots use): a renko spec has exactly one sizing
@@ -73,24 +75,37 @@ validator is unchanged. The `renko_atr_*` names in row (d) are the fields of `Re
   the resolved spec and `spec_hash` (and the request -> resolved mapping) in the response/subscribe ack; clients
   treat `spec_hash` as an opaque server-issued id. The bars service persists the mapping so a re-subscribe with
   the same request is idempotent.
-- **A different ATR period/multiple (or a re-resolution at a different time) yields a NEW `spec_hash`, hence
-  a NEW series** with its own index epoch. The old series is never mutated.
+- **A different ATR period/multiple yields a NEW series only if the RESOLVED brick size differs** (the hash
+  covers `range_ticks`, not the request): two requests that resolve to the same integer share one `spec_hash` and
+  one series; a re-resolution at a later time that lands on a different integer is a new `spec_hash`. The old
+  series is never mutated.
 - **Anchor/tie-break.** "Last closed 1m bar before series start": a 1m bar whose close boundary is
   `<= start_ts` is closed (a start exactly on a boundary uses the bar that just ended, not the one beginning).
 
 **BI-5 and `restore()`.** `BuilderState` (§3.2) MUST persist the resolved brick size in **price units** and the
 `spec_hash` it belongs to (proposed fields `resolved_brick_px`, `tick_size_at_start`, `spec_hash`). `restore()`
-reads these and **never re-resolves** ATR (or re-reads the instrument cache); a restore whose persisted
-`spec_hash` differs from the requested one is refused, not silently re-keyed. Without this, a restart after a
+reads these and **never re-resolves** ATR; a restore whose persisted `spec_hash` differs from the requested one
+is refused, not silently re-keyed, and a restore is also refused when the instrument's CURRENT tick size differs
+from `tick_size_at_start` (see the epoch rule below). Without this, a restart after a
 long gap would resolve a different size, create a new `spec_hash` and make BI-5 only nominally true.
 
 **Mid-session tick-size change (applies to R1 fixed renko and range bars too).** §3.3 defines a brick as
-`range_ticks x tick_size`. Proposal: the size is **frozen in price units at series construction**
-(`tick_size_at_start` comes from the instrument-info cache, `21-database-schema.md`, refreshed every 12 h, and is
-captured into `BuilderState` and the series provenance). If the cache later reports a different `tick_size`, the
-existing series keeps its captured value, so BI-4/BI-5 do not depend on cache timing; the service starts a
-**new series (new `spec_hash`/epoch)** for new subscriptions and the UI shows a notice ("Tick size changed;
-series restarted") instead of altering the old one.
+`range_ticks x tick_size`, but `tick_size` is **not** a `BarSpec` field (merged `bars/spec.py`), so the same fixed
+spec hashes identically before and after an exchange tick-size change and a "new `spec_hash`" cannot happen. Rule
+(option a, no hash change, no `SPEC_HASH_VERSION` bump):
+
+- The **`spec_hash` is unchanged**; the series gains an **epoch** keyed by the tick size at construction.
+  `BuilderState.tick_size_at_start` (from the instrument-info cache, `21-database-schema.md`, refreshed every
+  12 h) is captured when the series starts, and the brick/range size is frozen in price units
+  (`range_ticks x tick_size_at_start`) for the life of that epoch, so BI-4/BI-5 never depend on cache timing.
+- `restore()` refuses (a typed error, not a silent re-key) when the instrument's current tick size differs from
+  the snapshot's `tick_size_at_start`; the service then starts a **new epoch** (index restarts, new generation) under
+  the same `spec_hash`. Bars carry/are keyed by `(spec_hash, epoch)`; the epoch id is part of the
+  generation/pointer key below.
+- The UI shows a notice on epoch change ("Tick size changed; series restarted"). The old epoch stays readable
+  and is never mutated.
+- Rejected alternative (b): add a tick-size `BarSpec` field with a `SPEC_HASH_VERSION` bump and new golden
+  vectors; it moves every existing hash for an event that is rare and instrument-scoped.
 
 **Security note (E12-T05): the R1 integer pattern and the R2 `atr:<2..100>(:<mult>)?` pattern are whitelisted
 regexes with bounded length (`maxLength: 24` already), not a parser.
@@ -109,7 +124,10 @@ Cancellation contract for E12-S12 (`rebuild(spec, range, token) -> RebuildResult
    commit. The rebuild writes all rows under a new **series generation id**, then flips a per-`(symbol,
 spec_hash)` **current-generation pointer** (one transactional Postgres row update) as its only publish step.
    Readers resolve the pointer first and **pin** that generation for the whole read, so two generations are never
-   mixed. The superseded generation is garbage collected after readers drain (grace >= max read timeout); a
+   mixed. The superseded generation is garbage collected only when its **reader lease/refcount reaches zero**: every reader
+   (including a replay session, which can hold a generation far longer than one read timeout) takes a lease on the
+   generation it pinned and renews or releases it, and a lease that is not renewed within a TTL expires so a
+   crashed reader cannot block GC forever; a
    failed or cancelled generation is deleted immediately. Cancel leaves no _visible_ rows (the pointer never
    moved) and orphans are swept. Schema detail belongs to the E12-T02/S12 contract-first PR; this is the
    semantic requirement.
@@ -160,7 +178,8 @@ bootstrapped into a random walk, stored as zstd Parquet (8.0 MB) and read via py
 plain ints; they are not the E12-S0x builders (those do not exist yet), so production builders emitting
 `Decimal` pydantic bars will be slower — see the follow-up.
 
-Rebuild of 1M trades (median of 5, each in a fresh subprocess; wall includes Parquet read):
+Rebuild of 1M trades (median of 5, each in a fresh subprocess; wall includes Parquet read). **Quiet-machine
+baseline; the loaded round-3 re-run is in the "Round-3 re-run" note below the cancellation table:**
 
 | Builder             | Bars out | Wall (s) | Rows/s | Peak RSS (MB) | Read (s) | vs 10 s |
 | ------------------- | -------- | -------- | ------ | ------------- | -------- | ------- |
@@ -177,8 +196,9 @@ the PGWire path (materialising 1M Python row dicts + `pa.Table.from_pylist`) cos
 machine, i.e. roughly doubling the read side, so the QuestDB path is expected to remain inside 10 s but **this
 is unmeasured** and must be re-run when QuestDB is available (follow-up).
 
-Cancellation (renko rebuild, cancel fired at 15-60 % of a ~1.0 s run, 20 trials per row; latency from the
-intended cancel instant to "stopped and released"):
+Cancellation (**quiet-machine baseline**, see the round-3 note below for the loaded re-run; renko rebuild, cancel
+fired at 15-60 % of a ~1.0 s run, 20 trials per row; latency from the intended cancel instant to "stopped and
+released"):
 
 | Strategy                                                         | Chunk rows | p50 (ms) | max (ms) | Rows leaked after cancel | 250 ms   |
 | ---------------------------------------------------------------- | ---------- | -------- | -------- | ------------------------ | -------- |
@@ -234,7 +254,9 @@ is recorded and an optimisation Task is filed (batch/columnar builders) rather t
 
 ## Follow-ups
 
-Filed after owner ratification, so they carry the final decision: E12-S04 (integer renko, param whitelist, 422
-copy, tick-size freeze), E12-S12 (rebuild API, token registry, generation swap, bounded executor, metrics), the
-contract-first PR (`docs(protocol)!:`), an E08/E12 QuestDB-path re-measure Task, and a `32-risk-register.md`
-entry.
+Filed after owner ratification, so they carry the final decision (checklist on #525): E12-S04 (integer renko, param
+whitelist, 422 copy, tick-size epoch rule; ATR R2 as a later ticket), E12-S12 (rebuild API, cancel contract, token
+registry, generation swap with reader leases, bounded executor, metrics), the contract-first PR
+(`docs(protocol)!:`), and a `32-risk-register.md` entry. The QuestDB-path re-measure is **folded into E12-T07**,
+whose gate scope is: production `Decimal` builders, E08 PGWire read path **including cursor release**, reference VPS,
+and cancel p95 <= 250 ms **under load**.
