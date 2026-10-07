@@ -10,6 +10,7 @@
 // silently skipping (Technical notes / Security notes of the ticket this
 // implements, E02-T10): an incomplete local gate must never look complete.
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +41,17 @@ function gate(n, name, fn) {
  * @param {import("node:child_process").SpawnSyncOptions} [opts]
  */
 function run(command, args, opts = {}) {
+  // Fail fast on a wrong cwd (#1564): a pytest run from the repo root collected
+  // scripts/gh/tests and died with ModuleNotFoundError instead of mirroring CI.
+  const cwd = opts.cwd ?? REPO_ROOT;
+  if (
+    command === "uv" &&
+    args.includes("pytest") &&
+    !existsSync(path.join(cwd, "pyproject.toml"))
+  ) {
+    console.error(`verify: pytest must run from a project dir with pyproject.toml (cwd=${cwd})`);
+    return { status: "ran", exitCode: 1 };
+  }
   const result = spawnSync(command, args, {
     cwd: REPO_ROOT,
     stdio: "inherit",
@@ -65,9 +77,38 @@ function printSummary() {
 
 gate(1, "lint", () => run("pnpm", ["lint"]));
 gate(2, "typecheck", () => run("pnpm", ["typecheck"]));
-gate(3, "unit-backend", () =>
-  run("uv", ["run", "--project", "services/api", "pytest", "-m", "not integration"]),
-);
+// Mirrors CI's py lane (.github/workflows/_job-py.yml) from services/api, so the
+// repo-root scripts/ tests are not collected under the backend rootdir (#1564).
+// Those are owned by the governance workflow and run as a second step here.
+gate(3, "unit-backend", () => {
+  const backend = run(
+    "uv",
+    [
+      "run",
+      "pytest",
+      "-p",
+      "no:cacheprovider",
+      "-m",
+      "not exchange_smoke and not (chaos and integration) and not roundtrip and not integration",
+    ],
+    { cwd: path.join(REPO_ROOT, "services", "api") },
+  );
+  if (backend.exitCode !== 0) return backend;
+  return run("uv", [
+    "run",
+    "--project",
+    "services/api",
+    "python",
+    "-m",
+    "pytest",
+    "scripts/tests",
+    "scripts/gh/tests",
+    "-q",
+    "--no-cov",
+    "-p",
+    "no:cacheprovider",
+  ]);
+});
 gate(4, "unit-engine", () => run("pnpm", ["--filter", "@candleviewer/chart-engine", "test:cov"]));
 gate(5, "unit-frontend", () =>
   run("pnpm", ["--filter", "@candleviewer/web", "--filter", "@candleviewer/ui", "test:cov"]),
