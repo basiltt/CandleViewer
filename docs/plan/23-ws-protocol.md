@@ -199,7 +199,7 @@ Snapshots carry every level within the subscribed depth, bid side descending the
 | 1    | `u8`  | `side` (0 = buy/taker-lift, 1 = sell/taker-hit) — Bybit gives the aggressor side directly |
 | 1    | `u8`  | `flags` (bit0 block trade, bit1 liquidation-origin, bit2 cluster-aggregated)              |
 
-**body_kind 4 — bars.** `record_count` records of 69 bytes: `u32 ts_offset_ms`, `i64 o,h,l,c`, `u64 v`, `u64 turnover`, `u32 trades`, `i64 delta`, `u8 flags` (bit0 `confirm`).
+**body_kind 4 — bars.** `record_count` records of 77 bytes: `u64 index` (the §8.2 bar key, #2014), `u32 ts_offset_ms`, `i64 o,h,l,c`, `u64 v`, `u64 turnover`, `u32 trades`, `i64 delta`, `u8 flags` (bit0 `confirm`).
 
 **body_kind 5 — footprint.** Per-bar group: `u32 ts_offset_ms`, `u32 cell_count`, then `cell_count` × 33 bytes: `i64 price`, `u64 bid_volume`, `u64 ask_volume`, `u32 trades`, `u8 flags` (bit0 buy-imbalance, bit1 sell-imbalance, bit2 in-stack, bit3 POC).
 
@@ -836,13 +836,15 @@ The server accepts this **only** when it can prove continuity: it holds state co
 | Family                          | Coalescing rule                                                                                                 | Rationale                                                      |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `book`                          | Per price level, last-write-wins; deletes win over earlier updates at the same level.                           | The book is a map; only the current value matters.             |
-| `bars`                          | Per bar open-time, last-write-wins; a confirmed bar never replaced by an unconfirmed one.                       | The in-progress bar is overwritten many times per second.      |
+| `bars`                          | Per bar `index`, last-write-wins; a confirmed bar never replaced by an unconfirmed one.                         | The in-progress bar is overwritten many times per second.      |
 | `footprint`                     | Per (bar, price) cell, values summed for the _same_ bar, replaced across bars.                                  | Cells are cumulative within a bar.                             |
 | `heatmap`                       | Per time-bucket column, last-write-wins; whole columns dropped only if the bucket is complete and already sent. | Columns are the atomic render unit.                            |
 | `metrics`                       | Per metric code, last point wins.                                                                               | Scalar time series.                                            |
 | `ticker`, `wallet`, `positions` | Whole-object last-write-wins.                                                                                   | Snapshot-shaped.                                               |
 | `trades`, `liquidations`        | **Append, never merge** — throttling batches them into arrays.                                                  | Every print matters for the tape and CVD.                      |
 | `orders`, `executions`          | **Never coalesced, never throttled.**                                                                           | State-machine transitions and fills must be seen individually. |
+
+**Bar key (#2014).** Within a channel (one `spec_hash`) every bar — of every `bar_type`, time bars included — is keyed by its `index` (24 §3.1), never by `t_ms`: non-time bars can share an open time and would otherwise be merged. Clients key their bar stores the same way.
 
 A coalesced frame sets `coalesced: true` (structured) or header flag bit1 (binary), and carries `coalesced_count` — the number of source updates merged. The UI uses this to drive the "feed compressed" indicator on the tape-speed widget rather than silently under-reporting activity.
 
@@ -2016,6 +2018,11 @@ result against these schemas, which is what keeps the two representations from d
         "type": "object",
         "required": ["t_ms", "o", "h", "l", "c", "v", "confirm"],
         "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Bar identity, strictly increasing per series; the coalescing key (§8.2). t_ms may repeat for non-time bars."
+          },
           "t_ms": {
             "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs",
             "description": "Bar open time."
