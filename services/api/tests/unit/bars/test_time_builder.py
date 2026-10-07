@@ -47,6 +47,7 @@ def test_on_trade_boundary_trades_split_into_adjacent_bars_close_once() -> None:
     assert second.open_time == us("10:01:00") and not second.closed
     assert b.on_clock(us("10:01:00.500")) == ()
     assert len(closes(out)) == 1
+    assert out[1].amended is False
 
 
 def test_on_trade_exact_boundary_timestamp_opens_next_bar() -> None:
