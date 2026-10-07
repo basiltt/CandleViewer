@@ -134,3 +134,10 @@ def test_page_alert_payload_carries_no_ids_or_key_material() -> None:
             assert m.group(1) in {"env", "component", "instance", "job", "alertname", "severity"}, (
                 f"{rule.name}: annotation interpolates ${m.group(1)}"
             )
+
+
+def test_gitleaks_allowlist_violation_does_not_echo_matched_line() -> None:
+    secret_line = "paths = ['''infra/grafana/ZZSECRETVALUE123''']"
+    out = o.check_gitleaks_covers_infra("useDefault = true\n" + secret_line)
+    assert out
+    assert all("ZZSECRETVALUE123" not in v for v in out)

@@ -92,15 +92,16 @@ def render(manifest: dict) -> str:
 
     # C-3.2 / C-3.3 cross-cutting protected contracts.
     cc = manifest["cross_cutting"]
-    secrets = cc["secrets_importers"]
+    import_rule = cc["secrets_importers"]
     lines.append("[importlinter:contract:protected-secrets]")
-    lines.append(f"name = {secrets['rule']} — secrets is importable only by its allow-list")
+    rule_id = import_rule["rule"]
+    lines.append(f"name = {rule_id} — secrets is importable only by its allow-list")
     lines.append("type = protected")
-    lines.append(f"protected_modules =\n    {secrets['module']}")
+    lines.append(f"protected_modules =\n    {import_rule['module']}")
     # No composition-root exception: `candleviewer.app` obtains secrets/audit
     # instances via `candleviewer.admin.wiring` (M21) injection, so the
     # allow-lists are exactly C-3.2 / C-3.3.
-    importers_block = "\n    ".join(secrets["only_importable_by"])
+    importers_block = "\n    ".join(import_rule["only_importable_by"])
     lines.append(f"allowed_importers =\n    {importers_block}")
     lines.append("")
 
@@ -129,9 +130,7 @@ def render(manifest: dict) -> str:
         "candleviewer.risk",
     ]
     lines.append("[importlinter:contract:independence-oms-siblings]")
-    lines.append(
-        "name = C-3.1 rules/paper/risk are independent siblings of oms (no cross-imports)"
-    )
+    lines.append("name = C-3.1 rules/paper/risk are independent siblings of oms (no cross-imports)")
     lines.append("type = independence")
     modules_block = "\n    ".join(independent_siblings)
     lines.append(f"modules =\n    {modules_block}")

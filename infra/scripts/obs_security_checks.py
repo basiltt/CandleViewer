@@ -24,6 +24,11 @@ _WEBHOOK_RE = re.compile(
 )
 
 
+def _fingerprint(value: str) -> str:
+    """Non-reversible stand-in for a matched line: length only, never content."""
+    return f"len={len(value)}"
+
+
 def check_gitleaks_covers_infra(config_text: str) -> list[str]:
     """Violations if the gitleaks allowlist paths exempt any observability infra dir."""
     out: list[str] = []
@@ -35,7 +40,7 @@ def check_gitleaks_covers_infra(config_text: str) -> list[str]:
             continue
         for d in SCANNED_INFRA + ("infra/",):
             if d in s and "'''" in s:
-                out.append(f"gitleaks: allowlist exempts {d}: {s}")
+                out.append(f"gitleaks: allowlist exempts {d} (line fingerprint {_fingerprint(s)})")
     return out
 
 
@@ -57,7 +62,8 @@ def check_workflows_no_log_artifacts(workflows: Path) -> list[str]:
     for wf in sorted(workflows.glob("*.yml")):
         text = wf.read_text(encoding="utf-8")
         for m in re.finditer(
-            r"upload-artifact[\s\S]{0,400}?path:\s*(\|?[\s\S]{0,200}?)(?:\n\s*\n|\n\s*\w+:|$)", text
+            r"upload-artifact[\s\S]{0,400}?path:\s*(\|?[\s\S]{0,200}?)(?:\n\s*\n|\n\s*\w+:|$)",
+            text,
         ):
             if re.search(r"(^|[\s/*])(logs?|support-bundles?)(/|\s|$)", m.group(1)):
                 out.append(f"{wf.name}: uploads a log/bundle directory as an artefact (SR-124)")
