@@ -177,7 +177,11 @@ async def test_ddl_runner_applies_all_tables_idempotently(
     try:
         executor = _AsyncpgExecutor(conn)
         applied_first = await run_migrations(executor, DDL_DIR)
-        assert len(applied_first) == 2  # the two .sql files
+        assert applied_first == [
+            "0001_core_tables.sql",
+            "0002_footprint_cells.sql",
+            "0003_bars_integrity_columns.sql",
+        ]
         await assert_no_schema_drift(executor, DDL_DIR)
 
         applied_second = await run_migrations(executor, DDL_DIR)

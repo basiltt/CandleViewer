@@ -7,7 +7,9 @@ before any later batch for the same key: an original close can never overwrite a
 close (DEDUP keeps the last write). Errors are classified: *permanent* (invalid row, closed
 sink) are surfaced as a typed error, counted and not retried; *transient* get a bounded
 exponential backoff, then the batch is counted failed (`bars_write_failed_total{reason}`) and
-the writer is marked `degraded`. Producers never lose rows to a full buffer (`submit()` awaits).
+the writer is marked `degraded` (sticky until a success leaves the buffer empty). Rows of a
+permanently failed or exhausted table batch ARE dropped; they are counted by row.
+Producers never lose rows to a full buffer (`submit()` awaits).
 `stop(timeout_s)` is bounded (mirrors IlpWriter's 30 s contract) and returns the remaining count.
 BR-34: a *new* spec is refused (`BarBufferFull`) while the buffer is saturated.
 """
@@ -46,7 +48,7 @@ bars_write_saturation_total = Counter(
 )
 bars_write_failed_total = Counter(
     "bars_write_failed_total",
-    "Bar batches that failed (reason: permanent | transient_exhausted).",
+    "Bar ROWS dropped by failed batches (reason: permanent | transient_exhausted).",
     ["reason"],
 )
 DEFAULT_STOP_TIMEOUT_S = 30.0
@@ -220,20 +222,23 @@ class BarWriter:
             except Exception as exc:
                 if self._is_permanent(exc):
                     self.last_error = BarWritePermanentError(type(exc).__name__)
-                    bars_write_failed_total.labels("permanent").inc()
+                    bars_write_failed_total.labels("permanent").inc(
+                        len(rows)
+                    )  # rows lost, never silent
                     self.degraded = True
                     _log.error(
                         "bars_write_permanent_failure", table=table, error=type(exc).__name__
                     )
                     return
                 if attempt == MAX_ATTEMPTS:
-                    bars_write_failed_total.labels("transient_exhausted").inc()
+                    bars_write_failed_total.labels("transient_exhausted").inc(len(rows))
                     self.degraded = True
                     _log.error("bars_write_exhausted", table=table, rows=len(rows))
                     return
                 await self._sleep(min(BACKOFF_MAX_S, BACKOFF_BASE_S * 2 ** (attempt - 1)))
                 continue
-            self.degraded = False
+            if self._queue.empty():  # sticky: cleared only once the buffer has fully drained
+                self.degraded = False
             bars_write_latency_seconds.observe(time.monotonic() - started)
             bars_rows_written_total.labels(table.removeprefix("bars_")).inc(len(rows))
             return
