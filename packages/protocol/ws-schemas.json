@@ -197,6 +197,11 @@
           "items": {
             "additionalProperties": false,
             "properties": {
+              "amended": {
+                "default": false,
+                "description": "Optional. True when a late trade re-closed an already-confirmed bar at this (generation, index); the client replaces the stored bar by key and re-renders (§8.2). Structured payloads only; binary records carry no amended bit.",
+                "type": "boolean"
+              },
               "c": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
               },

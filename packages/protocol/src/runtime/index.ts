@@ -62,11 +62,14 @@ export interface BinaryFrameHeader {
 
 export const COMMON_HEADER_BYTES = 24;
 
+/** body_kind 4 (bars) format_version (#2014/#2018): v2 adds generation + index. */
+export const BARS_FORMAT_VERSION = 2;
+
 /** Thrown by every decoder below on any malformed input (§3.4 "Client obligations"). */
 export class BinaryFrameError extends Error {
   constructor(
     message: string,
-    readonly code: "frame_malformed" | "unsupported_body_kind" = "frame_malformed",
+    readonly code: "frame_malformed" | "unsupported_body_kind" | "unsupported_format_version" = "frame_malformed",
   ) {
     super(message);
     this.name = "BinaryFrameError";
@@ -105,6 +108,13 @@ export function parseBinaryFrameHeader(buf: ArrayBufferView): BinaryFrameHeader 
   const rawBodyKind = view.getUint8(5);
   if (rawBodyKind < 1 || rawBodyKind > 6) {
     throw new BinaryFrameError(`unknown body_kind ${rawBodyKind}`, "unsupported_body_kind");
+  }
+  const expectedVersion = rawBodyKind === 4 ? BARS_FORMAT_VERSION : 1;
+  if (formatVersion !== expectedVersion) {
+    throw new BinaryFrameError(
+      `unsupported (body_kind=${rawBodyKind}, format_version=${formatVersion}); expected format_version ${expectedVersion}`,
+      "unsupported_format_version",
+    );
   }
   return {
     magic,
@@ -290,6 +300,9 @@ export function decodeTrades(buf: ArrayBufferView): DecodedTrades {
 }
 
 export interface DecodedBar {
+  /** ADR-0033 series generation; with `index`, the §8.2 coalescing key. */
+  generation: bigint;
+  index: bigint;
   tsMs: bigint;
   open: string;
   high: string;
@@ -308,7 +321,7 @@ export interface DecodedBars {
   bars: DecodedBar[];
 }
 
-const BAR_RECORD_BYTES = 69;
+export const BAR_RECORD_BYTES = 85;
 
 /** Decodes a `body_kind: 4` (bars) binary frame body. */
 export function decodeBars(buf: ArrayBufferView): DecodedBars {
@@ -328,17 +341,22 @@ export function decodeBars(buf: ArrayBufferView): DecodedBars {
         `bar record ${i} runs past the buffer (record_count=${header.recordCount})`,
       );
     }
-    const tsOffsetMs = view.getUint32(cursor, true);
-    const o = view.getBigInt64(cursor + 4, true);
-    const h = view.getBigInt64(cursor + 12, true);
-    const l = view.getBigInt64(cursor + 20, true);
-    const c = view.getBigInt64(cursor + 28, true);
-    const v = view.getBigUint64(cursor + 36, true);
-    const turnover = view.getBigUint64(cursor + 44, true);
-    const tradeCount = view.getUint32(cursor + 52, true);
-    const delta = view.getBigInt64(cursor + 56, true);
-    const flagsByte = view.getUint8(cursor + 64);
+    const generation = view.getBigUint64(cursor, true);
+    const index = view.getBigUint64(cursor + 8, true);
+    const f = cursor + 16; // v1 fields start after the 16-byte identity
+    const tsOffsetMs = view.getUint32(f, true);
+    const o = view.getBigInt64(f + 4, true);
+    const h = view.getBigInt64(f + 12, true);
+    const l = view.getBigInt64(f + 20, true);
+    const c = view.getBigInt64(f + 28, true);
+    const v = view.getBigUint64(f + 36, true);
+    const turnover = view.getBigUint64(f + 44, true);
+    const tradeCount = view.getUint32(f + 52, true);
+    const delta = view.getBigInt64(f + 56, true);
+    const flagsByte = view.getUint8(f + 64);
     bars.push({
+      generation,
+      index,
       tsMs: header.tsBaseMs + BigInt(tsOffsetMs),
       open: unscale(o, header.priceScale),
       high: unscale(h, header.priceScale),

@@ -4,6 +4,7 @@ import {
   BinaryFrameError,
   BODY_KIND,
   COMMON_HEADER_BYTES,
+  BAR_RECORD_BYTES,
   decodeBars,
   decodeBookDelta,
   decodeBookSnapshot,
@@ -189,26 +190,42 @@ describe("decodeTrades", () => {
   });
 });
 
-describe("decodeBars", () => {
-  it("decodes a confirmed bar record", () => {
-    const header = buildHeader({ bodyKind: BODY_KIND.BARS, recordCount: 1, tsBaseMs: 0n });
-    const rec = new ArrayBuffer(69);
-    const rv = new DataView(rec);
-    rv.setUint32(0, 60000, true); // ts_offset_ms
-    rv.setBigInt64(4, 100000n, true); // o
-    rv.setBigInt64(12, 110000n, true); // h
-    rv.setBigInt64(20, 90000n, true); // l
-    rv.setBigInt64(28, 105000n, true); // c
-    rv.setBigUint64(36, 200000n, true); // v
-    rv.setBigUint64(44, 400000n, true); // turnover
-    rv.setUint32(52, 42, true); // trades
-    rv.setBigInt64(56, -5000n, true); // delta
-    rv.setUint8(64, 1); // confirm
-    const frame = concatBuffers(header, new Uint8Array(rec));
+function barRecord(generation: bigint, index: bigint, close: bigint, confirm: number): Uint8Array {
+  const rec = new ArrayBuffer(BAR_RECORD_BYTES);
+  const rv = new DataView(rec);
+  rv.setBigUint64(0, generation, true);
+  rv.setBigUint64(8, index, true);
+  rv.setUint32(16, 60000, true); // ts_offset_ms
+  rv.setBigInt64(20, 100000n, true); // o
+  rv.setBigInt64(28, 110000n, true); // h
+  rv.setBigInt64(36, 90000n, true); // l
+  rv.setBigInt64(44, close, true); // c
+  rv.setBigUint64(52, 200000n, true); // v
+  rv.setBigUint64(60, 400000n, true); // turnover
+  rv.setUint32(68, 42, true); // trades
+  rv.setBigInt64(72, -5000n, true); // delta
+  rv.setUint8(80, confirm); // confirm
+  return new Uint8Array(rec);
+}
 
+function barsHeader(recordCount: number, version = 2): DataView {
+  const header = buildHeader({ bodyKind: BODY_KIND.BARS, recordCount, tsBaseMs: 0n });
+  header.setUint8(4, version);
+  return header;
+}
+
+describe("decodeBars", () => {
+  it("uses 85-byte records", () => {
+    expect(BAR_RECORD_BYTES).toBe(85);
+  });
+
+  it("round-trips generation/index and decodes a confirmed bar record", () => {
+    const frame = concatBuffers(barsHeader(1), barRecord(7n, 2n ** 40n, 105000n, 1));
     const decoded = decodeBars(frame);
     expect(decoded.bars).toEqual([
       {
+        generation: 7n,
+        index: 2n ** 40n,
         tsMs: 60000n,
         open: "1000.00",
         high: "1100.00",
@@ -221,6 +238,37 @@ describe("decodeBars", () => {
         confirmed: true,
       },
     ]);
+  });
+
+  it("keeps same-open-time bars distinct by index", () => {
+    const frame = concatBuffers(
+      barsHeader(2),
+      barRecord(0n, 0n, 105000n, 1),
+      barRecord(0n, 1n, 106000n, 0),
+    );
+    const { bars } = decodeBars(frame);
+    expect(bars.map((b) => b.index)).toEqual([0n, 1n]);
+    expect(bars[0]?.tsMs).toBe(bars[1]?.tsMs);
+  });
+
+  it("rejects v1 (69-byte) bars with a typed error", () => {
+    const frame = concatBuffers(barsHeader(1, 1), new Uint8Array(69));
+    expect(() => decodeBars(frame)).toThrow(BinaryFrameError);
+    try {
+      decodeBars(frame);
+    } catch (e) {
+      expect((e as BinaryFrameError).code).toBe("unsupported_format_version");
+    }
+  });
+
+  it("rejects an unknown format_version", () => {
+    const frame = concatBuffers(barsHeader(1, 9), barRecord(0n, 0n, 1n, 0));
+    expect(() => decodeBars(frame)).toThrow(/format_version/);
+  });
+
+  it("rejects a truncated record", () => {
+    const frame = concatBuffers(barsHeader(1), new Uint8Array(69));
+    expect(() => decodeBars(frame)).toThrow(BinaryFrameError);
   });
 });
 
