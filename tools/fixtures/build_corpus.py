@@ -19,6 +19,12 @@ from typing import Any
 CAPTURE_DATE = "2026-10-05"
 ROOT = Path(__file__).resolve().parents[2] / "packages" / "fixtures" / "bybit" / CAPTURE_DATE
 T0 = 1_700_000_000_000
+#: Kline open times sit on the interval grid on Bybit (multiples of 60 000 ms for `1`). `T0` is
+#: 20 s past a minute, so klines anchor on the minute below it (#2044 review F2).
+KLINE_T0 = T0 - T0 % 60_000
+KLINE_NOTE = ("open times realigned -20000 ms onto the 1-minute epoch grid (#2044 review F2);"
+              " real Bybit kline open times are interval multiples (W from Monday 00:00 UTC);"
+              " row count and OHLCV unchanged; documented-shape, not a live capture")  # fmt: skip
 WS_HOST = "stream.bybit.com"
 REST_HOST = "api-demo.bybit.com"
 PUBLIC_REST_HOST = "api.bybit.com"  # public market data has no demo feed (C-2.11)
@@ -138,7 +144,7 @@ def kline_pages(symbol: str) -> list[dict[str, Any]]:
         c = o + Decimal("0.5") * rng.randint(-20, 20)
         h, lo = max(o, c) + Decimal("1.5"), min(o, c) - Decimal("1.5")
         vol = Decimal(rng.randint(1, 9000)) / 100
-        rows.append([str(T0 + k * 60_000), str(o), str(h), str(lo), str(c), str(vol),
+        rows.append([str(KLINE_T0 + k * 60_000), str(o), str(h), str(lo), str(c), str(vol),
                      str((vol * c).quantize(Decimal("0.01")))])  # fmt: skip
         px = c
     rows.reverse()  # newest first, like the exchange
@@ -229,7 +235,8 @@ def build() -> list[dict[str, Any]]:
         rel = f"rest/kline_BTCUSDT_1_page{i}.json"
         _write_json(rel, page)
         m.append(_entry(rel, "BTCUSDT", "GET /v5/market/kline", f"page boundary: page {i} of 3"
-                        " (limit 200, 450 rows)", host=REST_HOST, cap=32_000))  # fmt: skip
+                        " (limit 200, 450 rows)", host=REST_HOST, cap=32_000)
+                 | {"note": KLINE_NOTE})  # fmt: skip
     for sym, step_h in (("BTCUSDT", 8), ("ETHUSDT", 4)):
         rel = f"rest/funding_history_{sym}_{step_h}h.json"
         _write_json(rel, funding_history(sym, step_h))

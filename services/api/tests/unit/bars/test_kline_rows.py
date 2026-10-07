@@ -14,6 +14,7 @@ from candleviewer.bars.kline_rows import (
     kline_row,
     kline_rows,
     kline_spec,
+    stored_tape_lookup,
     submit_kline_bars,
 )
 from candleviewer.bars.models import Bar, BarSpec
@@ -50,6 +51,10 @@ def _tape_bar(open_time: int) -> Bar:
             closed=True, partial=False, gap_before=False,
         )
     )  # fmt: skip
+
+
+async def _none_stored(symbol: str, bar_param: str, ts: list[int]) -> set[int]:
+    return set()
 
 
 class _Sink:
@@ -102,7 +107,8 @@ async def test_submit_kline_bars_queues_kline_rows() -> None:
     sink = _Sink()
     w = BarWriter(sink)
     await w.start()
-    n = await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0), _k(T0 + W5, confirmed=False)])
+    n = await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0), _k(T0 + W5, confirmed=False)],
+                                  stored_higher=_none_stored)  # fmt: skip
     await w.stop()
     assert n == 1
     assert [r["source"] for r in sink.rows] == ["kline"]
@@ -114,7 +120,8 @@ async def test_submit_kline_bars_never_overwrites_tape_written_by_this_process()
     w = BarWriter(sink)
     await w.start()
     await w.submit([_tape_bar(T0 + W5)], SPEC, source="tape")
-    n = await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0), _k(T0 + W5), _k(T0 + 2 * W5)])
+    n = await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0), _k(T0 + W5), _k(T0 + 2 * W5)],
+                                  stored_higher=_none_stored)  # fmt: skip
     await w.stop()
     assert n == 2
     by_ts = {(r["ts"], r["source"]) for r in sink.rows}
@@ -147,8 +154,9 @@ async def test_submit_kline_bars_all_taken_or_foreign_symbol_queues_nothing() ->
         return set(ts)
 
     assert await submit_kline_bars(w, "BTCUSDT", "5", [_k()], stored_higher=all_taken) == 0
-    assert await submit_kline_bars(w, "BTCUSDT", "5", [_k(symbol="ETHUSDT")]) == 0
-    assert await submit_kline_bars(w, "BTCUSDT", "5", []) == 0
+    assert await submit_kline_bars(w, "BTCUSDT", "5", [_k(symbol="ETHUSDT")],
+                                   stored_higher=_none_stored) == 0  # fmt: skip
+    assert await submit_kline_bars(w, "BTCUSDT", "5", [], stored_higher=_none_stored) == 0
 
 
 async def test_writer_submit_rows_refuses_mislabelled_source() -> None:
@@ -167,3 +175,59 @@ async def test_writer_submit_rows_kline_over_tape_raises_source_overwrite_refuse
     with pytest.raises(SourceOverwriteRefused):
         await w.submit_rows([kline_row(_k(T0), SPEC)], SPEC, source="kline")
     await w.stop()
+
+
+class _Conn:
+    """Hot-tier fake: stored `bars_time` rows as the deployed key `(ts, symbol, bar_param)`."""
+
+    def __init__(self, rows: list[dict[str, object]]) -> None:
+        self.rows = rows
+        self.queries: list[tuple[str, tuple[object, ...]]] = []
+
+    async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+        self.queries.append((sql, params))
+        sym, param, lo, hi = params
+        return [
+            r for r in self.rows
+            if r["symbol"] == sym and r["bar_param"] == param and lo <= r["ts"] <= hi  # type: ignore[operator]
+            and r["source"] != "kline"
+        ]  # fmt: skip
+
+
+async def test_fresh_writer_after_restart_refuses_kline_over_stored_tape_and_counts() -> None:
+    """#2044 F4 / BR-07: a NEW writer (empty in-process precedence map) + a stored tape row
+    at the same `(ts, symbol, bar_param)` -> the kline row is refused and counted."""
+    from candleviewer.bars.writer import bars_source_overwrite_refused_total
+
+    conn = _Conn([
+        {"ts": T0, "symbol": "BTCUSDT", "bar_param": "5m", "source": "tape"},
+        {"ts": T0 + W5, "symbol": "BTCUSDT", "bar_param": "5m", "source": None},  # legacy
+        {"ts": T0 + 2 * W5, "symbol": "BTCUSDT", "bar_param": "5m", "source": "kline"},
+    ])  # fmt: skip
+    sink = _Sink()
+    w = BarWriter(sink)
+    await w.start()
+    before = bars_source_overwrite_refused_total.labels("kline", "tape")._value.get()
+    n = await submit_kline_bars(
+        w, "BTCUSDT", "5", [_k(T0), _k(T0 + W5), _k(T0 + 2 * W5)],
+        stored_higher=stored_tape_lookup(conn),
+    )  # fmt: skip
+    await w.stop()
+    assert n == 1 and [r["ts"] for r in sink.rows] == [T0 + 2 * W5]  # kline over kline: ok
+    after = bars_source_overwrite_refused_total.labels("kline", "tape")._value.get()
+    assert after == before + 2
+    sql, params = conn.queries[0]
+    assert "$1" in sql and params == ("BTCUSDT", "5m", T0, T0 + 2 * W5)
+
+
+async def test_stored_tape_lookup_empty_input_makes_no_query() -> None:
+    conn = _Conn([])
+    assert await stored_tape_lookup(conn)("BTCUSDT", "5m", []) == set()
+    assert conn.queries == []
+
+
+def test_submit_kline_bars_stored_check_is_mandatory() -> None:
+    import inspect
+
+    param = inspect.signature(submit_kline_bars).parameters["stored_higher"]
+    assert param.default is inspect.Parameter.empty

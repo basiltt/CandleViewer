@@ -87,7 +87,8 @@
       "source": "documented-shape (exception #1778 A)",
       "notable_event": "page boundary: page 0 of 3 (limit 200, 450 rows)",
       "http_status": 200,
-      "size_cap_bytes": 32000
+      "size_cap_bytes": 32000,
+      "note": "open times realigned -20000 ms onto the 1-minute epoch grid (#2044 review F2); real Bybit kline open times are interval multiples (W from Monday 00:00 UTC); row count and OHLCV unchanged; documented-shape, not a live capture"
     },
     {
       "path": "rest/kline_BTCUSDT_1_page1.json",
@@ -98,7 +99,8 @@
       "source": "documented-shape (exception #1778 A)",
       "notable_event": "page boundary: page 1 of 3 (limit 200, 450 rows)",
       "http_status": 200,
-      "size_cap_bytes": 32000
+      "size_cap_bytes": 32000,
+      "note": "open times realigned -20000 ms onto the 1-minute epoch grid (#2044 review F2); real Bybit kline open times are interval multiples (W from Monday 00:00 UTC); row count and OHLCV unchanged; documented-shape, not a live capture"
     },
     {
       "path": "rest/kline_BTCUSDT_1_page2.json",
@@ -109,7 +111,8 @@
       "source": "documented-shape (exception #1778 A)",
       "notable_event": "page boundary: page 2 of 3 (limit 200, 450 rows)",
       "http_status": 200,
-      "size_cap_bytes": 32000
+      "size_cap_bytes": 32000,
+      "note": "open times realigned -20000 ms onto the 1-minute epoch grid (#2044 review F2); real Bybit kline open times are interval multiples (W from Monday 00:00 UTC); row count and OHLCV unchanged; documented-shape, not a live capture"
     },
     {
       "path": "rest/recent_trade_BTCUSDT.json",

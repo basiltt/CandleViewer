@@ -22,6 +22,8 @@ REJECT_REASONS: Final = (
     "negative_volume",
     "off_tick",
     "symbol_mismatch",
+    "gap",
+    "oversized",
 )
 
 

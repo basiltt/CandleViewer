@@ -4,8 +4,11 @@ All wire knowledge for the endpoint lives here (C-2.2): params, the list-of-list
 `[startTime, open, high, low, close, volume, turnover]` delivered **newest first**, and the
 strict page validation the E12 STRIDE model asks for (SR-E12-09, BR-02):
 
-- open times strictly descending on the wire (strictly ascending once reversed), spaced by a
-  whole number of intervals;
+- open times on the absolute interval grid (UTC epoch; weeks from Monday), strictly
+  descending on the wire and **contiguous** (exactly one interval apart — a missing bar
+  rejects the page);
+- at most `limit` (<= 1000) rows, checked before any row is parsed;
+- `retCode == 0` and `result.symbol` present and equal to the requested symbol;
 - `high >= max(open, close)`, `low <= min(open, close)`, prices `> 0`, volume/turnover `>= 0`;
 - every price a multiple of the instrument tick size (when the catalogue supplies one).
 
@@ -49,6 +52,23 @@ _KLINE_INTERVALS: Final = frozenset(get_args(KlineEvent.model_fields["interval"]
 TickSizeFor = Callable[[str], Decimal | None]
 
 
+#: Bybit weeks open on Monday 00:00 UTC; the Unix epoch was a Thursday.
+_WEEK_OFFSET_MS: Final = 4 * 1440 * _MIN_MS
+
+
+def _aligned(start_ms: int, interval: str) -> bool:
+    """Absolute grid: open time is a multiple of the interval (UTC epoch; `W` from Monday)."""
+    offset = _WEEK_OFFSET_MS if interval == "W" else 0
+    return (start_ms - offset) % INTERVAL_MS[interval] == 0
+
+
+#: |adjusted exponent| bound for prices/volumes (1e-12 .. 1e12): far beyond any real kline.
+_MAX_ADJUSTED: Final = 12
+#: A ms open time is exactly 13 ASCII digits (2001..2286); `str.isdigit` would admit Unicode
+#: digits that `int()` then rejects with a non-`KlinePageRejected` error.
+_TS_RE: Final = re.compile(r"[0-9]{13}")
+
+
 def _dec(raw: object) -> Decimal:
     if not isinstance(raw, str):
         raise KlinePageRejected("kline value is not a string", "row_shape")
@@ -56,8 +76,11 @@ def _dec(raw: object) -> Decimal:
         value = Decimal(raw)
     except InvalidOperation as exc:
         raise KlinePageRejected("kline value is not a number", "unparseable") from exc
-    if not value.is_finite():
+    if not value.is_finite():  # NaN, sNaN, Infinity
         raise KlinePageRejected("kline value is not finite", "unparseable")
+    # S1: bound the magnitude so `"1e999999"` can neither pass nor blow up later arithmetic.
+    if value and not -_MAX_ADJUSTED <= value.adjusted() <= _MAX_ADJUSTED:
+        raise KlinePageRejected("kline value magnitude is out of range", "unparseable")
     return value
 
 
@@ -72,8 +95,15 @@ def _check_row(
         raise KlinePageRejected("kline low is above the body", "low_above_body")
     if v < 0 or t < 0:
         raise KlinePageRejected("kline volume/turnover is negative", "negative_volume")
-    if tick is not None and any(p % tick != 0 for p in (o, h, low, c)):
-        raise KlinePageRejected("kline price is off the tick grid", "off_tick")
+    if tick is not None:
+        try:
+            off = any(p % tick != 0 for p in (o, h, low, c))
+        except ArithmeticError as exc:  # any decimal fault is a bad page, never "transient"
+            raise KlinePageRejected(
+                "kline price cannot be checked on the tick grid", "off_tick"
+            ) from exc
+        if off:
+            raise KlinePageRejected("kline price is off the tick grid", "off_tick")
 
 
 def parse_kline_page(
@@ -83,6 +113,7 @@ def parse_kline_page(
     interval: str,
     tick_size: Decimal | None = None,
     now_ms: int | None = None,
+    limit: int = MAX_PAGE_LIMIT,
 ) -> list[KlineEvent]:
     """Validate one page and return it **ascending** by open time.
 
@@ -90,13 +121,18 @@ def parse_kline_page(
     """
     if interval not in INTERVAL_MS:
         raise KlinePageRejected(f"interval {interval[:8]!r} is not backfillable", "envelope")
+    if payload.get("retCode") != 0:
+        raise KlinePageRejected("kline: retCode is not 0", "envelope")
     result = payload.get("result")
     if not isinstance(result, dict):
         raise KlinePageRejected("kline: missing result object", "envelope")
     rows = result.get("list")
     if not isinstance(rows, list):
         raise KlinePageRejected("kline: missing list", "envelope")
-    if result.get("symbol", symbol) != symbol:
+    # Size cap on the RESPONSE, before any row is parsed (F3): never more than was asked for.
+    if len(rows) > min(limit, MAX_PAGE_LIMIT):
+        raise KlinePageRejected("kline page holds more rows than requested", "oversized")
+    if result.get("symbol") != symbol:
         raise KlinePageRejected("kline: page symbol does not match the request", "symbol_mismatch")
     now = int(time.time() * 1000) if now_ms is None else now_ms
     width_ms = INTERVAL_MS[interval]
@@ -106,9 +142,11 @@ def parse_kline_page(
         if not isinstance(row, list) or len(row) != 7:
             raise KlinePageRejected("kline row is not a 7-element list", "row_shape")
         raw_ts = row[0]
-        if not isinstance(raw_ts, str) or not raw_ts.isdigit():
+        if not isinstance(raw_ts, str) or not _TS_RE.fullmatch(raw_ts):
             raise KlinePageRejected("kline start time is not an integer string", "unparseable")
         start_ms = int(raw_ts)
+        if not _aligned(start_ms, interval):
+            raise KlinePageRejected("kline open time is off the interval grid", "misaligned_time")
         o, h, low, c, v, t = (_dec(x) for x in row[1:])
         _check_row(o, h, low, c, v, t, tick_size)
         starts.append(start_ms)
@@ -135,9 +173,10 @@ def parse_kline_page(
     # Wire order is strictly newest-first; anything else (dup, reorder) is a tampered page.
     if any(a <= b for a, b in itertools.pairwise(starts)):
         raise KlinePageRejected("kline page is not strictly newest-first", "non_monotonic")
-    # Grid check is relative (spacing), not absolute: the corpus is not epoch-aligned.
-    if any((a - b) % width_ms for a, b in itertools.pairwise(starts)):
-        raise KlinePageRejected("kline open times are off the interval grid", "misaligned_time")
+    # Bybit returns contiguous klines: a missing bar inside a page is a truncated/tampered
+    # response, so the page is rejected rather than accepted and marked covered (F1).
+    if any(a - b != width_ms for a, b in itertools.pairwise(starts)):
+        raise KlinePageRejected("kline page has a missing bar", "gap")
     events.reverse()
     return events
 
@@ -171,7 +210,9 @@ async def fetch_kline_page(
         },
         endpoint_class=EndpointClass.MARKET_DATA,
     )
-    return parse_kline_page(payload, symbol=symbol, interval=interval, tick_size=tick_size)
+    return parse_kline_page(
+        payload, symbol=symbol, interval=interval, tick_size=tick_size, limit=limit
+    )
 
 
 class BybitKlineFetcher:

@@ -216,6 +216,13 @@ class KlineBackfillService:
     and a job stops (keeping its partial result) after `max_consecutive_rate_limits`
     consecutive rate-limit responses. Fetches use the adapter's `MARKET_DATA` bucket — the
     lowest REST class, separate from the stop/cancel/SL reserve (C-12.7).
+
+    "Lowest ingestion lane" (SR-E12-08, BR-33): the #1957 `ingestion/dispatch.py` lanes order
+    *inbound WS frames*; this service makes outbound REST calls and emits no frames, so it has
+    no dispatch lane to join. Its priority is enforced instead by the governor's `MARKET_DATA`
+    bucket (never the order/position reserve), at most `max_concurrent_jobs` jobs and the page
+    ceiling. Bar emission onto the bars topic — where a lane would apply — is wired in part 2 /
+    E12-T05 (#2045 / #398); lane assignment is deferred to that wiring.
     """
 
     def __init__(

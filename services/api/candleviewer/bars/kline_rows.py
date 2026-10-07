@@ -19,9 +19,10 @@ import structlog
 
 from candleviewer.bars.errors import BarsError
 from candleviewer.bars.models import BarSpec
+from candleviewer.bars.reader import RowFetcher
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum, to_double
 from candleviewer.bars.spec import from_wire
-from candleviewer.bars.writer import SourceOverwriteRefused
+from candleviewer.bars.writer import SourceOverwriteRefused, bars_source_overwrite_refused_total
 from candleviewer.exchange.base.models import KlineEvent
 
 _log = structlog.get_logger(__name__)
@@ -96,20 +97,27 @@ async def submit_kline_bars(
     interval: str,
     events: Sequence[KlineEvent],
     *,
-    stored_higher: StoredHigherSource | None = None,
+    stored_higher: StoredHigherSource,
 ) -> int:
     """Persist confirmed klines as `source=kline` rows; returns rows queued.
 
-    A kline never overwrites tape (BR-07): open times already holding a higher-ranked stored
-    row are dropped up front, and if the writer still refuses the batch
-    (`SourceOverwriteRefused`, a tape row written by this process) rows are retried one by
-    one so only the conflicting ones are skipped — never forced through.
+    A kline never overwrites tape (BR-07), **across restarts too**: `stored_higher` is
+    mandatory — the writer's own precedence map only knows rows this process wrote, so open
+    times already holding a stored tape/parquet row (`stored_tape_lookup`, keyed on the
+    deployed dedup key `(ts, symbol, bar_param)`) are refused and counted up front. If the
+    writer still refuses the batch (`SourceOverwriteRefused`, a tape row written by this
+    process), rows are retried one by one so only the conflicting ones are skipped — never
+    forced through.
     """
     spec = kline_spec(interval)
     rows = [r for r in kline_rows(events, spec) if r["symbol"] == symbol]
-    if stored_higher is not None and rows:
+    if rows:
         taken = await stored_higher(symbol, bar_param_for(spec), [int(str(r["ts"])) for r in rows])
-        rows = [r for r in rows if int(str(r["ts"])) not in taken]
+        if taken:
+            refused = [r for r in rows if int(str(r["ts"])) in taken]
+            bars_source_overwrite_refused_total.labels(KLINE_SOURCE, "tape").inc(len(refused))
+            _log.info("kline_rows_refused_over_stored_tape", symbol=symbol, refused=len(refused))
+            rows = [r for r in rows if int(str(r["ts"])) not in taken]
     if not rows:
         return 0
     try:
@@ -127,6 +135,26 @@ async def submit_kline_bars(
         return queued
 
 
+_STORED_HIGHER_SQL: Final = (
+    "SELECT ts FROM bars_time WHERE symbol = $1 AND bar_param = $2 AND ts >= $3 AND ts <= $4 "
+    "AND (source IS NULL OR source != 'kline')"
+)  # NULL source = pre-0003 legacy row, which only the tape builder ever wrote
+
+
+def stored_tape_lookup(conn: RowFetcher) -> StoredHigherSource:
+    """The stored-row half of SR-E12-10 over the hot tier: open times in `ts` that already hold
+    a tape/parquet (or legacy) `bars_time` row. Parameterised; one bounded range query."""
+
+    async def lookup(symbol: str, bar_param: str, ts: list[int]) -> set[int]:
+        if not ts:
+            return set()
+        rows = await conn.fetch(_STORED_HIGHER_SQL, symbol, bar_param, min(ts), max(ts))
+        wanted = set(ts)
+        return {t for t in (int(str(r["ts"])) for r in rows) if t in wanted}
+
+    return lookup
+
+
 __all__ = [
     "KLINE_SOURCE",
     "ORDERFLOW_NULL_COLUMNS",
@@ -136,5 +164,6 @@ __all__ = [
     "kline_row",
     "kline_rows",
     "kline_spec",
+    "stored_tape_lookup",
     "submit_kline_bars",
 ]

@@ -269,3 +269,56 @@ async def test_fully_cached_request_never_calls_exchange_and_coverage_exposed() 
     index = svc.coverage(SYM, IV)
     assert index is not None and index.holes(Range(0, 5 * W)) == []
     assert svc.coverage("ETHUSDT", IV) is None
+
+
+async def test_gap_page_rejected_leaves_span_uncovered_and_is_refetched() -> None:
+    """#2044 F1: a page with a missing bar (adapter raises `gap`) is never marked covered;
+    the next job re-fetches exactly that span once the exchange serves it whole."""
+    cache = _Cache()
+    port = _Bybit(10)
+    bad = [True]
+
+    async def fetch(*a: object, **kw: object) -> Sequence[KlineEvent]:
+        if bad[0]:
+            raise KlinePageRejected("missing bar", "gap")
+        return await port(*a, **kw)  # type: ignore[arg-type]
+
+    svc = _svc(fetch, cache)
+    first = await svc.backfill_range(SYM, IV, Range(0, 10 * W))
+    assert first.partial and first.stop_reason == "page_rejected"
+    index = svc.coverage(SYM, IV)
+    assert index is not None and index.holes(Range(0, 10 * W)) == [Range(0, 10 * W)]
+    bad[0] = False
+    second = await svc.backfill_range(SYM, IV, Range(0, 10 * W))
+    assert not second.partial and len(cache.rows) == 10
+    assert index.holes(Range(0, 10 * W)) == []
+
+
+async def test_hostile_numeric_page_ends_page_rejected_with_metric_and_zero_retries() -> None:
+    """#2044 S1: a `1e999999` price through the real parser (with a tick size) is a rejected
+    page — counted, logged, never retried against MARKET_DATA, never `fetch_failed`."""
+    import copy
+    from decimal import Decimal
+
+    from candleviewer.exchange.bybit.klines import parse_kline_page  # adapter-under-test
+    from candleviewer.ingestion.metrics import kline_backfill_pages_rejected_total
+    from tests._corpus import rest
+
+    page = copy.deepcopy(rest("rest/kline_BTCUSDT_1_page0.json"))
+    page["result"]["list"][3][2] = "1e999999"
+    calls = 0
+
+    async def fetch(*a: object, **kw: object) -> Sequence[KlineEvent]:
+        nonlocal calls
+        calls += 1
+        return parse_kline_page(page, symbol=SYM, interval=IV, tick_size=Decimal("0.1"))
+
+    sleep = _Sleep()
+    counter = kline_backfill_pages_rejected_total.labels(
+        symbol=SYM, interval=IV, reason="unparseable"
+    )
+    before = counter._value.get()
+    result = await _svc(fetch, sleep=sleep).backfill_range(SYM, IV, Range(0, 10 * W))
+    assert result.partial and result.stop_reason == "page_rejected"
+    assert calls == 1 and sleep.calls == []
+    assert counter._value.get() == before + 1
