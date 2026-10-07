@@ -115,6 +115,10 @@ export interface BarsSymbolBarTypeParam {
      */
     confirm: boolean;
     /**
+     * Optional. True when a late trade re-closed an already-confirmed bar at this (generation, index); the client replaces the stored bar by key and re-renders (§8.2). Structured payloads only; binary records carry no amended bit.
+     */
+    amended?: boolean;
+    /**
      * Arbitrary-precision decimal as a string; never a JSON number.
      */
     delta?: string;

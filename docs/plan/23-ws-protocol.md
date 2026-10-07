@@ -205,7 +205,7 @@ Snapshots carry every level within the subscribed depth, bid side descending the
 
 **body_kind 6 — heatmap column.** One time-bucket column: `u32 ts_offset_ms`, `i64 price_min`, `i64 price_step`, `u32 row_count`, then `row_count` × 16 bytes: `u64 bid_size`, `u64 ask_size`. The renderer uploads this straight into a texture row.
 
-**Client obligations.** A client MUST validate `magic` and `format_version` (and MUST reject, as `frame_malformed`, a `(body_kind, format_version)` pair it does not know — e.g. a v1 decoder receiving v2 bars), MUST ignore trailing bytes it does not understand (forward compatibility), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync.
+**Client obligations.** A client MUST validate `magic` and `format_version` (and MUST reject, as `frame_malformed`, a `(body_kind, format_version)` pair it does not know — e.g. a v1 decoder receiving v2 bars; the code is `frame_malformed` on the wire and decoders MAY surface the more specific diagnostic `unsupported_format_version` locally, which maps to `frame_malformed` in §10), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync. For fixed-stride bodies (body_kind 4, bars) the rule is exact: body length MUST equal `24 + record_count × record_size`; both a short body and trailing bytes are `frame_malformed`. Forward compatibility is carried by `format_version`, not by trailing bytes. Variable-layout body kinds continue to ignore trailing bytes after the last declared record.
 
 ### 3.5 Compression
 
@@ -836,7 +836,7 @@ The server accepts this **only** when it can prove continuity: it holds state co
 | Family                          | Coalescing rule                                                                                                 | Rationale                                                      |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `book`                          | Per price level, last-write-wins; deletes win over earlier updates at the same level.                           | The book is a map; only the current value matters.             |
-| `bars`                          | Per bar `(generation, index)`, last-write-wins; a confirmed bar never replaced by an unconfirmed one.           | The in-progress bar is overwritten many times per second.      |
+| `bars`                          | Per bar `(generation, index)`, last-write-wins; a confirmed bar never replaced by an unconfirmed one, except a confirmed update with `amended: true` (below). | The in-progress bar is overwritten many times per second.      |
 | `footprint`                     | Per (bar, price) cell, values summed for the _same_ bar, replaced across bars.                                  | Cells are cumulative within a bar.                             |
 | `heatmap`                       | Per time-bucket column, last-write-wins; whole columns dropped only if the bucket is complete and already sent. | Columns are the atomic render unit.                            |
 | `metrics`                       | Per metric code, last point wins.                                                                               | Scalar time series.                                            |
@@ -845,6 +845,8 @@ The server accepts this **only** when it can prove continuity: it holds state co
 | `orders`, `executions`          | **Never coalesced, never throttled.**                                                                           | State-machine transitions and fills must be seen individually. |
 
 **Bar key (#2014).** Within a channel (one `spec_hash`) every bar — of every `bar_type`, time bars included — is keyed by `(generation, index)` (24 §3.1), never by `t_ms`: non-time bars can share an open time, and `index` restarts when ADR-0033 starts a new generation/epoch. A channel streams one generation at a time; a generation swap arrives as a new snapshot (ADR-0033 client ingestion). Clients key their bar stores the same way.
+
+**Amended bars (#2018, 24 §3.2).** A late trade can re-close an already-confirmed bar; the server then emits a `confirm: true` item with `amended: true` at the same `(generation, index)`. This is the one carve-out to "confirmed is final": a confirmed→confirmed replacement is permitted (and coalesced last-write-wins) only when the incoming item sets `amended`. A confirmed→unconfirmed replacement is never permitted. Clients replace the stored bar by key and re-render it.
 
 A coalesced frame sets `coalesced: true` (structured) or header flag bit1 (binary), and carries `coalesced_count` — the number of source updates merged. The UI uses this to drive the "feed compressed" indicator on the tape-speed widget rather than silently under-reporting activity.
 
@@ -2047,6 +2049,11 @@ result against these schemas, which is what keeps the two representations from d
             "type": "boolean",
             "description": "False for the in-progress bar. A client MUST NOT treat it as closed."
           },
+          "amended": {
+            "type": "boolean",
+            "default": false,
+            "description": "Optional. True when a late trade re-closed an already-confirmed bar at this (generation, index); the client replaces the stored bar by key and re-renders (§8.2). Structured payloads only; binary records carry no amended bit."
+          },
           "delta": { "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal" },
           "cvd": { "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal" },
           "min_delta": { "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal" },
@@ -3227,7 +3234,7 @@ discarded rather than applied out of order.
 | C7  | Use full-jitter backoff and not auto-reconnect on `1002`/`4400`/`4403`.            |
 | C8  | Throttle to ≥1 000 ms when the window is hidden; unsubscribe collapsed panes.      |
 | C9  | Decouple rendering from frame arrival (`requestAnimationFrame`).                   |
-| C10 | Validate the binary `magic`/`format_version` and ignore trailing unknown bytes.    |
+| C10 | Validate the binary `magic`/`format_version`; bars bodies must match length exactly (§3.4). |
 | C11 | Render replay data in visually distinct chrome.                                    |
 | C12 | Disable order-entry affordances on `kill_switch.engaged` and on `shutdown_notice`. |
 
