@@ -94,7 +94,16 @@ jobs:
         # in-source nosemgrep review dates); warns <30 days. Also runs weekly
         # in accepted-risk-expiry-weekly.yml so an expiry that passes with no
         # PR open is still caught.
-        run: python tools/ci/check_accepted_risk_expiry.py
+        run: python tools/ci/check_accepted_risk_expiry.py --report "$RUNNER_TEMP/accepted-risk-report.md"
+
+      - name: Publish accepted-risk report (live count; not pinned in the inventory doc, #1984)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: accepted-risk-report
+          path: ${{ runner.temp }}/accepted-risk-report.md
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Canary self-test (deliberately-broken fixtures must fail)
         # The guard against a green check that no longer checks anything

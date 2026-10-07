@@ -312,16 +312,22 @@ def test_real_repo_fails_once_clock_passes_latest_expiry() -> None:
     assert len([f for f in fails if f.startswith("EXPIRED")]) == len(res.items)
 
 
-def test_inventory_header_counts_match_run() -> None:
-    """The inventory header is a dated snapshot; its checked-count must track run()."""
+def test_inventory_header_has_no_hardcoded_count() -> None:
+    """Regression guard (#1984): a pinned count made every suppression PR a merge-race hotspot."""
     root = Path(__file__).resolve().parents[2]
     doc = (
         root / "docs/plan/backlog/artifacts/e49-accepted-risk-inventory.md"
     ).read_text(encoding="utf-8")
-    m = re.search(r"\*\*(\d+) items checked", doc)
-    assert m, "inventory header lost its '**N items checked' statement"
-    res, _, _ = ck.run(root, date(2026, 10, 6))
-    assert int(m.group(1)) == len(res.items)
+    assert not re.search(r"\d+\s+items checked", doc)
+    assert "--report" in doc
+
+
+def test_report_contains_count_line(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    out = tmp_path / "r.md"
+    ck.main(["--root", str(root), "--today", TODAY.isoformat(), "--report", str(out)])
+    res, _, _ = ck.run(root, TODAY)
+    assert f"**{len(res.items)} items checked**" in out.read_text(encoding="utf-8")
 
 
 def test_exception_row_expired_and_warn_and_malformed(tmp_path: Path) -> None:
