@@ -1,4 +1,4 @@
-C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-3ed3099\observability\new_attacks.py:468: DeprecationWarning: Machine 'm_h1' has unresolvable transition targets:
+<workspace>\CandleViewer\docs\research\xstate\battle-3ed3099\observability\new_attacks.py:468: DeprecationWarning: Machine 'm_h1' has unresolvable transition targets:
   m_h1.a: on 'GO' -> target 'does.not.exist' does not resolve
   (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)
   machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)

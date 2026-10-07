@@ -1,106 +1,106 @@
 ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: exchange 503
 ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
-    if isinstance(v, BaseException): raise v
-                                     ^^^^^^^
-RuntimeError: exchange 503
-ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
-Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
-    await produced if inspect.isawaitable(produced) else produced
-    ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: exchange 503
 ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: exchange 503
 ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
-    if isinstance(v, BaseException): raise v
-                                     ^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
-    await produced if inspect.isawaitable(produced) else produced
-    ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: exchange 503
 ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: exchange 503
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: exchange 503
+Traceback (most recent call last):
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: exchange 503
 ERROR:xstate_statemachine.interpreter:💥 Service 'diff_against_local' (ID: 'diff') failed: diff boom
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: diff boom
 ERROR:xstate_statemachine.interpreter:💥 Service 'apply_remediations' (ID: 'rem') failed: rem boom
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
     if isinstance(v, BaseException): raise v
                                      ^^^^^^^
 RuntimeError: rem boom
 ERROR:xstate_statemachine.sync_interpreter:🚫 Service 'fetch_exchange_state' is async and not supported by SyncInterpreter.
 ERROR:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.idle' failed; rolling back to the pre-transition configuration.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2884, in _execute_transition
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2884, in _execute_transition
     await self._enter_states(path_to_enter, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3448, in _enter_states
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3448, in _enter_states
     self._schedule_state_tasks(state)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4655, in _schedule_state_tasks
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4655, in _schedule_state_tasks
     self._schedule_state_invokes(state)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4707, in _schedule_state_invokes
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4707, in _schedule_state_invokes
     self._invoke_service(
     ~~~~~~~~~~~~~~~~~~~~^
         invocation, service_callable, owner_id=state.id
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\sync_interpreter.py", line 1549, in _invoke_service
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\sync_interpreter.py", line 1549, in _invoke_service
     raise NotSupportedError(
         f"Service '{invocation.src}' is async and not supported."
     )

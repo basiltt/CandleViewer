@@ -495,7 +495,7 @@
   "script": "issues/verify-main-5e07ba8/r4merge/m5.py",
   "status": "FAIL",
   "seconds": 0.21,
-  "tail": "l = True, restart_services: bool = False, restart_timers: Optional[bool] = None, clock: Optional[xstate_statemachine.clock.Clock] = None) -> ~TInterpreter\nOBS3 LATE receipt: Receipt(state_ids=frozenset({'d.a'}), changed=False, error=None, deferred=True, denied=False)\nOBS3 ARM receipt: Receipt(state_ids=frozenset({'d.b'}), changed=True, error=None, deferred=False, denied=False) states now: {'d.c'}\n~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\validation.py\", line 316, in validate_machine\n    raise InvalidConfigError(message)\nxstate_statemachine.exceptions.InvalidConfigError: Machine 's' has unresolvable transition targets:\n  s.a: on 'GO' -> target 'nowhere' does not resolve\n"
+  "tail": "l = True, restart_services: bool = False, restart_timers: Optional[bool] = None, clock: Optional[xstate_statemachine.clock.Clock] = None) -> ~TInterpreter\nOBS3 LATE receipt: Receipt(state_ids=frozenset({'d.a'}), changed=False, error=None, deferred=True, denied=False)\nOBS3 ARM receipt: Receipt(state_ids=frozenset({'d.b'}), changed=True, error=None, deferred=False, denied=False) states now: {'d.c'}\n~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/_ref/xstate-statemachine/src\\xstate_statemachine\\validation.py\", line 316, in validate_machine\n    raise InvalidConfigError(message)\nxstate_statemachine.exceptions.InvalidConfigError: Machine 's' has unresolvable transition targets:\n  s.a: on 'GO' -> target 'nowhere' does not resolve\n"
  },
  {
   "script": "issues/verify-main-5e07ba8/r4merge/m6.py",
@@ -837,7 +837,7 @@
   "script": "issues/verify-main-cec108b/149_plain_def_service_off_loop.py",
   "status": "FAIL",
   "seconds": 0.99,
-  "tail": "ng service takes onError\nCriterion 4: awaitable-returning plain-def service is awaited\n  [OK] returns_coro service takes onDone\nCriterion 5: executor released on stop()\n  [OK] service executor torn down\nCriterion 6: concurrent services run in parallel, not serialized\n    4 x 0.2s services elapsed: 0.223s (serial would be 0.800s)\n  [OK] N services run concurrently\n\nRESULT: FAIL (1 criteria failed)\noduced = await handoff\n               ^^^^^^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\concurrent\\futures\\thread.py\", line 59, in run\n    result = self.fn(*self.args, **self.kwargs)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\149_plain_def_service_off_loop.py\", line 130, in raises\n    raise ValueError(\"nope\")\nValueError: nope\n"
+  "tail": "ng service takes onError\nCriterion 4: awaitable-returning plain-def service is awaited\n  [OK] returns_coro service takes onDone\nCriterion 5: executor released on stop()\n  [OK] service executor torn down\nCriterion 6: concurrent services run in parallel, not serialized\n    4 x 0.2s services elapsed: 0.223s (serial would be 0.800s)\n  [OK] N services run concurrently\n\nRESULT: FAIL (1 criteria failed)\noduced = await handoff\n               ^^^^^^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\concurrent\\futures\\thread.py\", line 59, in run\n    result = self.fn(*self.args, **self.kwargs)\n  File \"<workspace>\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\149_plain_def_service_off_loop.py\", line 130, in raises\n    raise ValueError(\"nope\")\nValueError: nope\n"
  },
  {
   "script": "issues/verify-main-cec108b/150_send_threadsafe_budgeted.py",
@@ -921,7 +921,7 @@
   "script": "issues/verify-main-cec108b/probe_144_async.py",
   "status": "FAIL",
   "seconds": 2.77,
-  "tail": "async start() returned; last_error= None\nafter wait: last_error= None\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\probe_144_async.py\", line 41, in main\n    assert isinstance(i.last_error, RunawayChainError), \"no RunawayChainError recorded\"\n           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: no RunawayChainError recorded\n"
+  "tail": "async start() returned; last_error= None\nafter wait: last_error= None\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"<workspace>\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\probe_144_async.py\", line 41, in main\n    assert isinstance(i.last_error, RunawayChainError), \"no RunawayChainError recorded\"\n           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: no RunawayChainError recorded\n"
  },
  {
   "script": "issues/verify-main-cec108b/probe_144_async_count.py",
@@ -975,7 +975,7 @@
   "script": "issues/new-main/repro/c14_async_no_send_budget.py",
   "status": "FAIL",
   "seconds": 3.26,
-  "tail": "machine.max_iterations = 1000\n\nSYNC : send() returned. steps = 1001\nASYNC: after 2.0 s of spinning, steps = 1001  status = running\nASYNC: after 3.0 s, steps = 1001  (still climbing: False)\nASYNC: queue_depth = 0\nib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\new-main\\repro\\c14_async_no_send_budget.py\", line 71, in main\n    assert n3 > n2, \"async chain terminated on its own\"\n           ^^^^^^^\nAssertionError: async chain terminated on its own\n"
+  "tail": "machine.max_iterations = 1000\n\nSYNC : send() returned. steps = 1001\nASYNC: after 2.0 s of spinning, steps = 1001  status = running\nASYNC: after 3.0 s, steps = 1001  (still climbing: False)\nASYNC: queue_depth = 0\nib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"<workspace>\\CandleViewer\\docs\\research\\xstate\\issues\\new-main\\repro\\c14_async_no_send_budget.py\", line 71, in main\n    assert n3 > n2, \"async chain terminated on its own\"\n           ^^^^^^^\nAssertionError: async chain terminated on its own\n"
  },
  {
   "script": "issues/new-main/repro/f_chain.py",
@@ -1083,7 +1083,7 @@
   "script": "issues/post-5e07ba8/new/repro/R4-02_from_snapshot_no_validation.py",
   "status": "FAIL",
   "seconds": 0.28,
-  "tail": ")\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 178, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: status is 'running' but the configuration is empty.\n"
+  "tail": ")\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 178, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: status is 'running' but the configuration is empty.\n"
  },
  {
   "script": "issues/post-5e07ba8/new/repro/R4-03_block_policy_fire_and_forget_drop.py",
@@ -1395,7 +1395,7 @@
   "script": "issues/post-3ed3099/new/repro/R5-17_non-str-event-type-via-restore.py",
   "status": "FAIL",
   "seconds": 0.32,
-  "tail": "^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 178, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: 'pending_events' must be a list of event records whose 'type' is a non-empty string.\n"
+  "tail": "^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 178, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: 'pending_events' must be a list of event records whose 'type' is a non-empty string.\n"
  },
  {
   "script": "issues/post-3ed3099/new/repro/R5-18_error-hooks-invisible.py",

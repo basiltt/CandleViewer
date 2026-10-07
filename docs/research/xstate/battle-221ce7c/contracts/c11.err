@@ -1,15 +1,15 @@
 ERROR:xstate_statemachine.base_interpreter:🔥 Guard 'tightens_only' raised an exception while evaluating event 'TIGHTEN_SL'; guardErrorPolicy='raise'.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4896, in _is_guard_satisfied
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4896, in _is_guard_satisfied
     self._call_with_optional_params(
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
         guard_callable, self.context, event, params
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5045, in _call_with_optional_params
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5045, in _call_with_optional_params
     return fn(context, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\cvlib.py", line 144, in fn
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\cvlib.py", line 144, in fn
     raise RuntimeError("guard-boom:" + n)
 RuntimeError: guard-boom:tightens_only
 ERROR:xstate_statemachine.sync_interpreter:🛑 Exceeded 1000 self-generated events in a single macrostep on 'position_protection'. An action raises or sends the event that triggers it. Discarding the self-generated tail; every event the caller queued is still processed.

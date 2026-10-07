@@ -2,12 +2,12 @@ ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered th
 WARNING:xstate_statemachine.interpreter:⚠️ Interpreter 'kill_switch' is error; dropping event 'RETRY_FLATTEN'. Nothing drains the queue after shutdown, so queuing here would leak.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'audit_live_enabled' raised while handling event 'ENABLE_REQUESTED'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3196, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3196, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1910, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1910, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 81, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 81, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:audit_live_enabled
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'live_gate.eligible' failed; rolling back to the pre-transition configuration.

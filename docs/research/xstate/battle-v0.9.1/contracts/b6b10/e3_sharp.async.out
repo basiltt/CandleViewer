@@ -1,88 +1,88 @@
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
@@ -90,12 +90,12 @@ ERROR:xstate_statemachine.interpreter:🔁 Exceeded 7 microsteps while settling 
 WARNING:xstate_statemachine.interpreter:🛟 Chain budget reached on 'chase' while an engine completion ('done.invoke.arm') was pending; delivering it, then cutting the self-generated tail.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.arm'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'chase.arming' failed; rolling back to the pre-transition configuration.
@@ -105,56 +105,56 @@ PASS [async]#207/B7 (native shape): chain cut is observable (stranded hook + dor
 PASS [async]#207/B7 (native shape): plateau is maxIterations+2/+3 (deterministic)  | {"plateau": 10, "limit": 7, "over": 3, "state": ["chase.arming"], "tripped": true}
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.submitting_slice' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.submitting_slice' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.submitting_slice' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.submitting_slice' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.submitting_slice' failed; rolling back to the pre-transition configuration.
@@ -162,12 +162,12 @@ ERROR:xstate_statemachine.interpreter:🔁 Exceeded 5 microsteps while settling 
 WARNING:xstate_statemachine.interpreter:🛟 Chain budget reached on 'twap' while an engine completion ('done.invoke.slice') was pending; delivering it, then cutting the self-generated tail.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_child
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.submitting_slice' failed; rolling back to the pre-transition configuration.
@@ -177,56 +177,56 @@ PASS [async]#207/B6 (overlay): chain cut is observable (stranded hook + dormant)
 PASS [async]#207/B6 (overlay): plateau is maxIterations+2/+3 (deterministic)  | {"plateau": 7, "limit": 5, "over": 2, "state": ["twap.submitting_slice"], "tripped": true}
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_fire' raised while handling event 'done.invoke.act'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_fire
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'rule_instance.acting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_fire' raised while handling event 'done.invoke.act'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_fire
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'rule_instance.acting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_fire' raised while handling event 'done.invoke.act'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_fire
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'rule_instance.acting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_fire' raised while handling event 'done.invoke.act'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_fire
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'rule_instance.acting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_fire' raised while handling event 'done.invoke.act'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_fire
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'rule_instance.acting' failed; rolling back to the pre-transition configuration.
@@ -234,12 +234,12 @@ ERROR:xstate_statemachine.interpreter:🔁 Exceeded 6 microsteps while settling 
 WARNING:xstate_statemachine.interpreter:🛟 Chain budget reached on 'rule_instance' while an engine completion ('done.invoke.act') was pending; delivering it, then cutting the self-generated tail.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_fire' raised while handling event 'done.invoke.act'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\cv09.py", line 143, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:record_fire
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'rule_instance.acting' failed; rolling back to the pre-transition configuration.

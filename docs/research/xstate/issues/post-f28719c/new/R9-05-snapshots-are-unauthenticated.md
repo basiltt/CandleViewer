@@ -104,5 +104,5 @@ We HMAC-tag control-plane snapshots and refuse `version < 1` in our own envelope
 - Date: 2026-09-22
 - Python: CPython 3.13.7 (`.venv-main`)
 - Commit: `f28719c` (unreleased 0.8.1; `__version__` reports `0.8.0`)
-- cwd used: `C:\Users\basil` (neutral, outside both repos)
+- cwd used: `<home>` (neutral, outside both repos)
 - Exit codes: `R9-05_snapshots_are_unauthenticated.py` → **1** (both demonstrations reproduce fresh: consistent forgery accepted/relocated; all 3/3 version-downgrade forms accepted into a drifted machine)

@@ -16,6 +16,7 @@ from __future__ import annotations
 import ast
 import importlib
 import re
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -254,16 +255,40 @@ def test_no_gate_script_hard_codes_a_home_directory() -> None:
     assert offenders == []
 
 
-_OWNER_PATH = re.compile(rb"(?i)(C:[\/]+Users|(?<![\w.])/Users/|(?<![\w.])/home/[A-Za-z])")
+_OWNER_PATH = re.compile(
+    rb"(?i)(?:[A-Za-z]:[\\/]+Users[\\/]+\w|(?<![\w.])/Users/\w|(?<![\w.])/home/\w)"
+)
+_MAX_SCAN_BYTES = 8 * 1024 * 1024
+
+
+def _tracked_research_files(xs: Path) -> list[Path]:
+    try:
+        out = subprocess.run(  # noqa: S603 - fixed argv, no user input
+            ["git", "ls-files", "-z", "--", str(xs)],  # noqa: S607
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            check=True,
+        ).stdout
+        files = [_REPO_ROOT / name.decode() for name in out.split(b"\0") if name]
+    except (OSError, subprocess.CalledProcessError):
+        files = [p for p in xs.rglob("*") if p.is_file()]
+    return [p for p in files if p.is_file()]
+
+
+def test_owner_path_pattern_catches_every_shape() -> None:
+    for shape in (rb"C:\Users\x\y", rb"C:\\Users\\x", b"C:/Users/x", b"/home/x", b"/Users/x"):
+        assert _OWNER_PATH.search(shape), shape
+    assert not _OWNER_PATH.search(b"docs/research/xstate/<home>/x")
 
 
 def test_no_research_file_contains_an_owner_specific_path() -> None:
-    # #1963: every committed file under docs/research/xstate (results, logs, write-ups)
+    # #1963: every tracked file under docs/research/xstate (results, logs, write-ups)
     # must use <workspace>/<home> placeholders, never a developer's absolute path.
     xs = _REPO_ROOT / "docs" / "research" / "xstate"
-    offenders = [
-        str(path.relative_to(xs))
-        for path in sorted(xs.rglob("*"))
-        if path.is_file() and _OWNER_PATH.search(path.read_bytes())
-    ]
+    offenders = []
+    for path in _tracked_research_files(xs):
+        assert path.stat().st_size <= _MAX_SCAN_BYTES, f"{path} too large to scan"
+        data = path.read_bytes()
+        if (b"sers" in data or b"SERS" in data or b"/home/" in data) and _OWNER_PATH.search(data):
+            offenders.append(str(path.relative_to(xs)))
     assert offenders == []

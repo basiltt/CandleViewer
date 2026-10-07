@@ -1,5 +1,5 @@
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\g2_b11_fix.py", line 22, in <module>
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\g2_b11_fix.py", line 22, in <module>
     from g1_b11_b12 import b11_stub, _bad  # noqa: E402
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'g1_b11_b12'

@@ -144,7 +144,7 @@
     1 on_interpreter_start {}
     2 on_transition {'source': []}
     3 on_event_received {'type': 'LOOP'}
-    4 on_action_execute {'action': 'rechain'}C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-5e07ba8\observability\probe_matrix.py:394: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:
+    4 on_action_execute {'action': 'rechain'}<workspace>\CandleViewer\docs\research\xstate\battle-5e07ba8\observability\probe_matrix.py:394: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:
   m_snf.a: on 'GO' -> target 'does.not.exist' does not resolve
   (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)
   machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)

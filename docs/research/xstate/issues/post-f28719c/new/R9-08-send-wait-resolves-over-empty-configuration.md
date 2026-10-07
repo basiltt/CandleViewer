@@ -103,5 +103,5 @@ We rate this **Medium, not High**, precisely because the persistence door is shu
 - Date: 2026-09-22
 - Python: CPython 3.13.7 (`.venv-main`)
 - Commit: `f28719c` (unreleased 0.8.1; `__version__` reports `0.8.0`)
-- cwd used: `C:\Users\basil` (neutral, outside both repos)
+- cwd used: `<home>` (neutral, outside both repos)
 - Exit codes: `R9-08_send_wait_resolves_over_empty_configuration.py` → **1** (async/`async def` cell: 1 empty_hit, success-shaped receipt coincident with `SnapshotMidStepError` at lap 0; async/`def` and sync/`def` cells clean, 0 empty_hits)

@@ -1,5 +1,5 @@
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\f9_c04_c07b.py", line 12, in <module>
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\f9_c04_c07b.py", line 12, in <module>
     import cvf as K  # noqa: E402
     ^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'cvf'
