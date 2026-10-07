@@ -29,6 +29,11 @@ before commit.
   vol:0.25, one bar per line). Source: same corpus, date, symbol and env as above; redaction: derived
   output of an already-redacted corpus, no identifiers. Regenerate with
   `CV_REGEN_GOLDEN=1 pytest tests/unit/bars/test_activity_builders_golden.py` and review the diff.
+- `golden/bars/threshold_bars_BTCUSDT.jsonl` — E12-S03 range/delta bars (range:20, delta:1,
+  delta:2, one bar per line; the ticket's `delta:500` is replaced by delta:1/2 because it would
+  yield a single bar on this 137 BTC day). Source: same corpus, date, symbol and env as
+  above; redaction: derived output of an already-redacted corpus, no identifiers. Regenerate with
+  `CV_REGEN_GOLDEN=1 pytest tests/unit/bars/test_threshold_builders_golden.py` and review the diff.
 
 ## Scripts
 

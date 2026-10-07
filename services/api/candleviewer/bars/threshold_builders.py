@@ -71,6 +71,7 @@ class RangeBarUpdate(ActivityBarUpdate):
 
 
 def _check_rate(b: _ThresholdBuilder, n_trades: int) -> None:
+    # Same-module helper; reads the builder's counters directly (cosmetic, kept deliberately).
     if not b._warned and n_trades >= _RATE_WARN_MIN_TRADES and b._n_bars * 10 >= n_trades * 9:
         b._warned = True
         _log.warning(
