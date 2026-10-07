@@ -34,6 +34,9 @@ before commit.
   yield a single bar on this 137 BTC day). Source: same corpus, date, symbol and env as
   above; redaction: derived output of an already-redacted corpus, no identifiers. Regenerate with
   `CV_REGEN_GOLDEN=1 pytest tests/unit/bars/test_threshold_builders_golden.py` and review the diff.
+- `golden/bigtrade/` — E22-T04 big-trade golden (trades input, expected events for three
+  configurations, `algo_version`). Provenance, deviation (2.99 h window, not a symbol-day) and
+  regeneration (needs an `ALGO_VERSION` bump): see `golden/bigtrade/README.md`.
 
 ## Scripts
 

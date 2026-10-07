@@ -1,0 +1,55 @@
+{
+  "algo_version": "bigtrade-1",
+  "cases": {
+    "notional_100000_cluster_250ms_1tick": {
+      "config": {
+        "cluster_tolerance_ticks": 1,
+        "cluster_window_ms": 250,
+        "mode": "notional",
+        "percentile_window_ms": 3600000,
+        "value": "100000"
+      },
+      "counts": {
+        "advisory": 0,
+        "clusters": 532,
+        "flagged": 0,
+        "threshold": 360
+      },
+      "sha256": "5896d4e855084c7489abec4bad757aee1dcc6cc7ae07707f77359badefd81ccd"
+    },
+    "notional_250000": {
+      "config": {
+        "cluster_tolerance_ticks": 0,
+        "cluster_window_ms": 0,
+        "mode": "notional",
+        "percentile_window_ms": 3600000,
+        "value": "250000"
+      },
+      "counts": {
+        "advisory": 0,
+        "clusters": 0,
+        "flagged": 0,
+        "threshold": 360
+      },
+      "sha256": "8dddfce9687f6714df609556213037c7f3eb013897d3565efbaf16f22b9bd29f"
+    },
+    "percentile_99_1h": {
+      "config": {
+        "cluster_tolerance_ticks": 0,
+        "cluster_window_ms": 0,
+        "mode": "percentile",
+        "percentile_window_ms": 3600000,
+        "value": "99"
+      },
+      "counts": {
+        "advisory": 1,
+        "clusters": 0,
+        "flagged": 24,
+        "threshold": 360
+      },
+      "sha256": "53b2ed860b8085c2e2b9991334c7bb91d0d7ba3f4f19a57cbf131d10582a5aa2"
+    }
+  },
+  "prints": 542,
+  "symbol": "BTCUSDT"
+}
