@@ -157,8 +157,8 @@ class BarUpdate(BaseModel):
 class BuilderState(BaseModel):
     """Envelope for a builder snapshot, persisted every 60 s per `(symbol, spec_hash)` (§3.2).
 
-    `blob` is the builder's msgpack-encoded draft; its layout is owned by each builder
-    implementation (E12-S01…S04) and versioned by `state_version`.
+    `blob` is the builder's versioned orjson JSON, see 24-internal §3.2; its layout is
+    owned by each builder implementation (E12-S01…S04) and versioned by `state_version`.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")

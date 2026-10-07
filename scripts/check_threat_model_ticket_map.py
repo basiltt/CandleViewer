@@ -8,10 +8,6 @@ section (heading containing "ticket" up to the next ``## ``). Tickets labelled
 ``retired`` are skipped. A missing key is a model defect. Grouped rows like
 ``E22-D01 / D02`` count.
 
-``BASELINE_GAPS`` records known pre-existing gaps (warned, not failed). It is a
-shrink-only ratchet: when the live gap set is a strict subset of the baseline the
-check FAILS until the stale keys are removed; new gaps beyond the baseline fail.
-
 Exit codes: 0 clean, 1 gaps, 2 internal error. Stdlib only.
 """
 
@@ -27,8 +23,6 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_RE = re.compile(r"^(e\d{2})-.+\.md$", re.IGNORECASE)
 HEADING_RE = re.compile(r"^#{2,3} .*ticket", re.IGNORECASE | re.MULTILINE)
 KEY_RE = re.compile(r"^E\d{2}-[A-Z]\d{2}$")
-# Known pre-existing gaps per epic. Empty: the baseline is exhausted; never add keys.
-BASELINE_GAPS: dict[str, frozenset[str]] = {}
 
 
 def _section(text: str) -> str | None:
@@ -53,13 +47,8 @@ def _mentioned(key: str, text: str) -> bool:
     return False
 
 
-def check(
-    root: Path = ROOT,
-    baseline: dict[str, frozenset[str]] | None = None,
-    warnings: list[str] | None = None,
-) -> list[str]:
+def check(root: Path = ROOT) -> list[str]:
     """Return GOV-008 violation messages (empty when clean)."""
-    base = BASELINE_GAPS if baseline is None else baseline
     tickets = json.loads(
         (root / "docs/plan/backlog/all-tickets.json").read_text(encoding="utf-8")
     )
@@ -80,18 +69,9 @@ def check(
         missing = {
             k for k in keys if k.startswith(epic + "-") and not _mentioned(k, section)
         }
-        known = base.get(epic, frozenset())
-        new = sorted(missing - known)
-        if new:
-            problems.append(f"GOV-008 {path.name}: ticket map missing {', '.join(new)}")
-        resolved = sorted(known - missing)
-        if resolved:
+        if missing:
             problems.append(
-                f"GOV-008 baseline for {epic} is stale - remove {', '.join(resolved)}"
-            )
-        elif missing and not new and warnings is not None:
-            warnings.append(
-                f"GOV-008 warning (baseline) {path.name}: missing {', '.join(sorted(missing))}"
+                f"GOV-008 {path.name}: ticket map missing {', '.join(sorted(missing))}"
             )
     return problems
 
@@ -101,12 +81,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", default=str(ROOT))
     args = parser.parse_args(argv)
     try:
-        warnings: list[str] = []
-        problems = check(Path(args.repo_root), warnings=warnings)
+        problems = check(Path(args.repo_root))
     except (OSError, ValueError, KeyError) as exc:
         print(f"GOV-008 internal error: {exc}", file=sys.stderr)
         return 2
-    for line in warnings + problems:
+    for line in problems:
         print(line)
     if problems:
         print("::error::GOV-008 threat model ticket map is incomplete")
