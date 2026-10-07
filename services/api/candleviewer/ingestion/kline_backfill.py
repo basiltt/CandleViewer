@@ -383,9 +383,9 @@ class KlineBackfillService:
         result: BackfillResult,
     ) -> None:
         """Fill `hole` page by page, newest sub-hole first. Ordering-agnostic: a full page
-        proves coverage only of the span it actually returned (the live port serves the newest `limit`
-        rows of a window, other ports may serve the oldest); a short page proves the whole
-        window. Raises `_Stop` to end the job; everything already persisted stays."""
+        proves coverage only of the span it actually returned (the live port serves the
+        newest `limit` rows of a window, other ports may serve the oldest); a short page
+        proves the whole window. Raises `_Stop` to end the job; everything persisted stays."""
         index = self._index_for(symbol, interval)
         while True:
             pending = index.holes(hole)
