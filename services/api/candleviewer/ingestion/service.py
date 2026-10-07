@@ -23,6 +23,8 @@ from candleviewer.ingestion.connection import PHASE_OPEN, ConnectionManager
 from candleviewer.ingestion.dispatch import FrameRoute, LaneSet
 from candleviewer.ingestion.instruments import utc_now_us
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
+from candleviewer.ingestion.kline_backfill import KlineBackfillService
+from candleviewer.ingestion.kline_read import KlineReadService
 from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.synthetic_feed import (
     SyntheticFeedGenerator,
@@ -112,6 +114,7 @@ class IngestionService:
         self._closers: list[Callable[[], Awaitable[None]]] = []
         #: E08-S03: ticker demand/merge/publish, attached with the public WS.
         self.tickers: TickerStream | None = None
+        self.klines: KlineReadService | None = None  # E12-S05, set by the composition root
         #: E08-S04: trade tape, attached with the public WS.
         self.trades: TradeStream | None = None
         #: E08-S05: reconstructed L2 book, attached with the public WS.
@@ -165,6 +168,12 @@ class IngestionService:
     def attach_ws(self, manager: ConnectionManager) -> None:
         """Hand this module ownership of the public WS connection lifecycle."""
         self.ws = manager
+
+    def attach_klines(self, service: KlineReadService, backfill: KlineBackfillService) -> None:
+        """E12-S05: kline read path; the backfill's tracked jobs are cancelled on stop."""
+        self.klines = service
+        # First: cancel backfill jobs before the shared REST client they page through closes.
+        self._closers.insert(0, backfill.aclose)
 
     def attach_tickers(self, stream: TickerStream) -> None:
         self.tickers = stream

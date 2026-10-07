@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from candleviewer.exchange.bybit.config import RestClientConfig
 from candleviewer.exchange.bybit.funding import BybitFundingFetcher
+from candleviewer.exchange.bybit.klines import BybitKlineFetcher, TickSizeFor
 from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
 from candleviewer.exchange.bybit.public_ws import (
     PublicSocket,
@@ -70,6 +71,13 @@ class ExchangeBybitService:
         Public data always uses the live host (demo has no public feed)."""
         base = "https://api-testnet.bybit.com" if env == "testnet" else "https://api.bybit.com"
         return BybitRestClient(RestClientConfig(base_url=base))
+
+    @staticmethod
+    def kline_fetcher(
+        client: BybitRestClient, tick_size_for: TickSizeFor | None = None
+    ) -> BybitKlineFetcher:
+        """E12-S05: validated kline pages over a public governed client (`MARKET_DATA`)."""
+        return BybitKlineFetcher(client, tick_size_for)
 
     @classmethod
     def funding_fetcher(cls, env: str) -> tuple[BybitFundingFetcher, Callable[[], Awaitable[None]]]:

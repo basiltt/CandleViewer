@@ -77,14 +77,23 @@ class FakeMarketDataRepository:
         return sorted(rows, key=lambda r: r.ts_us)
 
     async def read_klines(
-        self, sym: str, interval: str, rng: TimeRange, tier: str = "auto"
+        self,
+        sym: str,
+        interval: str,
+        rng: TimeRange,
+        tier: str = "auto",
+        limit: int | None = None,
     ) -> list[KlineRow]:
         rows = [
             r
             for (s, i, _ts), r in self._klines.items()
             if s == sym and i == interval and _in_range(r.ts_us, rng)
         ]
-        return sorted(rows, key=lambda r: r.ts_us)
+        rows.sort(key=lambda r: r.ts_us)
+        return rows if limit is None else rows[-limit:] if limit else []
+
+    async def first_trade_us(self, sym: str) -> int | None:
+        return min((r.ts_us for r in self._trades.values() if r.symbol == sym), default=None)
 
     async def read_trades(self, sym: str, rng: TimeRange, tier: str = "auto") -> list[TradeRow]:
         rows = [r for r in self._trades.values() if r.symbol == sym and _in_range(r.ts_us, rng)]

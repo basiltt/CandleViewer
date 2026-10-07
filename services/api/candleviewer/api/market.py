@@ -48,6 +48,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
+from candleviewer.ingestion.kline_read import SOURCE_HOT, KlineReadService
 from candleviewer.storage.errors import StorageTierUnavailable
 from candleviewer.storage.models import TierHint, TimeRange
 
@@ -59,6 +60,14 @@ _DEFAULT_LIMIT = 1000
 #: exchange-compatible interval codes, mirrors `22-api-openapi.yaml`'s
 #: `KlineInterval` enum — kept as a plain tuple (not an import from
 #: `exchange.base`) so this router never needs an edge into `exchange.*`.
+_MIN_US = 60_000_000
+#: Bar width per interval for the window cap; `M` uses 31 days (its longest month).
+_INTERVAL_US: dict[str, int] = {
+    **{c: int(c) * _MIN_US for c in ("1", "3", "5", "15", "30", "60", "120", "240", "360", "720")},
+    "D": 1440 * _MIN_US,
+    "W": 7 * 1440 * _MIN_US,
+    "M": 31 * 1440 * _MIN_US,
+}
 _VALID_INTERVALS = (
     "1",
     "3",
@@ -144,7 +153,12 @@ class MarketDataCacheLike(Protocol):
     real `ctx.storage.market_data` (or a test fake)."""
 
     async def read_klines(
-        self, sym: str, interval: str, rng: TimeRange, tier: TierHint = "auto"
+        self,
+        sym: str,
+        interval: str,
+        rng: TimeRange,
+        tier: TierHint = "auto",
+        limit: int | None = None,
     ) -> Sequence[KlineRowLike]: ...
 
 
@@ -165,9 +179,13 @@ def _parse_time(value: str | None, *, default: datetime | None) -> datetime | No
     return parsed
 
 
+def _iso(ts_us: int) -> str:
+    return datetime.fromtimestamp(ts_us / 1_000_000, tz=UTC).isoformat()
+
+
 def _row_to_bar(row: KlineRowLike) -> dict[str, object]:
     return {
-        "t": datetime.fromtimestamp(row.ts_us / 1_000_000, tz=UTC).isoformat(),
+        "t": _iso(row.ts_us),
         "o": row.open,
         "h": row.high,
         "l": row.low,
@@ -183,6 +201,8 @@ def make_market_router(
     *,
     coverage_index_provider: CoverageIndexProvider | None = None,
     principal_resolver: PrincipalResolver | None = None,
+    read_service_provider: Callable[[], KlineReadService | None] | None = None,
+    symbol_listed: Callable[[str], bool] | None = None,
 ) -> APIRouter:
     """Bind `GET /market/klines` to a concrete cache reader.
 
@@ -207,6 +227,16 @@ def make_market_router(
     fail closed with `501` rather than silently serving unauthenticated
     reads (C-12.4, PR #1626 review) — RBAC on this route ("marketdata:read")
     is enforced here, server-side, never left to the UI to hide a button.
+
+    E12-S05: when `read_service_provider` yields a `KlineReadService`, reads go through it
+    (cold + hot tiers merged; exchange backfill started in the background for hot holes and
+    never awaited) and `meta.sources` / `meta.recording_started_at` come from it.
+
+    SR-E12-08 (#2045 security review): a read that can start an exchange backfill is only
+    served for a symbol `symbol_listed` accepts (instrument catalogue); an unknown symbol is
+    `422` (declared by the route) before any read, job or per-key state. With a read service
+    but no catalogue check wired, the route fails closed (`503`). The window may span at
+    most `limit` bars (`422`), and `limit` is pushed into the hot-tier query.
     """
     router = APIRouter(tags=["market-data"])
 
@@ -276,10 +306,33 @@ def make_market_router(
             start_us=int(start_dt.timestamp() * 1_000_000),
             end_us=int(end_dt.timestamp() * 1_000_000),
         )
-        rows = await cache.read_klines(symbol, interval, rng)
+        if rng.end_us - rng.start_us > limit * _INTERVAL_US[interval]:
+            return _problem(
+                422, "Unprocessable entity", "the from/to window spans more than 'limit' bars"
+            )
+        service = read_service_provider() if read_service_provider is not None else None
+        if service is not None and symbol_listed is None:
+            return _problem(503, "Service unavailable", "instrument catalogue is not wired")
+        if symbol_listed is not None and not symbol_listed(symbol):
+            # 422, not 404: the only client-error statuses this route declares are 400/422.
+            return _problem(422, "Unprocessable entity", "unknown instrument")
+        recording_started: str | None = None
+        rows: list[KlineRowLike]
+        if service is not None:
+            # +1: room for the forming bar, which `include_open=false` drops below.
+            read = await service.read(
+                symbol, interval, Range(rng.start_us, rng.end_us), limit=limit + 1
+            )
+            rows = list[KlineRowLike](read.rows)
+            sources = read.sources
+            if read.recording_started_at_us is not None:
+                recording_started = _iso(read.recording_started_at_us)
+        else:
+            rows = list(await cache.read_klines(symbol, interval, rng, limit=limit + 1))
+            sources = [SOURCE_HOT] if rows else []
         if not include_open:
             rows = [r for r in rows if r.confirmed]
-        rows = rows[:limit]
+        rows = rows[-limit:]  # newest `limit` (the window cap makes this the whole window)
 
         holes: list[dict[str, int]] = []
         if coverage_index_provider is not None:
@@ -299,8 +352,8 @@ def make_market_router(
                 "next_cursor": None,
                 "has_more": False,
                 "count": len(rows),
-                "sources": ["questdb"] if rows else [],
-                "recording_started_at": None,
+                "sources": sources,
+                "recording_started_at": recording_started,
                 "generated_at": datetime.now(UTC).isoformat(),
                 "coverage_holes": holes,
             },

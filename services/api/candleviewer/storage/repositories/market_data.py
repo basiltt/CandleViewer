@@ -86,15 +86,22 @@ class MarketDataRepository(Protocol):
         interval: str,
         rng: TimeRange,
         tier: TierHint = "auto",
+        limit: int | None = None,
     ) -> list[KlineRow]:
         """Read klines for `(sym, interval)` within `rng`, ascending `ts_us`
-        (E08-S06 cache-first read path)."""
+        (E08-S06 cache-first read path). `limit` keeps the **newest** `limit` rows and is
+        applied in the query, so a wide window never loads every row (E12-S05)."""
         ...
 
     async def read_trades(
         self, sym: str, rng: TimeRange, tier: TierHint = "auto"
     ) -> list[TradeRow]:
         """Read trades for `sym` within `rng`, ascending `(ts_us, trade_id)`."""
+        ...
+
+    async def first_trade_us(self, sym: str) -> int | None:
+        """Open time (µs) of the oldest stored trade for `sym` (where recorded tape begins),
+        or `None` when no tape exists (E12-S05 `meta.recording_started_at`)."""
         ...
 
     async def read_book_snapshot_at(

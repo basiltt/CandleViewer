@@ -18,6 +18,7 @@ from candleviewer.storage.models import TierHint, TimeRange
 from candleviewer.storage.questdb.ilp_writer import IlpWriter
 from candleviewer.storage.questdb.reader import (
     QuestDbReader,
+    build_first_trade,
     build_latest_ticker,
     build_read_bars,
     build_read_book_deltas,
@@ -208,10 +209,17 @@ class QuestDbMarketDataRepository:
         ]
 
     async def read_klines(
-        self, sym: str, interval: str, rng: TimeRange, tier: TierHint = "auto"
+        self,
+        sym: str,
+        interval: str,
+        rng: TimeRange,
+        tier: TierHint = "auto",
+        limit: int | None = None,
     ) -> list[KlineRow]:
         self._check_symbol(sym)
-        rows = await self._reader.run(build_read_klines(sym, interval, rng))
+        rows = await self._reader.run(build_read_klines(sym, interval, rng, limit))
+        if limit is not None:
+            rows = sorted(rows, key=lambda r: int(str(r["ts"])))
         return [
             KlineRow(
                 ts_us=int(str(r["ts"])),
@@ -228,6 +236,11 @@ class QuestDbMarketDataRepository:
             )
             for r in rows
         ]
+
+    async def first_trade_us(self, sym: str) -> int | None:
+        self._check_symbol(sym)
+        rows = await self._reader.run(build_first_trade(sym))
+        return int(str(rows[0]["ts"])) if rows else None
 
     async def read_trades(
         self, sym: str, rng: TimeRange, tier: TierHint = "auto"

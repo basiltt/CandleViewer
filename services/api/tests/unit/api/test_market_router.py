@@ -13,6 +13,7 @@ despite `22-api-openapi.yaml`'s `x-rbac: {permissions: [marketdata:read]}`
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import ClassVar
 
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
@@ -40,7 +41,7 @@ class _FakeCache:
     calls: list[tuple[str, str, TimeRange]] = field(default_factory=list)
 
     async def read_klines(
-        self, sym: str, interval: str, rng: TimeRange, tier: str = "auto"
+        self, sym: str, interval: str, rng: TimeRange, tier: str = "auto", limit: int | None = None
     ) -> list[_FakeRow]:
         self.calls.append((sym, interval, rng))
         return [r for r in self.rows if rng.start_us <= r.ts_us < rng.end_us]
@@ -215,3 +216,120 @@ class TestGetKlinesAuthorization:
             },
         )
         assert resp.status_code == 200
+
+
+class TestGetKlinesReadService:
+    """E12-S05: tier-merged reads; `meta.sources` and `meta.recording_started_at` on every
+    response (OpenAPI `DataMeta`)."""
+
+    _P: ClassVar[dict[str, str]] = {
+        "symbol": "BTCUSDT", "interval": "1", "from": "1970-01-01T00:00:00Z",
+        "to": "1970-01-01T00:03:00Z",
+    }  # fmt: skip
+
+    def _client_with(self, service: object) -> TestClient:
+        app = FastAPI()
+        app.include_router(
+            make_market_router(
+                lambda: _FakeCache(),
+                principal_resolver=_AUTHORIZED,
+                read_service_provider=lambda: service,  # type: ignore[arg-type,return-value]  # duck-typed fake service
+                symbol_listed=lambda s: s == "BTCUSDT",
+            )
+        )
+        return TestClient(app, client=("127.0.0.1", 50000))
+
+    def test_meta_sources_and_recording_started_at_from_read_service(self) -> None:
+        from candleviewer.ingestion.kline_read import KlineRead
+
+        class _Svc:
+            async def read(
+                self, symbol: str, interval: str, rng: object, limit: int | None = None
+            ) -> KlineRead:
+                rows = [_FakeRow(ts_us=0), _FakeRow(ts_us=60_000_000)]
+                return KlineRead(rows, ["parquet", "questdb", "exchange_rest"],  # type: ignore[arg-type]  # _FakeRow lacks .source
+                                 120_000_000, [], True)  # fmt: skip
+
+        body = self._client_with(_Svc()).get("/market/klines", params=self._P).json()
+        assert body["meta"]["sources"] == ["parquet", "questdb", "exchange_rest"]
+        assert body["meta"]["recording_started_at"] == "1970-01-01T00:02:00+00:00"
+        assert len(body["bars"]) == 2
+
+    def test_cache_only_meta_is_questdb_and_null_recording_start(self) -> None:
+        cache = _FakeCache(rows=[_FakeRow(ts_us=0)])
+        body = _client(cache).get("/market/klines", params=self._P).json()
+        assert body["meta"]["sources"] == ["questdb"]
+        assert body["meta"]["recording_started_at"] is None
+        empty = _client(_FakeCache()).get("/market/klines", params=self._P).json()
+        assert empty["meta"]["sources"] == [] and "recording_started_at" in empty["meta"]
+
+    def test_provider_returning_none_falls_back_to_cache(self) -> None:
+        body = self._client_with(None).get("/market/klines", params=self._P).json()
+        assert body["meta"]["sources"] == []
+
+
+class TestGetKlinesSecurityReview:
+    """#2045 security review: SR-E12-08 symbol gate (blocking) and the window cap (medium)."""
+
+    _P: ClassVar[dict[str, str]] = {
+        "interval": "1", "from": "1970-01-01T00:00:00Z", "to": "1970-01-01T00:03:00Z",
+    }  # fmt: skip
+
+    def _wired(self, listed: object) -> tuple[TestClient, object, object]:
+        from candleviewer.exchange.base.models import KlineEvent
+        from candleviewer.ingestion.kline_backfill import KlineBackfillService
+        from candleviewer.ingestion.kline_read import KlineReadService
+
+        fetches: list[str] = []
+
+        async def fetch(symbol: str, *a: object, **kw: object) -> list[KlineEvent]:
+            fetches.append(symbol)
+            return []
+
+        class _Hot:
+            async def read_klines(self, *a: object, **kw: object) -> list[object]:
+                return []
+
+            async def write_klines(self, rows: object) -> None: ...
+
+        backfill = KlineBackfillService(fetch_klines=fetch, cache=_Hot())  # type: ignore[arg-type]  # structural fakes
+        service = KlineReadService(_Hot(), backfill=backfill)  # type: ignore[arg-type]  # structural fake
+        app = FastAPI()
+        app.include_router(
+            make_market_router(
+                lambda: _FakeCache(), principal_resolver=_AUTHORIZED,
+                read_service_provider=lambda: service,
+                symbol_listed=listed,  # type: ignore[arg-type]  # None or a predicate
+            )
+        )  # fmt: skip
+        return TestClient(app, client=("127.0.0.1", 50000)), backfill, fetches
+
+    def test_many_unknown_symbols_start_no_job_no_fetch_no_state(self) -> None:
+        client, backfill, fetches = self._wired(lambda s: s == "BTCUSDT")
+        for i in range(200):
+            r = client.get("/market/klines", params={**self._P, "symbol": f"JUNK{i}"})
+            assert r.status_code == 422
+        assert fetches == []
+        assert backfill._jobs == {} and backfill._locks == {}  # type: ignore[attr-defined]  # private state under test
+        assert backfill.tracked_keys == 0  # type: ignore[attr-defined]  # backfill is typed object here
+
+    def test_listed_symbol_is_served(self) -> None:
+        client, backfill, _ = self._wired(lambda s: s == "BTCUSDT")
+        r = client.get("/market/klines", params={**self._P, "symbol": "BTCUSDT"})
+        assert r.status_code == 200
+        assert backfill.tracked_keys == 1  # type: ignore[attr-defined]  # backfill is typed object here
+
+    def test_read_service_without_catalogue_fails_closed_503(self) -> None:
+        client, _, fetches = self._wired(None)
+        r = client.get("/market/klines", params={**self._P, "symbol": "BTCUSDT"})
+        assert r.status_code == 503 and fetches == []
+
+    def test_window_spanning_more_than_limit_bars_is_422(self) -> None:
+        cache = _FakeCache()
+        client = _client(cache)
+        params = {"symbol": "BTCUSDT", "interval": "1", "from": "2020-01-01T00:00:00Z",
+                  "to": "2024-01-01T00:00:00Z", "limit": "5000"}  # fmt: skip
+        assert client.get("/market/klines", params=params).status_code == 422
+        assert cache.calls == []  # rejected before any read
+        ok = {**params, "from": "2023-12-29T00:00:00Z"}  # 3 days = 4 320 bars <= 5 000
+        assert client.get("/market/klines", params=ok).status_code == 200
