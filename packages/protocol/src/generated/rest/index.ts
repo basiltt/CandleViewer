@@ -1635,7 +1635,20 @@ export interface paths {
      *     | `heikin_ashi` | underlying time interval                        | `5`            |
      *
      *     Non-time bars are **not** anchored to wall-clock; each bar carries `open_time` and
-     *     `close_time` derived from its first/last trade. A request whose window starts before
+     *     `close_time` derived from its first/last trade.
+     *
+     *     **Ordering and identity (#2014).** A bar's identity is `(series, generation, index)`
+     *     (21 §4.8, 24 §3.1). The response serves exactly one generation: the series' current
+     *     generation, pinned for the whole request (ADR-0033 Decision 2), never a mix. `bars` is
+     *     ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire). `t` MAY
+     *     repeat for non-time bars (an N-threshold print yields N volume bars or renko bricks with
+     *     one open time; two tick bars can open in the same ms). Clients MUST key bars by
+     *     `(generation, index)`, never by `t`. Every bar returned here carries `index` and
+     *     `generation` (they stay optional in the shared `Bar` schema only because
+     *     `/market/klines` also uses it). Pagination follows C3: `next_cursor` is opaque, encodes
+     *     the pinned `(generation, index)`, and resumes after the last returned `index` in that
+     *     generation; if the generation was swapped since, the server returns `invalid_cursor` and
+     *     the client restarts. A request whose window starts before
      *     `recording_started_at` returns `no_data_recorded` (422) rather than silently
      *     substituting REST klines, because tick-accurate construction is impossible there.
      */
@@ -4165,14 +4178,24 @@ export interface components {
       confirm?: boolean;
       cvd?: components["schemas"]["Decimal"] | null;
       delta?: components["schemas"]["Decimal"] | null;
+      /**
+       * Format: int64
+       * @description ADR-0033 series generation (= epoch); 0 until ADR-0033 is ratified. Always present on /market/bars.
+       */
+      generation?: number;
       h: components["schemas"]["Decimal"];
+      /**
+       * Format: int64
+       * @description Bar index, strictly increasing within (series, generation) (24 §3.1). Always present on /market/bars; `t` may repeat for non-time bars (#2014).
+       */
+      index?: number;
       l: components["schemas"]["Decimal"];
       max_delta?: components["schemas"]["Decimal"] | null;
       min_delta?: components["schemas"]["Decimal"] | null;
       o: components["schemas"]["Decimal"];
       /**
        * Format: date-time
-       * @description Bar open time.
+       * @description Bar open time; not unique for non-time bars.
        */
       t: string;
       trades?: number;

@@ -61,6 +61,8 @@ describe("generated bar types", () => {
     const update: bars.BarUpdate = { kind: "close", bar };
     type WireBar = ws.BarsSymbolBarTypeParam["bars"][number];
     const wire: WireBar = {
+      generation: 0,
+      index: bar.index,
       t_ms: Math.floor(bar.open_time / 1000),
       o: bar.open,
       h: bar.high,

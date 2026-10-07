@@ -2483,9 +2483,11 @@ CREATE TABLE bars_time (
   value_area_low  DOUBLE,
   imbalance_count INT,            -- stacked diagonal imbalances in this bar
   is_closed       BOOLEAN,
-  build_version   INT             -- bumped when the builder algorithm changes → triggers rebuild
+  build_version   INT,            -- bumped when the builder algorithm changes → triggers rebuild
+  generation      LONG,           -- ADR-0033 series generation (= epoch); 0 for live series until ADR-0033 ratified
+  index           LONG            -- Bar.index (24 §3.1): strictly increasing per (symbol, bar_param, generation)
 ) TIMESTAMP(ts) PARTITION BY MONTH WAL
-  DEDUP UPSERT KEYS(ts, symbol, bar_param);
+  DEDUP UPSERT KEYS(ts, symbol, bar_param, generation, index);   -- #2014; lands with migration 0004
 ```
 
 Identical column set (differing only in `bar_param` semantics) for:
@@ -2499,11 +2501,13 @@ Identical column set (differing only in `bar_param` semantics) for:
 | `bars_renko`  | `renko:10`                          | brick size in ticks |
 | `bars_delta`  | `delta:500`                         |                     | cumulative delta | ≥ N |
 
+**Bar identity is `(bar_param, generation, index)`, not `ts` (#2014).** Non-time bars (tick, volume, range, renko, delta) can legitimately share an open time: a print spanning N volume thresholds or N renko bricks yields N bars with one `ts`, and two tick bars can open in the same ms. Keyed on `(ts, symbol, bar_param)` those rows upsert onto each other and the stored series loses bars (BI-1 breaks). Index alone is not enough either: an ADR-0033 rebuild re-writes the same `(ts, index)` pairs under a new generation before the current-generation pointer flips, and an epoch restart (tick-size change) restarts `index`. So **all six** `bars_*` tables carry `generation LONG` and `index LONG` and key on `(ts, symbol, bar_param, generation, index)`; a rebuild never overwrites the pinned generation's rows, which keeps ADR-0033 Decision 2's generation swap and reader pinning intact. ADR-0033's **epoch** maps onto `generation` (an epoch change "restarts index, new generation"), so there is no separate epoch column: every epoch is a generation, and a reader only ever needs the pinned generation. `generation = 0` for every live series until ADR-0033 is ratified. `bars_time` uses the same key (unique open time by construction, but one DDL / `BarWriter` row / read path for every family). `ts` stays because QuestDB requires the designated timestamp in every DEDUP key. Reads filter on the pinned generation and order by `index`. Synthetic `densify()` fillers repeat an index but are never persisted (24 §3.1). Migration: §9.5.
+
 `bars_renko` and `bars_range` additionally carry `open_source_ts` (the timestamp of the trade that opened the brick) because their bars are not time-aligned.
 
 All six tables also carry two integrity columns added by `backend/db/questdb/0003_bars_integrity_columns.sql` (E12-T02, requested by the E12-X01 STRIDE model): `source SYMBOL CAPACITY 8 CACHE` (`tape` | `kline` | `parquet`; a kline row is refused over a tape row for rows written by this process; the stored-row check lands with E12-T05, #1996) and `row_checksum LONG` (63-bit sha256 prefix over the value columns, verified on read). `bar_param` is rendered from the validated spec (`5m`, `tick:500`, …), never from client text.
 
-`row_checksum` is an **unkeyed** sha256 prefix: tamper-evidence against naive edits only (an attacker with write access can recompute it); an HMAC is out of scope for E12-T02. A NULL checksum is untrusted on read (integrity event, `reason=missing`) except for pre-0003 legacy rows, which have NULL `source` *and* NULL `row_checksum`. Source precedence: a `kline` row is refused over a `tape`/`parquet` row written by this process (stored-row check: E12-T05, #1996).
+`row_checksum` is an **unkeyed** sha256 prefix: tamper-evidence against naive edits only (an attacker with write access can recompute it); an HMAC is out of scope for E12-T02. A NULL checksum is untrusted on read (integrity event, `reason=missing`) except for pre-0003 legacy rows, which have NULL `source` _and_ NULL `row_checksum`. Source precedence: a `kline` row is refused over a `tape`/`parquet` row written by this process (stored-row check: E12-T05, #1996).
 
 Source precedence is enforced in `BarWriter` against rows written by the same process; the stored-row check belongs to the E12-T05 backfill caller (follow-up filed).
 
@@ -3011,6 +3015,17 @@ NAMING_CONVENTION = {
 | `0013_partitioning`           | convert `order_events` to monthly range partitions; attach initial partitions                                                                                                                                                              |
 
 ---
+
+### 9.5 QuestDB migration 0004 — `bars_*` DEDUP key gains `generation, index` (#2014)
+
+QuestDB cannot alter an existing table's `DEDUP UPSERT KEYS` column set to add a column not yet present, and changing the key of a populated table cannot repair rows already collapsed by the old key, so a re-keyed table must be **recreated**. Two paths:
+
+| Path                               | Steps                                                                                                                                                                                                                                                                                                    | Cost                                       |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| A. expand→migrate→contract (C-5.1) | `0004` creates `bars_*_v2` with the new key; `BarWriter` dual-writes; rebuild history into v2 from `trades`/Parquet (activity bars cannot be recovered from the collapsed v1 rows); readers switch; a later release drops v1                                                                             | 3 releases, dual-write code, a rebuild job |
+| B. drop-and-recreate               | `backend/db/questdb/0004_bars_key_by_index.sql` drops and recreates the six `bars_*` tables with `generation LONG` + `index LONG` and the new key (keeping `source`/`row_checksum` from 0003); bars are rebuilt from `trades` on demand (they are derived data, §8 retention: "rebuildable from trades") | one file; loses only derived rows          |
+
+**Recommended: B**, because R0 has no production data, `bars_*` is a derived cache of `trades` (never the system of record), and v1 rows of activity families are already corrupt where collisions occurred, so migrating them adds nothing. B is a destructive DDL change and therefore an **explicit owner decision** (#1778 item R); if the owner declines, path A applies. The 0004 file must be idempotent on an empty install, and its PR records the owner's acknowledgement.
 
 ## 10. Seed data
 

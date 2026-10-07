@@ -70,6 +70,14 @@ export interface BarsSymbolBarTypeParam {
   param: string;
   bars: {
     /**
+     * ADR-0033 series generation (= epoch); 0 until ratified. Part of the coalescing key (§8.2).
+     */
+    generation: number;
+    /**
+     * Bar index, strictly increasing within a generation; with generation, the coalescing key (§8.2). t_ms may repeat for non-time bars.
+     */
+    index: number;
+    /**
      * Bar open time.
      */
     t_ms: number;
