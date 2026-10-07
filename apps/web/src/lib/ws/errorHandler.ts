@@ -20,7 +20,10 @@ export function onWsError(listener: Listener): () => void {
 export function handleWsError(frame: WsErrorFrame): ErrorTreatment {
   const treatment = classifyError(frame.p.code);
   if (treatment.consoleError) {
-    console.error(`[ws] client-bug error ${frame.p.code}`, frame.p.message ?? "");
+    // Server-derived values go in as separate arguments, never in the format
+    // string: a `%s`/`%d` inside `code` or `message` must print literally
+    // (CodeQL js/tainted-format-string).
+    console.error("[ws] client-bug error", frame.p.code, frame.p.message ?? "");
   }
   for (const l of listeners) l(frame.p.code, treatment);
   return treatment;
