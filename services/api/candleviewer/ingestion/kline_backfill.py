@@ -47,6 +47,7 @@ import asyncio
 import functools
 import itertools
 import random
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
@@ -77,6 +78,8 @@ _PAGE_LIMIT = 1000
 #: SR-E12-08 ceilings (E12 STRIDE model, BR-33).
 MAX_PAGES_PER_JOB = 400
 MAX_CONSECUTIVE_RATE_LIMITS = 5
+#: Upper bound on `(symbol, interval)` keys whose coverage/lock state is kept in memory.
+MAX_TRACKED_KEYS = 512
 #: Progress `status` while a rate-limit backoff is pending: the UI shows "loading older bars…"
 #: over the partial result instead of blocking (E12-S05 "Rate limited").
 STATUS_LOADING_OLDER = "loading_older_bars"
@@ -242,6 +245,7 @@ class KlineBackfillService:
         max_consecutive_rate_limits: int = MAX_CONSECUTIVE_RATE_LIMITS,
         max_concurrent_jobs: int = 2,
         page_limit: int = _PAGE_LIMIT,
+        max_tracked_keys: int = MAX_TRACKED_KEYS,
     ) -> None:
         self._fetch_klines = fetch_klines
         self._cache = cache
@@ -255,15 +259,37 @@ class KlineBackfillService:
         self._max_limits = max(1, min(max_consecutive_rate_limits, MAX_CONSECUTIVE_RATE_LIMITS))
         self._page_limit = max(1, min(page_limit, _PAGE_LIMIT))
         self._job_slots = asyncio.Semaphore(max(1, max_concurrent_jobs))
-        self._coverage: dict[tuple[str, str], CoverageIndex] = {}
+        self._max_keys = max(1, max_tracked_keys)
+        self._coverage: OrderedDict[tuple[str, str], CoverageIndex] = OrderedDict()
         self._jobs: dict[tuple[str, str], asyncio.Task[BackfillResult]] = {}
         self._locks: dict[tuple[str, str], asyncio.Lock] = {}
 
     def _index_for(self, symbol: str, interval: str) -> CoverageIndex:
         key = (symbol, interval)
-        if key not in self._coverage:
-            self._coverage[key] = CoverageIndex()
-        return self._coverage[key]
+        index = self._coverage.get(key)
+        if index is None:
+            index = self._coverage[key] = CoverageIndex()
+            self._evict()
+        self._coverage.move_to_end(key)
+        return index
+
+    def _evict(self) -> None:
+        """LRU-bound the per-key state (SR-E12-08 defence in depth; the route also refuses
+        unknown symbols). A key with a running job is never evicted; an evicted key only
+        loses its in-memory coverage, which `load_coverage_from_cache` rebuilds."""
+        for key in list(self._coverage):
+            if len(self._coverage) <= self._max_keys:
+                break
+            if self.job_running(*key):
+                continue
+            del self._coverage[key]
+            lock = self._locks.get(key)
+            if lock is not None and not lock.locked():
+                del self._locks[key]
+
+    @property
+    def tracked_keys(self) -> int:
+        return len(self._coverage)
 
     def coverage(self, symbol: str, interval: str) -> CoverageIndex | None:
         """The in-memory coverage index (for `meta.coverage_holes`), if one exists."""
@@ -505,6 +531,7 @@ class KlineBackfillService:
 __all__ = [
     "MAX_CONSECUTIVE_RATE_LIMITS",
     "MAX_PAGES_PER_JOB",
+    "MAX_TRACKED_KEYS",
     "STATUS_LOADING_OLDER",
     "BackfillResult",
     "KlineBackfillError",

@@ -8,7 +8,8 @@ counted in `kline_crosscheck_divergence_total`, so persistent feed rot shows up 
 **Documented tolerance:** prices (o/h/l/c) must match within `price_ticks` ticks (default 0 —
 both sides come from the same exchange trades); volume within `volume_rel` relative error
 (default 0.1 %, absorbing exchange-side rounding of `size` into the kline volume). Bars present
-on only one side are not divergences (they are coverage gaps, reported elsewhere). Structurally
+on only one side, and forming bars (unconfirmed kline or unclosed tape bar), are not
+divergences (gaps are reported elsewhere; a forming bar is still moving). Structurally
 typed so `ingestion` never imports `bars` (C-3.1).
 """
 
@@ -42,11 +43,15 @@ class OhlcvLike(Protocol):
 class KlineLike(OhlcvLike, Protocol):
     @property
     def start(self) -> int: ...
+    @property
+    def confirmed(self) -> bool: ...
 
 
 class TapeBarLike(OhlcvLike, Protocol):
     @property
     def open_time(self) -> int: ...
+    @property
+    def closed(self) -> bool: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,10 +72,11 @@ def cross_check(
 ) -> list[Divergence]:
     """Return (and log + count) every bar whose OHLCV diverges beyond tolerance."""
     price_tol = (tick_size or Decimal(0)) * price_ticks
-    tape = {b.open_time: b for b in tape_bars}
+    # A3: only closed bars on both sides are comparable; a forming bar is still moving.
+    tape = {b.open_time: b for b in tape_bars if b.closed}
     out: list[Divergence] = []
     for k in klines:
-        bar = tape.get(k.start)
+        bar = tape.get(k.start) if k.confirmed else None
         if bar is None:
             continue
         bad = [f for f in _FIELDS if abs(getattr(k, f) - getattr(bar, f)) > price_tol]

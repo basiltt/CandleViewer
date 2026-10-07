@@ -55,7 +55,14 @@ def build_read_trades(sym: str, rng: TimeRange) -> QueryBuilder:
     return QueryBuilder(sql, (sym, rng.start_us, rng.end_us))
 
 
-def build_read_klines(sym: str, interval: str, rng: TimeRange) -> QueryBuilder:
+def build_first_trade(sym: str) -> QueryBuilder:
+    """Oldest stored trade for `sym` (one row; designated-timestamp ordered, bounded)."""
+    return QueryBuilder("SELECT ts FROM trades WHERE symbol = $1 ORDER BY ts LIMIT 1", (sym,))
+
+
+def build_read_klines(
+    sym: str, interval: str, rng: TimeRange, limit: int | None = None
+) -> QueryBuilder:
     """E08-S06 cache read: `klines WHERE symbol=$1 AND interval=$2 AND ts
     BETWEEN $3 AND $4 ORDER BY ts` — same three-property shape every other
     builder here follows (symbol equality, two-sided ts bound, ts-ordered)."""
@@ -63,7 +70,13 @@ def build_read_klines(sym: str, interval: str, rng: TimeRange) -> QueryBuilder:
         "SELECT * FROM klines WHERE symbol = $1 AND interval = $2 "
         "AND ts >= $3 AND ts < $4 ORDER BY ts"
     )
-    return QueryBuilder(sql, (sym, interval, rng.start_us, rng.end_us))
+    if limit is None:
+        return QueryBuilder(sql, (sym, interval, rng.start_us, rng.end_us))
+    # Newest `limit` rows (DESC + LIMIT); the repository re-sorts ascending.
+    return QueryBuilder(
+        sql.replace("ORDER BY ts", "ORDER BY ts DESC LIMIT $5"),
+        (sym, interval, rng.start_us, rng.end_us, limit),
+    )
 
 
 def build_read_funding(sym: str, rng: TimeRange, limit: int) -> QueryBuilder:

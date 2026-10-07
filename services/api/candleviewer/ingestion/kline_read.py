@@ -1,12 +1,20 @@
 """Cache-first `/market/klines` read path (E12-S05, `22-api-openapi.yaml` `/market/klines`).
 
-Source priority (OpenAPI): (1) locally stored bars, (2) exchange REST kline backfill for
-windows the store does not hold, (3) the Parquet cold tier for windows older than QuestDB hot
-retention. `read()` never waits on the exchange: it serves what the tiers hold now and, if the
-hot part of the window has holes, starts (or joins) the single background backfill job for
-that `(symbol, interval)` — the chart is interactive before paging finishes, and the next read
-picks up the new rows. Every result states the tiers it touched (`sources`) and where
-tick-accurate data begins (`recording_started_at`; before it, delta/footprint are null).
+Source priority (OpenAPI): (1) tape-built bars, (2) exchange REST kline backfill for windows
+the store does not hold, (3) the Parquet cold tier for windows older than QuestDB hot
+retention.
+
+**Scope today: klines only.** Tier (1), merging `bars_time` (source=tape) so tape wins on
+overlap, is deferred to E12-T05 (#398): nothing persists `bars_time` rows in production yet
+(`bars_wiring`, #2037) and no `bars_time` read is composed, so `sources` never claims tape.
+The cold tier is supported here but not wired by the composition root (follow-up issue, see
+PR); symbol validation must precede any cold path join when it is.
+
+`read()` never waits on the exchange: it serves what the tiers hold now and, if the hot part
+of the window has holes, starts (or joins) the single background backfill job for that
+`(symbol, interval)`; the chart is interactive before paging finishes, and the next read picks
+up the new rows. Every result states the tiers it touched (`sources`) and where tick-accurate
+data begins (`recording_started_at`; before it, delta/footprint are null).
 
 Backfill only targets the **hot** part of the window (older history is the cold tier's job),
 which also bounds how far back one request can make the exchange page (security notes).
@@ -14,6 +22,7 @@ which also bounds how far back one request can make the exchange page (security 
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Final, Protocol
@@ -52,9 +61,13 @@ class KlineRowLike(Protocol):
 
 class HotKlineReader(Protocol):
     async def read_klines(
-        self, sym: str, interval: str, rng: Range, tier: str = "auto"
+        self, sym: str, interval: str, rng: Range, tier: str = "auto", limit: int | None = None
     ) -> Sequence[KlineRowLike]: ...
 
+
+#: `symbol -> µs of the oldest recorded trade` (where tick-accurate data begins); `None` = no
+#: tape. The composition root reads it from the hot `trades` table.
+RecordingStart = Callable[[str], Awaitable[int | None]]
 
 ColdKlineReader = Callable[[str, str, Range], Awaitable[Sequence[KlineRowLike]]]
 
@@ -87,8 +100,9 @@ class KlineReadService:
         backfill: KlineBackfillService | None = None,
         cold: ColdKlineReader | None = None,
         hot_boundary_us: Callable[[], int] = lambda: 0,
-        recording_started_at_us: Callable[[str], int | None] = lambda _s: None,
+        recording_started_at_us: RecordingStart | None = None,
         max_backfill_bars: int = 400_000,
+        max_tracked_keys: int = 512,
     ) -> None:
         self._hot = hot
         self._backfill = backfill
@@ -96,9 +110,14 @@ class KlineReadService:
         self._boundary = hot_boundary_us
         self._recording_started = recording_started_at_us
         self._max_backfill_bars = max_backfill_bars
-        self._primed: set[tuple[str, str]] = set()
+        self._primed: OrderedDict[tuple[str, str], None] = OrderedDict()
+        self._max_primed = max(1, max_tracked_keys)
 
-    async def read(self, symbol: str, interval: str, rng: Range) -> KlineRead:
+    async def read(
+        self, symbol: str, interval: str, rng: Range, limit: int | None = None
+    ) -> KlineRead:
+        """`symbol` must already be validated against the instrument catalogue by the caller
+        (the route returns 422 first): this method may start an exchange backfill for it."""
         boundary = self._boundary()
         sources: list[str] = []
         rows: list[KlineRowLike] = []
@@ -113,15 +132,20 @@ class KlineReadService:
         backfilling = False
         if rng.end_us > boundary:
             hot_rng = Range(max(rng.start_us, boundary), rng.end_us)
-            hot_rows = await self._hot.read_klines(symbol, interval, hot_rng)
+            hot_rows = await self._hot.read_klines(symbol, interval, hot_rng, limit=limit)
             if hot_rows:
                 sources.append(SOURCE_HOT)
                 rows.extend(hot_rows)
             holes, backfilling = await self._schedule_backfill(symbol, interval, hot_rng)
-        if backfilling or any(r.source in _EXCHANGE_ROW_SOURCES for r in rows):
+        # A4: claim the exchange tier only once exchange-sourced rows are actually merged into
+        # this response; a running job alone is reported via `backfilling`, not `sources`.
+        if any(r.source in _EXCHANGE_ROW_SOURCES for r in rows):
             sources.append(SOURCE_EXCHANGE)
         rows.sort(key=lambda r: r.ts_us)
-        return KlineRead(rows, sources, self._recording_started(symbol), holes, backfilling)
+        if limit is not None:
+            rows = rows[-limit:] if limit else []  # newest `limit` across both tiers
+        started = await self._recording_started(symbol) if self._recording_started else None
+        return KlineRead(rows, sources, started, holes, backfilling)
 
     async def _schedule_backfill(
         self, symbol: str, interval: str, hot_rng: Range
@@ -135,7 +159,10 @@ class KlineReadService:
         key = (symbol, interval)
         if key not in self._primed:
             await self._backfill.load_coverage_from_cache(symbol, interval, target)
-            self._primed.add(key)
+            self._primed[key] = None
+            while len(self._primed) > self._max_primed:  # LRU; re-priming is only a cache read
+                self._primed.popitem(last=False)
+        self._primed.move_to_end(key)
         index = self._backfill.coverage(symbol, interval)
         holes = index.holes(target) if index is not None else [target]
         if holes:
@@ -151,4 +178,5 @@ __all__ = [
     "HotKlineReader",
     "KlineRead",
     "KlineReadService",
+    "RecordingStart",
 ]

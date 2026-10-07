@@ -179,7 +179,7 @@ class _Cache:
         self.rows = rows
 
     async def read_klines(
-        self, sym: str, interval: str, rng: Any, tier: str = "auto"
+        self, sym: str, interval: str, rng: Any, tier: str = "auto", limit: int | None = None
     ) -> list[_Row]:
         return [r for r in self.rows if rng.start_us <= r.ts_us < rng.end_us]
 
@@ -205,8 +205,9 @@ def test_kline_fixture_to_rest_is_ascending_gapless_and_schema_valid() -> None:
         params={
             "symbol": "BTCUSDT",
             "interval": "1",
-            "from": "2023-11-14T00:00:00Z",
-            "to": "2023-11-16T00:00:00Z",
+            # The corpus spans 22:13..05:42 UTC; the window must fit `limit` bars (#2045 S2).
+            "from": "2023-11-14T22:00:00Z",
+            "to": "2023-11-15T06:00:00Z",
             "limit": 1000,
         },
     )

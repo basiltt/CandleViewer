@@ -119,7 +119,7 @@ from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.kline_backfill import KlineBackfillService, KlineFetcher
 from candleviewer.ingestion.kline_coverage import Range
-from candleviewer.ingestion.kline_read import KlineReadService
+from candleviewer.ingestion.kline_read import KlineReadService, RecordingStart
 from candleviewer.ingestion.metrics import export_ingestion_metrics, ingest_enabled
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
@@ -937,7 +937,10 @@ def create_app(
     # previously reachable by any mesh caller with no RBAC check at all).
     app.include_router(
         make_market_router(
-            lambda: ctx.storage.market_data, read_service_provider=lambda: ctx.ingestion.klines
+            lambda: ctx.storage.market_data,
+            read_service_provider=lambda: ctx.ingestion.klines,
+            # SR-E12-08: only catalogue-listed, trading symbols may start a backfill.
+            symbol_listed=lambda sym: _catalogue_listed(ctx, sym),
         )
     )
     # E08-S01-2: served from the scheduler's in-memory snapshot; `503` until
@@ -1139,6 +1142,15 @@ def _alert_metric_sink(facade: Metrics) -> Callable[[str, tuple[str, ...]], Any]
 
 def _bars_writer_state(runtime: Any) -> tuple[bool, str] | None:
     return None if runtime is None else runtime.writer_state()
+
+
+def _catalogue_listed(ctx: AppContext, symbol: str) -> bool:
+    """True iff `symbol` is in the instrument catalogue snapshot and trading (fail closed when
+    no catalogue is attached yet)."""
+    scheduler = ctx.ingestion.instruments
+    snap = scheduler.snapshot() if scheduler is not None else None
+    inst = snap.get(symbol) if snap is not None else None
+    return inst is not None and inst.status == "trading"
 
 
 def _catalogue_tick_size(ctx: AppContext, symbol: str) -> Decimal | None:
@@ -1381,10 +1393,10 @@ def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
 
     class _HotKlines:
         async def read_klines(
-            self, sym: str, interval: str, rng: Range, tier: str = "auto"
+            self, sym: str, interval: str, rng: Range, tier: str = "auto", limit: int | None = None
         ) -> Sequence[KlineRow]:
             return await ctx.storage.market_data.read_klines(
-                sym, interval, TimeRange(start_us=rng.start_us, end_us=rng.end_us)
+                sym, interval, TimeRange(start_us=rng.start_us, end_us=rng.end_us), limit=limit
             )
 
         async def write_klines(self, rows: Sequence[object]) -> None:
@@ -1394,7 +1406,22 @@ def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
 
     hot = _HotKlines()
     backfill = KlineBackfillService(fetch_klines=fetch_klines, cache=hot)
-    ctx.ingestion.attach_klines(KlineReadService(hot, backfill=backfill), backfill)
+    ctx.ingestion.attach_klines(
+        KlineReadService(
+            hot, backfill=backfill, recording_started_at_us=recording_started_at_us(ctx)
+        ),
+        backfill,
+    )
+
+
+def recording_started_at_us(ctx: AppContext) -> RecordingStart:
+    """E12-S05 `meta.recording_started_at`: the oldest recorded trade for the symbol in the hot
+    `trades` table — where tick-accurate (tape) data begins; `None` when no tape exists."""
+
+    async def first(symbol: str) -> int | None:
+        return await ctx.storage.market_data.first_trade_us(symbol)
+
+    return first
 
 
 def wire_clock_offset(ctx: AppContext, fetch_server_time: ServerTimeFetcher) -> ClockGuard:

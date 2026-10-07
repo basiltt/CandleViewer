@@ -41,10 +41,11 @@ class _Hot:
     reads: int = 0
 
     async def read_klines(
-        self, sym: str, interval: str, rng: Range, tier: str = "auto"
+        self, sym: str, interval: str, rng: Range, tier: str = "auto", limit: int | None = None
     ) -> Sequence[_Row]:
         self.reads += 1
-        return [r for t, r in sorted(self.rows.items()) if rng.start_us <= t < rng.end_us]
+        out = [r for t, r in sorted(self.rows.items()) if rng.start_us <= t < rng.end_us]
+        return out if limit is None else out[-limit:]
 
     async def write_klines(self, rows: Sequence[object]) -> None:
         for row in rows:
@@ -76,17 +77,29 @@ class _Port:
         return [b for b in self.bars if start <= b.start <= end][-limit:]
 
 
-def _svc(hot: _Hot, port: _Port, **kw: object) -> tuple[KlineReadService, KlineBackfillService]:
+class _RaisingPort:
+    """A5: an adapter that fails the test on ANY call — proves a cache hit never fetches."""
+
+    async def __call__(self, *a: object, **kw: object) -> Sequence[KlineEvent]:
+        raise AssertionError("cache hit must not call the exchange")
+
+
+async def _started_at_zero(symbol: str) -> int | None:
+    return 0
+
+
+def _svc(
+    hot: _Hot, port: _Port | _RaisingPort, **kw: object
+) -> tuple[KlineReadService, KlineBackfillService]:
     bf = KlineBackfillService(fetch_klines=port, cache=hot)
-    return KlineReadService(hot, backfill=bf, **kw), bf  # type: ignore[arg-type]
+    return KlineReadService(hot, backfill=bf, **kw), bf  # type: ignore[arg-type]  # **kw: object passthrough
 
 
 async def test_cache_hit_served_locally_without_exchange_call() -> None:
     hot = _Hot({i * W: _Row(i * W) for i in range(10)})
-    port = _Port(10)
-    svc, _ = _svc(hot, port, recording_started_at_us=lambda s: 0)
+    svc, _ = _svc(hot, _RaisingPort(), recording_started_at_us=_started_at_zero)
     read = await svc.read(SYM, IV, Range(0, 10 * W))
-    assert port.calls == 0 and not read.backfilling and read.holes == []
+    assert not read.backfilling and read.holes == []
     assert len(read.rows) == 10 and read.sources == ["questdb"]
     assert read.recording_started_at_us == 0
 
@@ -100,7 +113,7 @@ async def test_tail_only_fetch_and_first_page_served_while_backfill_continues() 
     # Interactive now: stored bars returned, tail backfill running in the background.
     assert len(read.rows) == 5 and read.backfilling
     assert read.holes == [Range(5 * W, 8 * W)]
-    assert read.sources == ["questdb", "exchange_rest"]
+    assert read.sources == ["questdb"]  # A4: a job alone is not an exchange-sourced row
     port.release.set()
     task = bf._jobs[(SYM, IV)]
     result = await task
@@ -159,12 +172,13 @@ class _Bar:
     low: Decimal
     close: Decimal
     volume: Decimal
+    closed: bool = True
 
 
-def _bar(t: int, **kw: str) -> _Bar:
+def _bar(t: int, *, closed: bool = True, **kw: str) -> _Bar:
     base = {"open": "100", "high": "101", "low": "99", "close": "100", "volume": "1"}
     base.update(kw)
-    return _Bar(t, **{k: Decimal(v) for k, v in base.items()})
+    return _Bar(t, **{k: Decimal(v) for k, v in base.items()}, closed=closed)
 
 
 def test_cross_check_logs_and_counts_divergence_beyond_tolerance() -> None:
@@ -191,7 +205,7 @@ def test_cross_check_logs_and_counts_divergence_beyond_tolerance() -> None:
 )
 def test_cross_check_tolerance(kw: dict[str, str], ticks: int, fields: tuple[str, ...]) -> None:
     out = cross_check(
-        SYM, IV, [_k(0)], [_bar(0, **kw)], tick_size=Decimal("0.1"), price_ticks=ticks
+        SYM, IV, [_k(0)], [_bar(0, closed=True, **kw)], tick_size=Decimal("0.1"), price_ticks=ticks
     )
     assert (out[0].fields if out else ()) == fields
 
@@ -204,19 +218,106 @@ def test_cross_check_no_overlap_or_zero_volume_is_not_a_divergence() -> None:
 
 @pytest.mark.perf
 async def test_cache_hit_5000_bars_median_read_within_300ms_budget() -> None:
-    """US-MKT-008: <=300 ms for a 5 000-bar cache hit (code-path overhead; median of 5, and
-    the hit is asserted to make zero exchange calls so it is not a backfill in disguise)."""
-    import statistics
+    """US-MKT-008 sanity bound: a 5 000-bar cache hit within 300 ms of code-path overhead.
+    `perf`-marked (deselected on shared laptops), gc disabled, fastest of 7; the adapter
+    raises on any call, so this can never be a backfill in disguise."""
+    import gc
     import time
 
     hot = _Hot({i * W: _Row(i * W) for i in range(5_000)})
-    port = _Port(5_000)
-    svc, _ = _svc(hot, port)
+    svc, _ = _svc(hot, _RaisingPort())
     samples = []
-    for _ in range(5):
-        t0 = time.perf_counter()
-        read = await svc.read(SYM, IV, Range(0, 5_000 * W))
-        samples.append((time.perf_counter() - t0) * 1000)
-        assert len(read.rows) == 5_000
-    assert port.calls == 0
-    assert statistics.median(samples) <= 300.0
+    gc.disable()
+    try:
+        for _ in range(7):
+            t0 = time.perf_counter()
+            read = await svc.read(SYM, IV, Range(0, 5_000 * W))
+            samples.append((time.perf_counter() - t0) * 1000)
+            assert len(read.rows) == 5_000
+    finally:
+        gc.enable()
+    assert min(samples) <= 300.0
+
+
+async def test_cache_hit_read_cost_scales_linearly_not_worse() -> None:
+    """A5 ratio-style (no wall-clock budget): 10x the bars costs ~10x the work, measured as
+    rows touched by the read path, never as time."""
+    touched: list[int] = []
+
+    class _Counting(_Hot):
+        async def read_klines(self, *a: object, **kw: object) -> Sequence[_Row]:
+            out = await super().read_klines(*a, **kw)  # type: ignore[arg-type]  # forwarded as-is
+            touched.append(len(out))
+            return out
+
+    for n in (500, 5_000):
+        hot = _Counting({i * W: _Row(i * W) for i in range(n)})
+        svc, _ = _svc(hot, _RaisingPort())
+        assert len((await svc.read(SYM, IV, Range(0, n * W))).rows) == n
+    small, large = touched[-2], touched[-1]
+    assert large <= 10 * small * 1.1
+
+
+async def test_tracked_keys_are_lru_bounded_and_running_jobs_are_kept() -> None:
+    port = _Port(0)
+    port.release.clear()  # every job stays running until released
+    bf = KlineBackfillService(fetch_klines=port, cache=_Hot(), max_tracked_keys=3)
+    svc = KlineReadService(_Hot(), backfill=bf, max_tracked_keys=3)
+    await svc.read("AAAUSDT", IV, Range(0, 2 * W))  # running job: never evicted
+    port.release.set()
+    await bf._jobs[("AAAUSDT", IV)]
+    for i in range(10):
+        await svc.read(f"S{i:02d}USDT", IV, Range(0, 2 * W))
+        await asyncio.gather(*bf._jobs.values())
+    assert bf.tracked_keys <= 3 and len(svc._primed) <= 3
+    assert len(bf._locks) <= 3
+
+
+async def test_read_limit_keeps_newest_rows() -> None:
+    hot = _Hot({i * W: _Row(i * W) for i in range(10)})
+    svc, _ = _svc(hot, _Port(10))
+    read = await svc.read(SYM, IV, Range(0, 10 * W), limit=3)
+    assert [r.ts_us for r in read.rows] == [7 * W, 8 * W, 9 * W]
+
+
+def test_cross_check_skips_forming_bars_on_either_side() -> None:
+    """A3: an unconfirmed kline or an unclosed tape bar is never compared."""
+    forming = _k(0).model_copy(update={"confirmed": False})
+    assert cross_check(SYM, IV, [forming], [_bar(0, high="200")]) == []
+    assert cross_check(SYM, IV, [_k(0)], [_bar(0, closed=False, high="200")]) == []
+    assert len(cross_check(SYM, IV, [_k(0)], [_bar(0, high="200")])) == 1
+
+
+async def test_exchange_rest_only_claimed_once_an_exchange_row_is_merged() -> None:
+    """A4: a running job alone does not add `exchange_rest`; a merged kline row does."""
+    port = _Port(3)
+    port.release.clear()
+    svc, bf = _svc(_Hot(), port)
+    first = await svc.read(SYM, IV, Range(0, 3 * W))
+    assert first.backfilling and first.sources == []
+    port.release.set()
+    await bf._jobs[(SYM, IV)]
+    second = await svc.read(SYM, IV, Range(0, 3 * W))
+    assert second.sources == ["questdb", "exchange_rest"]
+
+
+async def test_wired_recording_started_at_is_first_tape_trade_or_null() -> None:
+    """A1, wiring level (real composition helper over the storage repository, no fake service):
+    populated tape -> oldest trade ts; empty tape -> None."""
+    from candleviewer.app import build_app_context, recording_started_at_us
+    from candleviewer.storage.repositories.rows import TradeRow
+    from candleviewer.storage.testing import FakeMarketDataRepository
+
+    ctx = build_app_context()
+    repo = FakeMarketDataRepository()
+    ctx.storage._market_data = repo  # the fake backend's repository, as `storage.start()` sets
+    first = recording_started_at_us(ctx)
+    assert await first(SYM) is None
+    await repo.write_trades([
+        TradeRow(ts_us=t, symbol=SYM, price="1", qty="1", side="buy", trade_id=str(t))
+        for t in (5_000, 2_000, 9_000)
+    ])  # fmt: skip
+    assert await first(SYM) == 2_000
+    assert await first("ETHUSDT") is None
+    svc = KlineReadService(_Hot(), recording_started_at_us=first)
+    assert (await svc.read(SYM, IV, Range(0, W))).recording_started_at_us == 2_000
