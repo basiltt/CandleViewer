@@ -22,6 +22,7 @@ from candleviewer.ingestion.connection import PHASE_OPEN, ConnectionManager
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.observability.health_probes import (
     BARS,
+    BARS_WRITER,
     HOT_TIER_WRITE_BEHIND,
     INGESTION,
     CallableProbe,
@@ -250,6 +251,24 @@ def register_bars_probe(registry: HealthRegistry, health: Callable[[], HealthRep
         return ProbeResult(ComponentState.HEALTHY)
 
     registry.register(CallableProbe(BARS, probe, timeout=1.0))
+
+
+def register_bars_writer_probe(
+    registry: HealthRegistry, state: Callable[[], tuple[bool, str] | None]
+) -> None:
+    """#2031: `bars_writer`. `state()` is None when bars are not wired (flag off) -> NOT_DEPLOYED;
+    else `(degraded, detail)`, DEGRADED with `bars_writer_degraded` after rows were dropped."""
+
+    async def probe() -> ProbeResult:
+        current = state()
+        if current is None:
+            return ProbeResult(ComponentState.NOT_DEPLOYED, "bars not enabled")
+        degraded, detail = current
+        if degraded:
+            return ProbeResult(ComponentState.DEGRADED, detail)
+        return ProbeResult(ComponentState.HEALTHY)
+
+    registry.register(CallableProbe(BARS_WRITER, probe, timeout=1.0))
 
 
 def register_public_ws_probe(
