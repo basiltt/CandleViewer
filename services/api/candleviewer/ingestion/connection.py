@@ -19,8 +19,6 @@ import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
-import structlog
-
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import Topic
 from candleviewer.ingestion.metrics import ingest_ws_up
@@ -32,8 +30,6 @@ from candleviewer.observability.latency import StageRecorder, StageStamps
 from candleviewer.statechart import build
 from candleviewer.statechart.bindings.b13_ws_conn import register_runtime, unregister_runtime
 from candleviewer.statechart.factory import default_clock
-
-logger = structlog.get_logger(__name__)
 
 #: Plain enum published by the B13 chart's entry actions (INV-B13-d, C-2.20):
 #: hot paths read `ConnectionManager.state()`; nothing queries the interpreter.

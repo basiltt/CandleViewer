@@ -25,12 +25,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Final, NamedTuple
 
-import structlog
-
+from candleviewer.ingestion._logging import get_logger
 from candleviewer.ingestion.metrics import ingest_dispatch_overflow_total
 from candleviewer.observability.context import spawn
-
-logger = structlog.get_logger(__name__)
 
 #: Frames buffered per lane (~2 s of a busy book topic at 50 ms pushes x 20).
 LANE_MAXSIZE: Final[int] = 1024
@@ -86,7 +83,7 @@ class Lane:
         stream = self.route.stream if self.route is not None else "unrouted"
         ingest_dispatch_overflow_total.labels(stream=stream).inc()
         if self.dropped % _LOG_EVERY == 0:
-            logger.warning(
+            get_logger(__name__).warning(
                 "dispatch lane full; frame dropped, resync queued",
                 stream=stream,
                 symbol=self.route.symbol if self.route is not None else None,
@@ -142,7 +139,7 @@ class LaneSet:
         except asyncio.CancelledError:
             raise
         except Exception:  # resync is best effort; frames keep flowing
-            logger.exception("dispatch overflow resync failed")
+            get_logger(__name__).exception("dispatch overflow resync failed")
 
     async def _work(self, lane: Lane) -> None:
         """Drain one lane forever; never raises (a raise would cancel the

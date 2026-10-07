@@ -33,13 +33,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Protocol
 
-import structlog
-
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy, Topic, TopicPattern
 from candleviewer.domain.primitives import EventId
 from candleviewer.exchange.base.models import TradeEvent
 from candleviewer.exchange.base.trade_print import TradePrint
+from candleviewer.ingestion._logging import get_logger
 from candleviewer.ingestion.metrics import (
     count_event,
     ingest_dispatch_overflow_total,
@@ -57,8 +56,6 @@ from candleviewer.ingestion.ticker_stream import UnknownSymbolError, uuid7
 from candleviewer.ingestion.watchdog import FeedHealthEvent, prune_unlisted
 from candleviewer.ingestion.write_behind import WriteBehindBuffer
 from candleviewer.observability.context import spawn
-
-logger = structlog.get_logger(__name__)
 
 #: Per-symbol recent-id capacity: 5 000 prints/s x a 10 s reconnect window,
 #: rounded up; well past a 1 000-row backfill page.
@@ -257,7 +254,7 @@ class TradeStream:
             raise
         except Exception:  # rate-limited / network / malformed: gap stays unrecovered
             trade_backfill_rows_total.labels(result="error").inc()
-            logger.warning("trade backfill failed", symbol=symbol)
+            get_logger(__name__).warning("trade backfill failed", symbol=symbol)
             return None
         trade_backfill_rows_total.labels(result="ok").inc(len(rows))
         return rows
@@ -345,7 +342,7 @@ class TradeStream:
                     if sym in self._last_ts:
                         self._gap_open.setdefault(sym, (self._last_ts[sym], "backfill_failed"))
         if not task.cancelled() and task.exception() is not None:
-            logger.error("trade backfill task failed", exc_info=task.exception())
+            get_logger(__name__).error("trade backfill task failed", exc_info=task.exception())
 
     async def wait_backfills(self) -> None:
         """Await every in-flight backfill (tests, orderly shutdown)."""
@@ -429,7 +426,7 @@ class TradeStream:
             raise
         except Exception:  # write-behind must never take ingest down
             self._writes.requeue(batch)
-            logger.warning(
+            get_logger(__name__).warning(
                 "trade write-behind failed; requeued",
                 rows=len(batch),
                 failures=self._writes.failures,

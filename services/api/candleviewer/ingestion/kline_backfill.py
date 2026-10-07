@@ -50,10 +50,9 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-import structlog
-
 from candleviewer.domain.primitives import Symbol, TsUs
 from candleviewer.exchange.base.models import KlineEvent
+from candleviewer.ingestion._logging import get_logger
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
 from candleviewer.ingestion.metrics import (
@@ -63,8 +62,6 @@ from candleviewer.ingestion.metrics import (
     kline_coverage_holes,
     symbol_label,
 )
-
-logger = structlog.get_logger(__name__)
 
 _MIN_BACKOFF_S = 1.0
 _MAX_BACKOFF_S = 30.0
@@ -349,7 +346,7 @@ class KlineBackfillService:
                 if attempt < self._max_retries - 1:
                     backoff = min(_MAX_BACKOFF_S, _MIN_BACKOFF_S * (2**attempt))
                     jitter = backoff * self._random()
-                    logger.warning(
+                    get_logger(__name__).warning(
                         "kline_backfill_page_retry",
                         symbol=symbol,
                         interval=interval,
@@ -360,7 +357,7 @@ class KlineBackfillService:
         kline_backfill_pages_total.labels(
             symbol=symbol_label(symbol), interval=interval, result="error"
         ).inc()
-        logger.warning(
+        get_logger(__name__).warning(
             "kline_backfill_page_failed", symbol=symbol, interval=interval, error=str(last_error)
         )
         raise KlineBackfillError(

@@ -21,13 +21,12 @@ from collections.abc import Awaitable, Callable
 from decimal import Decimal
 from typing import Protocol
 
-import structlog
-
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy, Topic, TopicPattern
 from candleviewer.domain.primitives import EventId
 from candleviewer.exchange.base.models import TickerEvent
 from candleviewer.exchange.base.ticker_delta import TICKER_FIELDS, TickerDelta
+from candleviewer.ingestion._logging import get_logger
 from candleviewer.ingestion.metrics import (
     count_event,
     ingest_lag_seconds,
@@ -40,8 +39,6 @@ from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.watchdog import FeedHealthEvent, prune_unlisted
 from candleviewer.observability.context import spawn
-
-logger = structlog.get_logger(__name__)
 
 #: A merged ticker is publishable only once these are all known. The optional
 #: remainder (`open_interest_value`, `next_funding_time`) may legitimately stay
@@ -288,7 +285,7 @@ class TickerStream:
                 if self._writer is not None:
                     await self._writer.write_ticker(event)
             except Exception:  # write-behind must never take ingest down
-                logger.warning("ticker write-behind failed", symbol=event.symbol)
+                get_logger(__name__).warning("ticker write-behind failed", symbol=event.symbol)
 
     # ---- lifecycle -------------------------------------------------------
     async def start(self) -> None:
