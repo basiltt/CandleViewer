@@ -467,6 +467,7 @@ class BigTradeEvent(MarketEvent):          # one per flagged print
     mode: Literal["absolute_size", "notional", "percentile"]
     threshold_abs: Decimal                 # effective threshold in the mode's unit (qty for absolute_size, USDT otherwise)
     capped: bool                           # True while the over-flagging cap is active
+    estimated: bool                        # True in percentile mode (threshold is a P² estimate)
     seq: int                               # copied from the source TradeEvent
 
 class TradeClusterEvent(MarketEvent):      # emitted when a cluster closes
@@ -476,7 +477,11 @@ class TradeClusterEvent(MarketEvent):      # emitted when a cluster closes
     anchor_price: Px                       # first print's price (display only; not a merge criterion)
     first_ts_event: int
     last_ts_event: int
-    trade_ids: tuple[str, ...]             # bounded by PRINTS_BUFFER_MAX
+    trade_id_count: int                    # exact member count (== cluster_size)
+    first_trade_id: str
+    last_trade_id: str
+    trade_ids: tuple[str, ...]             # first 64 members in (ts_event, trade_id) order
+    trade_ids_truncated: bool              # True when trade_id_count > 64
     cluster_size: int
     total_qty: Qty
     total_notional: Notional
@@ -516,6 +521,7 @@ class BigTradeAdvisoryEvent(MarketEvent):
 - **Over-flagging cap.** When more than 20 % of the prints in the trailing window are flagged, the engine emits `BigTradeAdvisoryEvent` and raises the effective threshold to the trailing p80. It keeps emitting `BigTradeEvent` with `capped=True` and **never suppresses** them.
 - **Percentile estimator.** P² behind a trimmed wrapper (SR-E22-14), using fixed-size state. It never stores the window's prints. The accuracy target is a **rank** error of ≤ 1 % against the exact quantile over the same window. The effective threshold refreshes at most every 5 s.
 - **State caps (closes threat-model gap G3; SR-E22-05).** Per symbol: `CLUSTER_KEYS_MAX = 4096` open cluster keys and `PRINTS_BUFFER_MAX = 16384` buffered prints. The oldest entry is evicted (`close_reason="evicted"`) and `bigtrade_state_truncated_total{symbol}` is incremented, never silently. Every bound is imported from `orderflow/limits.py` (E22 threat model §7). No literal copies are allowed elsewhere.
+- **Bounded membership.** `trade_ids` is capped at 64, with `trade_ids_truncated` set when the cap applies. The exact count and the first/last ids are always present, so the event size is O(1) on the bus while still giving tape highlighting and determinism tests concrete members. The full membership stays reconstructible from the tape by `(symbol, side, price_bucket, first_ts_event..last_ts_event)`.
 - **Input assert (SR-E22-13).** Engine inputs are `Decimal` > 0 and on tick. Anything else is rejected and counted.
 
 ---

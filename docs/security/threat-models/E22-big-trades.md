@@ -1,6 +1,6 @@
 # E22 — STRIDE threat model: Big trades and bubbles (tape, BigTradeEngine, clustering)
 
-- Ticket: E22-X01 (issue #609). Owner: Security engineer (CODEOWNER). Status: Approved (security review r2 APPROVE + architecture review APPROVE on #1904).
+- Ticket: E22-X01 (issue #609). Owner: Security engineer (CODEOWNER). Status: Draft for Security + Architect review.
 - Method: `docs/plan/04-security-program.md` §5 template (L x I = risk), STRIDE per epic (C-12.1). Reuses the
   exchange-boundary trust model of E08 (`e08-exchange-boundary.md`, W1-W11) and the adversarial register
   `services/api/tests/security/ingestion/E08_X02_FINDINGS.md`; those threats are **referenced, not duplicated**.
@@ -281,4 +281,3 @@ SR-E22-nn are epic-local requirement ids (convention of `E16-FR-nn` / `E35-FR-nn
 | Date       | Reviewer               | Result          |
 | ---------- | ---------------------- | --------------- |
 | 2026-10-06 | author (E22-X01 agent) | Draft submitted |
-| 2026-10-07 | owner item Q (#1778)   | Approved — cites #1904 security r2 + architect APPROVE |
