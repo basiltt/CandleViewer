@@ -62,6 +62,8 @@ These are the project-board `Risk` field values, reused verbatim across tickets 
 
 ## 2. Risk heat map (current scores)
 
+Regenerated 2026-10-06 (E49-T03): RSK-053 added at its provisional re-score (L3/I5 = 15). No other plotted score changed.
+
 ```mermaid
 quadrantChart
     title Likelihood vs Impact (current assessment)
@@ -86,6 +88,7 @@ quadrantChart
     "RSK-040 a11y canvas gap": [0.62, 0.55]
     "RSK-043 pen-test findings": [0.82, 0.60]
     "RSK-046 runbook/rollback gap": [0.38, 0.78]
+    "RSK-053 runbook integrity (provisional)": [0.60, 0.97]
 ```
 
 ---
@@ -599,12 +602,13 @@ the 30-minute canary meanwhile.
 
 ### RSK-053 · Runbook integrity is review-time only; colluding or compromised approvers bypass the two-key rule
 
-`Risk: R15` · Category **Security** · L 2 · I 5 · **Score 10 — High** · Owner **Security engineer** · Epics E48 · Status **Accepted** (expires 2027-03-25)
+`Risk: R15` · Category **Security** · L 3 · I 5 · **Score 15 — Critical (provisional, was L2/10)** · Owner **Security engineer** · Epics E48 · Status **Accepted** (expires 2027-03-25)
 
 - **Description** — Introduced by the E48-X01 STRIDE model (`docs/plan/security/threat-models/e48-docs-ga.md`). A tampered runbook is only caught by CODEOWNERS review; with a single human owner the second approver is an agent review.
 - **Mitigation** — Two approvals plus CODEOWNERS on `docs/runbooks/**`, verified commits, alert on merge with fewer than two approvals (E48-T03); runbook lint for privileged-shortcut patterns.
 - **Trigger** — Alert on a `docs/runbooks/**` merge with fewer than two approvals; any runbook step that disables a safety invariant.
 - **Contingency** — Revert the change, treat as a security incident per `SECURITY.md`, re-review every runbook changed in the window.
+- **Review** — 2026-10-06, E49-T03 (provisional, Security engineer + Architect, pre-Sprint-25 pass; the formal Sprint-25 re-review repeats it). Re-scored L2→L3: the "second approver" is in practice an agent review with a single human owner, and live multi-manager trading (E44) raises the value of a tampered runbook. Score reaches 15, so it is **escalated to the Owner as a GA decision (`escalate: owner`, #1778) rather than silently re-accepted**; the Accepted status and 2027-03-25 expiry are unchanged until the Owner decides. Re-activation trigger: any `docs/runbooks/**` merge with fewer than two approvals, or the first non-owner human approver being onboarded. Evidence: `docs/plan/backlog/artifacts/e49-accepted-risk-inventory.md` §1.
 
 ### RSK-054 · Allow-list redaction drops diagnostically useful fields, slowing support
 
@@ -614,6 +618,7 @@ the 30-minute canary meanwhile.
 - **Mitigation** — Extend the allow-list by reviewed PR when a field is repeatedly needed.
 - **Trigger** — Two support cases blocked by a missing field in a quarter.
 - **Contingency** — Add the field to the allow-list with a security review; never relax to a blacklist.
+- **Review** — 2026-10-06, E49-T03 (provisional, Owner/PO). Re-accept unchanged (L3/I2 = 6): no support case has yet been blocked by a missing field because E48-S01 is unbuilt. Expiry 2027-06-30 is owner-approved and is not changed here. Re-activation trigger: as the Trigger above (two blocked support cases in a quarter).
 
 ### RSK-055 · Manager-role insider sees aggregate non-secret diagnostics for assigned accounts
 
@@ -623,6 +628,7 @@ the 30-minute canary meanwhile.
 - **Mitigation** — Server-side RBAC and account scoping, audit event per bundle (E48-S01).
 - **Trigger** — A bundle containing data outside the actor's account scope.
 - **Contingency** — Disable bundle generation for the Manager role until fixed; review audit trail.
+- **Review** — 2026-10-06, E49-T03 (provisional, Security engineer). Re-accept unchanged (L3/I3 = 9) for the expiry shown. Re-score at E44 live enablement: the first Manager trading real funds moves L and the exposure; that event is the re-activation trigger, and the Owner is asked in #1778 to confirm it is a GA-gate re-review, not a quarterly one.
 
 ### RSK-056 · Unattended rule execution drifts from authoring-time permissions or degrades the shared order path
 
@@ -648,12 +654,12 @@ the 30-minute canary meanwhile.
 
 | Score band           | Count  | IDs                                                                                                                                                                                                           |
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                                                 |
-| **High (10–14)**     | 22     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049, RSK-053          |
+| **Critical (15–25)** | 8      | RSK-053, RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                                        |
+| **High (10–14)**     | 21     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049                   |
 | **Medium (5–9)**     | 23     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055, RSK-057 |
 | **Total entries**    | **52** | RSK-001 … RSK-057 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                                             |
 
-Band arithmetic: 7 Critical + 20 High + 20 Medium = **47**, equal to the 47 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
+Band arithmetic (corrected by E49-T03; the earlier text said 47 and predated RSK-051…057): 8 Critical + 21 High + 23 Medium = **52**, equal to the 52 `### RSK-nnn` entries in §3–§9 (RSK-053 moved High→Critical on its provisional re-score). There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
 
 #### 10.0.1 ID allocation — which numbers exist and which never will
 
@@ -672,6 +678,8 @@ IDs are assigned in **category blocks of ten** so a reader can infer a risk's fa
 | 045          | —                                                 | none                       | **045 was never issued.** It was drafted as "Storybook visual-regression flakiness", then merged into RSK-048 (flaky E2E tests) during the first review pass rather than being tracked twice. It is retired permanently.                                                                      |
 | 046–050      | Operability & analytics trust (R14/R8/R12)        | 046–050                    | none                                                                                                                                                                                                                                                                                          |
 | 051          | Governance/CI security (R11), added by E01-X01    | 051                        | none — single-entry block added when the E01-X01 STRIDE model identified a category (repository/CI governance) not covered by the original ten blocks; sized at one because a single risk captures the surface at register granularity, with detail living in `04-security-program.md` §5.12. |
+
+**E49-T03 (2026-10-06):** no ID was retired in the re-review — no risk's mitigation is fully shipped (the storage-writer and unwired-component clusters in `e49-root-cause-clusters.md` are defect clusters, not register entries; RSK-012 stays _largely retired_ until E07-S07). Nothing was reused or back-filled.
 
 **Retired / never-issued numbers in one line:** `RSK-006`, `RSK-007`, `RSK-008`, `RSK-009` were reserved-but-never-issued rendering slots; `RSK-045` was drafted and merged into `RSK-048`. No other number below 050 is missing. A reader scanning for them will find nothing, and that is correct.
 
