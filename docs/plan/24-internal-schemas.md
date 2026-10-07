@@ -410,20 +410,24 @@ Sources: live accruing rate from `tickers.{symbol}` (`fundingRate`, `nextFunding
 
 ### 2.9 Event catalogue summary
 
-| Event               | Bybit source                       | Cadence             | Recorded                       | Bus topic                      |
-| ------------------- | ---------------------------------- | ------------------- | ------------------------------ | ------------------------------ |
-| `TradeEvent`        | `publicTrade.{s}` / `recent-trade` | per match           | yes (hot+cold)                 | `md.trade.{symbol}`            |
-| `BookSnapshot`      | `orderbook.{d}.{s}` type=snapshot  | on subscribe/resync | yes                            | `md.book.{symbol}`             |
-| `BookDelta`         | `orderbook.{d}.{s}` type=delta     | 20–200 ms           | yes (deltas, not re-snapshots) | `md.book.{symbol}`             |
-| `TickerEvent`       | `tickers.{s}`                      | ~100 ms             | yes (downsampled 1 Hz cold)    | `md.ticker.{symbol}`           |
-| `KlineEvent`        | `kline.{i}.{s}` / REST             | 1–60 s              | yes                            | `md.kline.{symbol}.{interval}` |
-| `LiquidationEvent`  | `allLiquidation.{s}`               | ≤1 push/500 ms      | yes                            | `md.liq.{symbol}`              |
-| `OpenInterestEvent` | ticker / REST OI                   | 100 ms / 5 min      | yes                            | `md.oi.{symbol}`               |
-| `FundingEvent`      | ticker / REST funding              | 100 ms / settlement | yes                            | `md.funding.{symbol}`          |
-| `BestQuoteEvent`    | derived                            | on change           | no (derivable)                 | `md.quote.{symbol}`            |
-| `BookDesyncEvent`   | derived                            | rare                | yes                            | `sys.md.desync`                |
-| `FeedHealthEvent`   | derived                            | 1 Hz                | metrics only                   | `sys.md.health`                |
-| `ClockSyncEvent`    | `GET /v5/market/time`              | 60 s                | metrics only                   | `sys.clock`                    |
+| Event                    | Bybit source                       | Cadence             | Recorded                           | Bus topic                              |
+| ------------------------ | ---------------------------------- | ------------------- | ---------------------------------- | -------------------------------------- |
+| `TradeEvent`             | `publicTrade.{s}` / `recent-trade` | per match           | yes (hot+cold)                     | `md.trade.{symbol}`                    |
+| `BookSnapshot`           | `orderbook.{d}.{s}` type=snapshot  | on subscribe/resync | yes                                | `md.book.{symbol}`                     |
+| `BookDelta`              | `orderbook.{d}.{s}` type=delta     | 20–200 ms           | yes (deltas, not re-snapshots)     | `md.book.{symbol}`                     |
+| `TickerEvent`            | `tickers.{s}`                      | ~100 ms             | yes (downsampled 1 Hz cold)        | `md.ticker.{symbol}`                   |
+| `KlineEvent`             | `kline.{i}.{s}` / REST             | 1–60 s              | yes                                | `md.kline.{symbol}.{interval}`         |
+| `LiquidationEvent`       | `allLiquidation.{s}`               | ≤1 push/500 ms      | yes                                | `md.liq.{symbol}`                      |
+| `OpenInterestEvent`      | ticker / REST OI                   | 100 ms / 5 min      | yes                                | `md.oi.{symbol}`                       |
+| `FundingEvent`           | ticker / REST funding              | 100 ms / settlement | yes                                | `md.funding.{symbol}`                  |
+| `BestQuoteEvent`         | derived                            | on change           | no (derivable)                     | `md.quote.{symbol}`                    |
+| `BookDesyncEvent`        | derived                            | rare                | yes                                | `sys.md.desync`                        |
+| `FeedHealthEvent`        | derived                            | 1 Hz                | metrics only                       | `sys.md.health`                        |
+| `ClockSyncEvent`         | `GET /v5/market/time`              | 60 s                | metrics only                       | `sys.clock`                            |
+| `BigTradeEvent`          | derived (§2.10)                    | per flagged print   | no (derivable from trades, C-2.15) | `{env}.md.{symbol}.bigtrade`           |
+| `TradeClusterEvent`      | derived (§2.10)                    | on cluster close    | no (derivable from trades, C-2.15) | `{env}.md.{symbol}.cluster`            |
+| `BigTradeThresholdEvent` | derived (§2.10)                    | ≤ 1 / 5 s           | yes (config echo; not derivable)   | `{env}.md.{symbol}.bigtrade-threshold` |
+| `BigTradeAdvisoryEvent`  | derived (§2.10)                    | on over-flag entry  | yes                                | `{env}.md.{symbol}.bigtrade-advisory`  |
 
 **Ingestion health reasons (#1919).** `IngestionService.health()` returns `degraded` (never `down`;
 `stopped` before start) with `detail` = comma-joined `HealthReason` tokens, derived from published plain
@@ -475,8 +479,8 @@ class TradeClusterEvent(MarketEvent):      # emitted when a cluster closes
     side: Side
     price_bucket: int                      # floor(price / (tick_size * max(1, tolerance_ticks)))
     anchor_price: Px                       # first print's price (display only; not a merge criterion)
-    first_ts_event: int
-    last_ts_event: int
+    first_ts_event: TsUs
+    last_ts_event: TsUs
     trade_id_count: int                    # exact member count (== cluster_size)
     first_trade_id: str
     last_trade_id: str
@@ -503,24 +507,34 @@ class BigTradeThresholdEvent(MarketEvent): # config echo, at most one per 5 s pe
 
 class BigTradeAdvisoryEvent(MarketEvent):
     reason: Literal["threshold_too_low"]
+    mode: Literal["absolute_size", "notional", "percentile"]
+    threshold_abs: Decimal                 # the configured effective threshold that over-flagged (reference for suggested_value)
     flagged_fraction: Decimal              # > 0.20 over the trailing window
     suggested_value: Decimal               # in the configured mode's unit
     cap_active: bool
 ```
 
-| Event                    | Bus topic (`{env}.md.{symbol}.{detail}`, §2.9 as shipped) | Cadence                   |
-| ------------------------ | --------------------------------------------------------- | ------------------------- |
-| `BigTradeEvent`          | `…bigtrade`                                               | per flagged print         |
-| `TradeClusterEvent`      | `…cluster`                                                | on cluster close          |
-| `BigTradeThresholdEvent` | `…bigtrade.threshold`                                     | ≤ 1 / 5 s and on config change |
-| `BigTradeAdvisoryEvent`  | `…bigtrade.advisory`                                      | on entering the over-flag state |
+| Event                    | Bus topic (`{env}.md.{symbol}.{detail}`, §2.9 as shipped) | Cadence                         |
+| ------------------------ | --------------------------------------------------------- | ------------------------------- |
+| `BigTradeEvent`          | `…bigtrade`                                               | per flagged print               |
+| `TradeClusterEvent`      | `…cluster`                                                | on cluster close                |
+| `BigTradeThresholdEvent` | `…bigtrade-threshold`                                     | ≤ 1 / 5 s and on config change  |
+| `BigTradeAdvisoryEvent`  | `…bigtrade-advisory`                                      | on entering the over-flag state |
+
+Topic details are flat single segments (`bus/models.py` `_SEGMENT_RE` = `[a-zA-Z0-9_-]+`, at most 4 segments). None of them collides with an existing `md` detail (`trade`, `book`, `ticker`, `gap`).
+
+**Envelope.** All four events carry the §1.4 envelope (C6) with `schema_version = 1`. A shape change bumps it (§17). `ts_event` (`TsUs`) is defined per event as follows:
+
+- `BigTradeEvent`: the triggering print's `ts_event`.
+- `TradeClusterEvent`: the last member's `ts_event` (equal to `last_ts_event`).
+- `BigTradeThresholdEvent` / `BigTradeAdvisoryEvent`: the emit time from the engine's injected clock. In replay this is the replay clock, so live and replay match.
 
 **Rules (binding).**
 
-- **Cluster key.** A cluster is keyed on `(symbol, side, price_bucket)` only. A print merges into the open cluster for its key if `ts_event <= first_ts_event + cluster_window_ms`. Otherwise that cluster closes (`deadline`) and a new one opens. There is no separate tolerance check against the anchor price. A cluster belongs to the bar containing its `first_ts_event` (US-BIG-004 scenario 3). `cluster_window_ms = 0` disables clustering. A config change closes all open clusters (`config_change`) and recomputes from the buffered prints.
-- **Over-flagging cap.** When more than 20 % of the prints in the trailing window are flagged, the engine emits `BigTradeAdvisoryEvent` and raises the effective threshold to the trailing p80. It keeps emitting `BigTradeEvent` with `capped=True` and **never suppresses** them.
+- **Cluster key.** A cluster is keyed on `(symbol, side, price_bucket)` only. A print merges into the open cluster for its key if `ts_event <= first_ts_event + cluster_window_ms * 1000` (ms → µs, C4). Otherwise that cluster closes (`deadline`) and a new one opens. There is no separate tolerance check against the anchor price. A cluster belongs to the bar containing its `first_ts_event` (US-BIG-004 scenario 3). `cluster_window_ms = 0` disables clustering. A config change closes all open clusters (`config_change`) and recomputes from the buffered prints.
+- **Over-flagging cap.** When more than 20 % of the prints in the trailing window are flagged, the engine emits `BigTradeAdvisoryEvent` and raises the effective threshold to the trailing p80. The p80 comes from a **second** P² estimator over the same trailing window, so state is still fixed-size (two estimators per symbol). It keeps emitting `BigTradeEvent` with `capped=True` and **never suppresses** them.
 - **Percentile estimator.** P² behind a trimmed wrapper (SR-E22-14), using fixed-size state. It never stores the window's prints. The accuracy target is a **rank** error of ≤ 1 % against the exact quantile over the same window. The effective threshold refreshes at most every 5 s.
-- **State caps (closes threat-model gap G3; SR-E22-05).** Per symbol: `CLUSTER_KEYS_MAX = 4096` open cluster keys and `PRINTS_BUFFER_MAX = 16384` buffered prints. The oldest entry is evicted (`close_reason="evicted"`) and `bigtrade_state_truncated_total{symbol}` is incremented, never silently. Every bound is imported from `orderflow/limits.py` (E22 threat model §7). No literal copies are allowed elsewhere.
+- **State caps (closes threat-model gap G3; SR-E22-05).** Per symbol: `CLUSTER_KEYS_MAX = 4096` open cluster keys and `PRINTS_BUFFER_MAX = 16384` buffered prints. The buffer holds **all** evaluated prints (not only flagged ones) inside the active cluster window, so a config change can recompute without a restart. Its effective size is `max(PRINTS_BUFFER_MAX, cluster_window_ms × 5)`, where 5 = the 5 000 prints/s budget #5 expressed per ms. That means a healthy feed never evicts inside the window: 25 000 at the 5 000 ms REST cap, 10 000 → 16 384 at the 2 000 ms WS cap. It stays bounded because `cluster_window_ms` is capped (SR-E22-04). The oldest entry is evicted (`close_reason="evicted"`) and `bigtrade_state_truncated_total{symbol}` is incremented, never silently. Every bound is imported from `orderflow/limits.py` (E22 threat model §7). No literal copies are allowed elsewhere.
 - **Bounded membership.** `trade_ids` is capped at 64, with `trade_ids_truncated` set when the cap applies. The exact count and the first/last ids are always present, so the event size is O(1) on the bus while still giving tape highlighting and determinism tests concrete members. The full membership stays reconstructible from the tape by `(symbol, side, price_bucket, first_ts_event..last_ts_event)`.
 - **Input assert (SR-E22-13).** Engine inputs are `Decimal` > 0 and on tick. Anything else is rejected and counted.
 
