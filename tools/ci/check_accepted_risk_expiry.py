@@ -322,6 +322,8 @@ def render_report(res: Result, fails: list[str], warns: list[str], today: date) 
     for it in res.items:
         by[it.source] = by.get(it.source, 0) + 1
     out = [f"# Accepted-risk expiry report ({today.isoformat()})", ""]
+    out.append(f"**{len(res.items)} items checked**")
+    out.append("")
     out.append(
         "Checked: "
         + (", ".join(f"{k}={v}" for k, v in sorted(by.items())) or "nothing")
