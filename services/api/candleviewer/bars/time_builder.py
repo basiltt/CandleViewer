@@ -195,8 +195,9 @@ _INT_SLOTS: Final = frozenset(
 class TimeBarUpdate(BarUpdate):
     """`BarUpdate` plus the §3.3c `amended` flag, set on a `close` re-emitted by a late trade.
 
-    Stop-gap until the E12-T01 `BarUpdate` contract carries `amended` (#1985); it
-    is still a `BarUpdate`, so `BarBuilder` consumers are unaffected.
+    Stop-gap until the E12-T01 `BarUpdate` contract carries `amended` (#1985); folds into
+    `BarUpdate` when #1985 lands. It is still a `BarUpdate`, so `BarBuilder` consumers are
+    unaffected.
     """
 
     amended: bool = False
@@ -293,7 +294,11 @@ class TimeBarBuilder:
         return out
 
     def snapshot(self) -> BuilderState:
-        """Versioned JSON draft (Decimals as strings) inside the `BuilderState` envelope."""
+        """Versioned JSON draft (Decimals as strings) inside the `BuilderState` envelope.
+
+        §3.2's "msgpack blob" wording is superseded by versioned orjson (`state_version`);
+        msgpack is not a dependency. Docs update tracked in #1987.
+        """
         doc = {
             "cur": None if self._cur is None else self._cur.dump(),
             "closed": [d.dump() for d in self._closed],

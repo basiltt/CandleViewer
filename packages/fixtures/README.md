@@ -18,6 +18,14 @@ TypeScript and Python test suites (CONSTITUTION.md C-13.5, `.claude/rules/40-tes
 or CI run.** Fixtures are recorded via the (future) recorder tool and reviewed
 before commit.
 
+## Golden provenance (C-13.5)
+
+- `golden/bars/time_bars_BTCUSDT.jsonl` — E12-S01 time bars (1m/5m/1h, one bar per line).
+  Source: corpus `bybit/2026-10-05/ws/clean_publicTrade_BTCUSDT.jsonl`; date 2026-10-05; symbol
+  BTCUSDT; env: public live stream shape (no account data); redaction: derived output of an
+  already-redacted corpus, no identifiers. Regenerate from `services/api` with
+  `CV_REGEN_GOLDEN=1 pytest tests/unit/bars/test_time_builder_golden.py` and review the diff.
+
 ## Scripts
 
 - `pnpm --filter @candleviewer/fixtures verify` — runs the redaction check
