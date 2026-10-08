@@ -148,8 +148,10 @@ class CoverageHole(BaseModel):
 
 class DataMeta(PageMeta):
     sources: Annotated[
-        list[Literal["questdb", "parquet", "postgres", "exchange_rest", "memory"]] | None,
-        Field(description="Storage tiers consulted."),
+        list[Literal["questdb", "parquet", "postgres", "exchange_rest", "memory", "tape"]] | None,
+        Field(
+            description="Tiers whose rows are in this response (provenance, 24 §2): `tape` = bars built locally from the recorded trade tape; `questdb` = exchange-kline rows in the hot tier; `parquet` = cold tier; `exchange_rest` = rows just backfilled from Bybit."
+        ),
     ] = None
     recording_started_at: AwareDatetime | None = None
     generated_at: AwareDatetime | None = None
@@ -945,7 +947,21 @@ class Ticker(BaseModel):
 
 
 class Bar(BaseModel):
-    t: Annotated[AwareDatetime, Field(description="Bar open time.")]
+    index: Annotated[
+        int | None,
+        Field(
+            description="Bar index, strictly increasing within (series, generation) (24 §3.1). Always present on /market/bars; `t` may repeat for non-time bars (#2014).",
+            ge=0,
+        ),
+    ] = None
+    generation: Annotated[
+        int | None,
+        Field(
+            description="ADR-0033 series generation (= epoch); 0 until ADR-0033 is ratified. Always present on /market/bars.",
+            ge=0,
+        ),
+    ] = None
+    t: Annotated[AwareDatetime, Field(description="Bar open time; not unique for non-time bars.")]
     close_time: Annotated[AwareDatetime | None, Field(description="Present for non-time bars.")] = (
         None
     )

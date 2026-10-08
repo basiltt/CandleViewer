@@ -38,6 +38,8 @@ class ErrorCode(StrEnum):
     RULE_IR_INVALID = "rule_ir_invalid"
     INSUFFICIENT_BALANCE = "insufficient_balance"
     NO_DATA_RECORDED = "no_data_recorded"
+    BAR_WINDOW_TOO_LARGE = "bar_window_too_large"
+    RESPONSE_TOO_LARGE = "response_too_large"
     RATE_LIMITED = "rate_limited"
     EXCHANGE_RATE_LIMITED = "exchange_rate_limited"
     INTERNAL_ERROR = "internal_error"
@@ -106,6 +108,8 @@ ERROR_META: Final[dict[ErrorCode, ErrorMeta]] = {
     ErrorCode.RULE_IR_INVALID: ErrorMeta(("rest",), None, False, None, None),
     ErrorCode.INSUFFICIENT_BALANCE: ErrorMeta(("rest",), None, False, None, None),
     ErrorCode.NO_DATA_RECORDED: ErrorMeta(("rest", "ws",), "any", False, None, None),
+    ErrorCode.BAR_WINDOW_TOO_LARGE: ErrorMeta(("rest",), None, False, None, None),
+    ErrorCode.RESPONSE_TOO_LARGE: ErrorMeta(("rest",), None, False, None, None),
     ErrorCode.RATE_LIMITED: ErrorMeta(("rest",), None, True, None, None),
     ErrorCode.EXCHANGE_RATE_LIMITED: ErrorMeta(("rest",), None, True, None, None),
     ErrorCode.INTERNAL_ERROR: ErrorMeta(("rest", "ws",), "any", True, None, None),

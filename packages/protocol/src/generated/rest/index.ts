@@ -1640,17 +1640,30 @@ export interface paths {
      *     **Ordering and identity (#2014).** A bar's identity is `(series, generation, index)`
      *     (21 §4.8, 24 §3.1). The response serves exactly one generation: the series' current
      *     generation, pinned for the whole request (ADR-0033 Decision 2), never a mix. `bars` is
-     *     ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire). `t` MAY
+     *     ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire; until
+     *     migration 0004 the server orders by `t`, see `MarketCursor`). `t` MAY
      *     repeat for non-time bars (an N-threshold print yields N volume bars or renko bricks with
      *     one open time; two tick bars can open in the same ms). Clients MUST key bars by
      *     `(generation, index)`, never by `t`. Every bar returned here carries `index` and
      *     `generation` (they stay optional in the shared `Bar` schema only because
-     *     `/market/klines` also uses it). Pagination follows C3: `next_cursor` is opaque, encodes
-     *     the pinned `(generation, index)`, and resumes after the last returned `index` in that
-     *     generation; if the generation was swapped since, the server returns `invalid_cursor` and
-     *     the client restarts. A request whose window starts before
+     *     `/market/klines` also uses it). Pagination follows C3 and the `MarketCursor` parameter;
+     *     if the pinned generation was swapped since the cursor was issued, the server returns
+     *     `invalid_cursor` and the client restarts. A request whose window starts before
      *     `recording_started_at` returns `no_data_recorded` (422) rather than silently
      *     substituting REST klines, because tick-accurate construction is impossible there.
+     *     **Precedence:** when a non-time window both starts before `recording_started_at` and
+     *     exceeds a hard window cap, `no_data_recorded` wins — it is the more
+     *     specific data-availability fact, and the client cannot fix it by paginating.
+     *
+     *     **Paging (#2045, E12-T05).** A request without `cursor` is served as its first page:
+     *     the oldest `limit` bars of the window, oldest→newest, with `meta.has_more` and a
+     *     server-issued `meta.next_cursor` when more remain; the client continues with that cursor
+     *     until `has_more` is false. Every read fetches at most `limit + 1` rows, so the work per
+     *     request is bounded whatever the window. `bar_window_too_large` (422) is reserved for the
+     *     hard window caps (E12 STRIDE SR-E12-02): time bars span at most 400 days; non-time bars
+     *     at most 31 days and an estimated 250 000 bars. Cursor semantics are stated once, on the
+     *     `MarketCursor` parameter. A page that would exceed the response ceiling (SR-E12-01)
+     *     returns 422 `response_too_large`.
      */
     get: operations["getBars"];
     put?: never;
@@ -1795,6 +1808,17 @@ export interface paths {
      *     cold tier for windows older than the QuestDB hot retention. Each response states which
      *     tiers were touched in `meta.sources`, and `meta.recording_started_at` tells the UI where
      *     native (tick-accurate) data begins — before that point delta/footprint fields are null.
+     *     Bars built from the tape are reported as `tape` in `meta.sources`.
+     *
+     *     **Paging (#2045, E12-T05).** A request without `cursor` is served as its first page:
+     *     the oldest `limit` bars of the window, oldest→newest, with `meta.has_more` and a
+     *     server-issued `meta.next_cursor` when more remain; the client continues with that cursor
+     *     until `has_more` is false. Every read fetches at most `limit + 1` rows, so the work per
+     *     request is bounded whatever the window. `bar_window_too_large` (422) is reserved for the
+     *     hard window caps (E12 STRIDE SR-E12-02): time bars span at most 400 days; non-time bars
+     *     at most 31 days and an estimated 250 000 bars. Cursor semantics are stated once, on the
+     *     `MarketCursor` parameter. A page that would exceed the response ceiling (SR-E12-01)
+     *     returns 422 `response_too_large`.
      */
     get: operations["getKlines"];
     put?: never;
@@ -4522,8 +4546,8 @@ export interface components {
       generated_at?: string;
       /** Format: date-time */
       recording_started_at?: string | null;
-      /** @description Storage tiers consulted. */
-      sources?: ("questdb" | "parquet" | "postgres" | "exchange_rest" | "memory")[];
+      /** @description Tiers whose rows are in this response (provenance, 24 §2): `tape` = bars built locally from the recorded trade tape; `questdb` = exchange-kline rows in the hot tier; `parquet` = cold tier; `exchange_rest` = rows just backfilled from Bybit. */
+      sources?: ("questdb" | "parquet" | "postgres" | "exchange_rest" | "memory" | "tape")[];
     };
     /**
      * @description Arbitrary-precision decimal transported as a string (convention C6).
@@ -7398,6 +7422,8 @@ export interface components {
     LayoutId: string;
     /** @description Page size. */
     Limit: number;
+    /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
+    MarketCursor: string;
     MethodId: string;
     OrderId: string;
     PositionId: string;
@@ -10347,6 +10373,8 @@ export interface operations {
     parameters: {
       query: {
         bar_type: components["schemas"]["BarType"];
+        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
+        cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
         include_delta?: boolean;
@@ -10375,7 +10403,10 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
+      503: components["responses"]["ServiceUnavailable"];
     };
   };
   getDataCoverage: {
@@ -10563,6 +10594,8 @@ export interface operations {
   getKlines: {
     parameters: {
       query: {
+        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
+        cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
         /** @description Attach per-bar delta/CVD/trade-count (requires recorded tape for the window). */
@@ -10593,6 +10626,8 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
       503: components["responses"]["ServiceUnavailable"];
     };
