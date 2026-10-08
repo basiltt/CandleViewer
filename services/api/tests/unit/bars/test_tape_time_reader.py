@@ -102,3 +102,32 @@ def test_record_page_only_counts_allow_listed_labels() -> None:
     bm.record_param_rejected("../../etc")
     assert v("bars_endpoint_param_rejected_total", {"reason": "invalid"}) == p0 + 1
     assert v("bars_endpoint_param_rejected_total", {"reason": "../../etc"}) == 0
+
+
+class UndefinedTableError(Exception):
+    """Shaped like `asyncpg.exceptions.UndefinedTableError` (a `PostgresError`): not an
+    OSError/ConnectionError/TimeoutError, which is what LazyPgWire re-raises for a missing
+    `bars_time`. `bars` may not import asyncpg (ADR-0003), so the fake mirrors its shape."""
+
+    sqlstate = "42P01"
+
+
+def test_reader_degrades_on_driver_query_error_and_counts_it() -> None:
+    from prometheus_client import REGISTRY
+
+    def v(reason: str) -> float:
+        got = REGISTRY.get_sample_value("bars_tape_read_degraded_total", {"reason": reason})
+        return float(got or 0.0)
+
+    before = (v("query_error"), v("timeout"), v("connection"))
+    assert _read(_Fetch([], exc=UndefinedTableError('relation "bars_time" does not exist'))) == []
+    assert _read(_Fetch([], exc=TimeoutError())) == []
+    assert _read(_Fetch([], exc=ConnectionResetError())) == []
+    assert (v("query_error"), v("timeout"), v("connection")) == tuple(b + 1 for b in before)
+
+
+def test_reader_never_swallows_cancellation() -> None:
+    import pytest
+
+    with pytest.raises(asyncio.CancelledError):
+        _read(_Fetch([], exc=asyncio.CancelledError()))

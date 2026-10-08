@@ -17,6 +17,7 @@ from typing import Any, Final, Protocol
 
 import structlog
 
+from candleviewer.bars.metrics import bars_tape_read_degraded_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum
 from candleviewer.observability.metrics import Counter
@@ -283,6 +284,12 @@ def tape_time_bar_reader(reader: BarReader, *, timeout_s: float) -> TapeTimeBars
     Only tape-built rows are returned (kline-sourced `bars_time` rows are not tape and must not
     claim it). A failing or slow tape tier degrades the response to klines-only (never a 500,
     never a false `tape` claim): `meta.sources` then honestly omits `tape`.
+
+    S2/A2 (#2087 reviews): the catch is deliberately `Exception`, not a driver class list.
+    `LazyPgWire.fetch` re-raises raw asyncpg errors (e.g. `UndefinedTableError` when `bars_time`
+    does not exist yet), and `bars` may not import `asyncpg` (ADR-0003 import contract), so it
+    cannot name `asyncpg.PostgresError`. Cancellation is a `BaseException` and still propagates.
+    Every degrade is counted (`bars_tape_read_degraded_total{reason}`) and logged WARN.
     """
     from candleviewer.bars.spec import TIME_INTERVALS  # cycle break: spec imports models
 
@@ -296,12 +303,21 @@ def tape_time_bar_reader(reader: BarReader, *, timeout_s: float) -> TapeTimeBars
                 page = await reader.read_bars(
                     symbol, spec, rng.start_us, rng.end_us, min(limit or MAX_LIMIT, MAX_LIMIT)
                 )
-        except (TimeoutError, OSError, ConnectionError) as exc:
+        except Exception as exc:  # broad on purpose: see the S2/A2 note in the docstring
+            bars_tape_read_degraded_total.labels(reason=_degrade_reason(exc)).inc()
             _log().warning("bars_tape_read_degraded", error=type(exc).__name__)
             return []
         return [b for b in map(stored_bar, page.rows) if b.tape_built]
 
     return read
+
+
+def _degrade_reason(exc: Exception) -> str:
+    if isinstance(exc, TimeoutError):
+        return "timeout"
+    if isinstance(exc, (OSError, ConnectionError)):
+        return "connection"
+    return "query_error"
 
 
 def _integrity_failure(row: dict[str, object]) -> str | None:

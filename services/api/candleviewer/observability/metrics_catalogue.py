@@ -475,6 +475,18 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         exported=True,
     ),
     _s(
+        "bars_tape_read_degraded_total",
+        "counter",
+        "reads",
+        ("reason",),
+        "Klines tape-tier reads that failed and fell back to klines-only (by reason).",
+        "any query_error = bars_time schema/driver fault; sustained = tape tier down",
+        _L,
+        "E12",
+        max_series=3,
+        exported=True,
+    ),
+    _s(
         "book_resync_total",
         "counter",
         "resyncs",

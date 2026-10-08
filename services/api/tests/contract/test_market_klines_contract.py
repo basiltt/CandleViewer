@@ -187,35 +187,86 @@ class TestKlinesResponses:
 
 
 class TestKlinesPagination:
-    _WIDE: ClassVar[dict[str, Any]] = {**_P, "limit": 100}
+    _WIDE: ClassVar[dict[str, Any]] = {**_P, "limit": 7}
 
-    def test_uncursored_window_wider_than_limit_is_bar_window_too_large(self) -> None:
-        _problem(_client().get("/market/klines", params=self._WIDE), 422, "bar_window_too_large")
-
-    def test_cursor_round_trip_returns_every_bar_once_oldest_first(self) -> None:
-        client = _client()
-        from candleviewer.api.market_response import encode_cursor
-
-        cursor: str | None = encode_cursor(0)  # first page: start at `from`
+    def _walk(self, client: TestClient, params: dict[str, Any]) -> tuple[list[str], int]:
+        """A1: start WITHOUT a cursor; follow only server-issued `next_cursor`."""
+        cursor: str | None = None
         seen: list[str] = []
         pages = 0
-        while cursor is not None:
-            body = client.get("/market/klines", params={**self._WIDE, "cursor": cursor}).json()
+        while True:
+            q = params if cursor is None else {**params, "cursor": cursor}
+            resp = client.get("/market/klines", params=q)
+            assert resp.status_code == 200, resp.text
+            body = resp.json()
             KlineResponse.model_validate(body)
-            assert body["meta"]["count"] <= 100
+            meta = body["meta"]
+            assert meta["count"] == len(body["bars"]) <= params["limit"]
+            assert meta["has_more"] is (meta["next_cursor"] is not None)
+            # A4: never an empty page that claims more rows.
+            assert body["bars"] or not meta["has_more"]
             seen.extend(b["t"] for b in body["bars"])
-            cursor = body["meta"]["next_cursor"]
-            assert body["meta"]["has_more"] is (cursor is not None)
             pages += 1
-            assert pages < 20
-        assert len(seen) == len(set(seen)) == 450 and seen == sorted(seen)
+            assert pages < 200
+            cursor = meta["next_cursor"]
+            if cursor is None:
+                return seen, pages
 
-    @pytest.mark.parametrize("bad", ["x", "djE6YWJj", "Zm9v", "v1:12"])
-    def test_malformed_cursor_is_invalid_cursor(self, bad: str) -> None:
-        _problem(
-            _client().get("/market/klines", params={**self._WIDE, "cursor": bad}),
-            400, "invalid_cursor",
-        )  # fmt: skip
+    def test_uncursored_wide_window_is_served_as_first_page_with_cursor(self) -> None:
+        body = _client().get("/market/klines", params=self._WIDE).json()
+        assert body["meta"]["count"] == 7 and body["meta"]["has_more"] is True
+        assert body["meta"]["next_cursor"]
+
+    def test_round_trip_from_no_cursor_pages_by_rows(self) -> None:
+        """A1 + A4: limit=7 over the 450 recorded bars -> 65 non-empty pages, each bar once."""
+        seen, pages = self._walk(_client(), self._WIDE)
+        assert len(seen) == len(set(seen)) == 450 and seen == sorted(seen)
+        assert pages == 65
+
+    def test_window_over_400_days_is_bar_window_too_large(self) -> None:
+        q = {**self._WIDE, "from": "2020-01-01T00:00:00Z", "to": "2023-11-15T06:00:00Z"}
+        _problem(_client().get("/market/klines", params=q), 422, "bar_window_too_large")
+
+    @pytest.mark.parametrize("bad", ["x", "djE6YWJj", "Zm9v", "v1:12", "a" * 129])
+    def test_malformed_cursor_is_invalid_cursor_without_echo(self, bad: str) -> None:
+        """S1: a 129-char cursor is a 400 Problem, not FastAPI's echoing 422."""
+        resp = _client().get("/market/klines", params={**self._WIDE, "cursor": bad})
+        _problem(resp, 400, "invalid_cursor")
+        assert bad not in resp.text
+
+    def test_cursor_is_bound_to_its_request(self) -> None:
+        """A3: a cursor replayed with another interval or symbol is invalid_cursor."""
+        client = _client()
+        cursor = client.get("/market/klines", params=self._WIDE).json()["meta"]["next_cursor"]
+        other = {**self._WIDE, "interval": "5", "cursor": cursor}
+        _problem(client.get("/market/klines", params=other), 400, "invalid_cursor")
+        from candleviewer.api.market_response import InvalidCursor, cursor_scope, decode_cursor
+
+        with pytest.raises(InvalidCursor):  # symbol is part of the scope too
+            decode_cursor(cursor, scope=cursor_scope("klines", "ETHUSDT", "1"), end_us=2**62)
+        with pytest.raises(InvalidCursor):  # and the route: a klines cursor is not a bars one
+            decode_cursor(cursor, scope=cursor_scope("bars", "BTCUSDT", "1"), end_us=2**62)
+        early = {**self._WIDE, "to": "2023-11-14T22:14:00Z", "cursor": cursor}
+        _problem(client.get("/market/klines", params=early), 400, "invalid_cursor")
+
+    @pytest.mark.parametrize("ts", [9 * 10**18, 0, 1_699_999_980_000_001])
+    def test_forged_positions_are_rejected_not_clamped(self, ts: int) -> None:
+        from candleviewer.api.market_response import cursor_scope, encode_cursor
+
+        forged = encode_cursor(cursor_scope("klines", "BTCUSDT", "1"), ts)
+        resp = _client().get("/market/klines", params={**self._WIDE, "cursor": forged})
+        _problem(resp, 400, "invalid_cursor")
+
+    def test_out_of_bounds_limit_is_a_problem_without_echo(self) -> None:
+        """S1 audit: `limit` bounds fire before the handler; the shared handler keeps the
+        Problem shape and drops the input."""
+        from candleviewer.api.error_redaction import install_error_redaction
+
+        client = _client()
+        install_error_redaction(client.app)  # type: ignore[arg-type]  # TestClient.app is the FastAPI app
+        resp = client.get("/market/klines", params={**_P, "limit": "987654321"})
+        _problem(resp, 422, "validation_failed")
+        assert "987654321" not in resp.text
 
 
 class TestKlinesErrors:
@@ -250,3 +301,48 @@ class TestKlinesErrors:
         app.include_router(make_market_router(lambda: None, principal_resolver=_Resolver(_READ)))
         resp = TestClient(app).get("/market/klines", params=_P)
         _problem(resp, 503, "store_unavailable")
+
+
+def test_klines_param_rejections_are_counted() -> None:
+    """A6: klines rejections feed `bars_endpoint_param_rejected_total`."""
+    from prometheus_client import REGISTRY
+
+    def v(reason: str) -> float:
+        got = REGISTRY.get_sample_value("bars_endpoint_param_rejected_total", {"reason": reason})
+        return float(got or 0.0)
+
+    inv, uns = v("invalid"), v("unsupported")
+    client = _client()
+    client.get("/market/klines", params={**_P, "interval": "7"})
+    client.get("/market/klines", params={**_P, "price_type": "last"})
+    client.get("/market/klines", params={**_P, "price_type": "mark"})
+    assert (v("invalid"), v("unsupported")) == (inv + 2, uns + 1)
+
+
+def test_tape_tier_failure_serves_klines_only_never_500() -> None:
+    """S2/A2 end to end: a raw driver error in the tape tier degrades the response."""
+
+    class UndefinedTableError(Exception):
+        sqlstate = "42P01"
+
+    from candleviewer.bars.reader import BarReader, tape_time_bar_reader
+
+    class _Broken:
+        async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+            raise UndefinedTableError('relation "bars_time" does not exist')
+
+    async def _noop(*a: object) -> None: ...
+
+    service = KlineReadService(
+        _Hot(_corpus()), tape=tape_time_bar_reader(BarReader(_Broken(), _noop), timeout_s=1.0)
+    )
+    app = FastAPI()
+    app.include_router(
+        make_market_router(
+            lambda: _Hot([]), principal_resolver=_Resolver(_READ),
+            read_service_provider=lambda: service, symbol_listed=lambda s: s == "BTCUSDT",
+        )
+    )  # fmt: skip
+    resp = TestClient(app).get("/market/klines", params=_P)
+    assert resp.status_code == 200
+    assert resp.json()["meta"]["sources"] == ["questdb"] and resp.json()["meta"]["count"] == 450

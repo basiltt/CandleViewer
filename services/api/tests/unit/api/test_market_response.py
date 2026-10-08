@@ -25,16 +25,37 @@ class _Row:
     confirmed: bool = True
 
 
-@given(st.integers(min_value=0, max_value=2**63 - 1))
-def test_cursor_round_trips_any_ts(ts: int) -> None:
-    c = mr.encode_cursor(ts)
-    assert len(c) <= 128 and mr.decode_cursor(c) == ts
+_SCOPE = mr.cursor_scope("klines", "BTCUSDT", "1")
+_LO, _HI = 1_420_070_400_000_000, 4_102_444_800_000_000
+
+
+@given(st.integers(min_value=_LO, max_value=_HI))
+def test_cursor_round_trips_any_plausible_ts(ts: int) -> None:
+    c = mr.encode_cursor(_SCOPE, ts)
+    assert len(c) <= 128 and mr.decode_cursor(c, scope=_SCOPE, end_us=_HI) == ts
 
 
 @pytest.mark.parametrize("bad", ["", "a" * 129, "é", "!!!", "Zm9v", "djE6LTE", "djE6"])
 def test_decode_cursor_rejects_foreign_input(bad: str) -> None:
     with pytest.raises(mr.InvalidCursor):
-        mr.decode_cursor(bad)
+        mr.decode_cursor(bad, scope=_SCOPE, end_us=_HI)
+
+
+@pytest.mark.parametrize(
+    ("scope", "ts", "end", "grid"),
+    [
+        (mr.cursor_scope("bars", "BTCUSDT", "1"), _LO, _HI, None),  # other route
+        (_SCOPE, _LO - 1, _HI, None),  # implausibly old
+        (_SCOPE, _HI + 1, 2**63, None),  # implausibly new
+        (_SCOPE, _LO + 60_000_000, _LO, None),  # after `to`
+        (_SCOPE, _LO + 1, _HI, 60_000_000),  # off the bar grid
+    ],
+)
+def test_decode_cursor_rejects_mismatches(scope: str, ts: int, end: int, grid: int | None) -> None:
+    c = mr.encode_cursor(_SCOPE if scope.startswith("klines") else scope, ts)
+    want = scope if not scope.startswith("bars") else _SCOPE
+    with pytest.raises(mr.InvalidCursor):
+        mr.decode_cursor(c, scope=want, end_us=end, grid_us=grid)
 
 
 def test_kline_row_with_include_delta_gets_nulls_never_zero() -> None:

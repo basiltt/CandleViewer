@@ -4,9 +4,14 @@ One place builds what both routes return, so the two cannot drift from `22-api-o
 RFC 9457 problems carrying a catalogued `code`, the opaque bar cursor, `DataMeta`, the
 null-not-zero delta rule and the response size ceiling (SR-E12-01).
 
-**Cursor.** Opaque to clients (OpenAPI `MarketCursor`). Today it encodes the next page's start
-`ts` (µs); after migration 0004 it encodes `(generation, index)` (TODO(#2017)). The `v1:`
-version tag lets the server reject a cursor from another encoding with `invalid_cursor`.
+**Cursor.** Opaque to clients (OpenAPI `MarketCursor`). It encodes `v1`, the issuing route,
+symbol and series (interval, or `bar_type:param`) and the next page's first `ts` (µs); after
+migration 0004 the position becomes `(generation, index)` (TODO(#2017)). Every field is checked
+against the request on decode (`invalid_cursor` on any mismatch).
+
+**Response ceiling (A5).** The 2 MiB check runs on the serialised page. That is bounded by
+construction: `limit <= 5000` rows of at most ~400 bytes each is ~2 MB, so a page is never
+materialised beyond that before the check.
 
 **Null, not zero (BR-07).** Exchange klines carry no order flow, so a kline-sourced bar's
 `delta`/`min_delta`/`max_delta`/`cvd` are `null` when `include_delta=true`; a zero would be a lie
@@ -53,22 +58,50 @@ def problem(status: int, code: str, title: str, detail: str) -> JSONResponse:
     )
 
 
-def encode_cursor(ts_us: int) -> str:
-    raw = f"{_CURSOR_TAG}{ts_us}".encode("ascii")
+#: Plausible exchange time: 2015-01-01 .. 2100-01-01 (µs). Outside it a cursor is forged.
+_TS_MIN_US: Final = 1_420_070_400_000_000
+_TS_MAX_US: Final = 4_102_444_800_000_000
+
+
+def cursor_scope(route: str, symbol: str, series: str) -> str:
+    """What a cursor is bound to: `klines|BTCUSDT|1` or `bars|BTCUSDT|tick:100`."""
+    return f"{route}|{symbol}|{series}"
+
+
+def encode_cursor(scope: str, ts_us: int) -> str:
+    """Opaque cursor: next page's first `ts` bound to the issuing request's `scope`.
+
+    Not a MAC (no secret material exists, and none is needed): a cursor only names a position
+    in public market data, and `decode_cursor` re-validates every field against the request, so
+    a forged or replayed cursor can at worst select a page the caller could request directly.
+    """
+    raw = f"{_CURSOR_TAG}{scope}|{ts_us}".encode()
     return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
 
 
-def decode_cursor(cursor: str) -> int:
+def decode_cursor(cursor: str, *, scope: str, end_us: int, grid_us: int | None = None) -> int:
+    """`ts_us` from a cursor this server issued for exactly this request, else `InvalidCursor`.
+
+    Rejects: wrong length/encoding/version, a different route/symbol/series, a `ts` outside the
+    plausible range or after the request's `to`, and (time bars) a `ts` off the interval grid —
+    rejected, never clamped.
+    """
     if not cursor or len(cursor) > _CURSOR_MAX_LEN or not cursor.isascii():
         raise InvalidCursor("cursor is empty or too long")
     try:
-        raw = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4)).decode("ascii")
+        raw = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4)).decode("utf-8")
     except (binascii.Error, UnicodeDecodeError, ValueError) as exc:
         raise InvalidCursor("cursor is not valid base64") from exc
     body = raw.removeprefix(_CURSOR_TAG)
-    if body == raw or not body.isdigit() or len(body) > 19:
-        raise InvalidCursor("cursor has an unknown encoding")
-    return int(body)
+    got_scope, _, ts = body.rpartition("|")
+    if body == raw or got_scope != scope or not ts.isdigit() or len(ts) > 19:
+        raise InvalidCursor("cursor does not belong to this request")
+    ts_us = int(ts)
+    if not _TS_MIN_US <= ts_us <= _TS_MAX_US or ts_us > end_us:
+        raise InvalidCursor("cursor position is outside this request")
+    if grid_us is not None and ts_us % grid_us:
+        raise InvalidCursor("cursor position is not on a bar boundary")
+    return ts_us
 
 
 def iso_us(ts_us: int) -> str:
@@ -167,6 +200,7 @@ __all__ = [
     "BarRowLike",
     "InvalidCursor",
     "build_meta",
+    "cursor_scope",
     "decode_cursor",
     "encode_cursor",
     "iso_us",

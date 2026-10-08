@@ -52,6 +52,7 @@ from fastapi.responses import JSONResponse, Response
 from candleviewer.api.market_response import (
     InvalidCursor,
     build_meta,
+    cursor_scope,
     decode_cursor,
     encode_cursor,
     kline_response,
@@ -59,7 +60,7 @@ from candleviewer.api.market_response import (
     serialize_bar,
 )
 from candleviewer.bars.limits import DEFAULT_LIMIT, MAX_LIMIT, MAX_TIME_WINDOW_US
-from candleviewer.bars.metrics import record_page
+from candleviewer.bars.metrics import record_page, record_param_rejected
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
 from candleviewer.ingestion.kline_read import SOURCE_HOT, KlineReadService
 from candleviewer.storage.errors import StorageTierUnavailable
@@ -71,6 +72,8 @@ _REQUIRED_PERMISSION = "marketdata:read"
 #: mark/index/premium-index kline streams are not ingested), so the others are refused 422.
 _PRICE_TYPES = frozenset({"trade", "mark", "index", "premium_index"})
 _SERVED_PRICE_TYPES = frozenset({"trade"})
+#: A4: slices scanned per page before a data hole ends the page (bounded work per request).
+_MAX_SLICES = 16
 
 #: exchange-compatible interval codes, mirrors `22-api-openapi.yaml`'s
 #: `KlineInterval` enum — kept as a plain tuple (not an import from
@@ -212,7 +215,7 @@ def _wall_now_us() -> int:
 def _window_too_large() -> JSONResponse:
     return problem(
         422, "bar_window_too_large", "Window too large",
-        "The from/to window holds more bars than one page; narrow it or page with a cursor.",
+        "Time bars can be requested for at most 400 days at once; narrow from/to.",
     )  # fmt: skip
 
 
@@ -257,7 +260,12 @@ def make_market_router(
     served for a symbol `symbol_listed` accepts (instrument catalogue); an unknown symbol is
     `422` (declared by the route) before any read, job or per-key state. With a read service
     but no catalogue check wired, the route fails closed (`503`). The window may span at
-    most `limit` bars (`422`), and `limit` is pushed into the hot-tier query.
+    most 400 days (`422 bar_window_too_large`); narrower windows are paged by rows, each read
+    asking for `limit + 1` rows (22-api paging rule, #2087 A1/A4).
+
+    S3 (#2087 security review): FastAPI parses and validates query parameters before this
+    handler, so an unauthenticated caller can see a 400/422 schema error before the 401. Those
+    bodies go through `api.error_redaction` and never echo input.
     """
     router = APIRouter(tags=["market-data"])
 
@@ -287,7 +295,9 @@ def make_market_router(
         from_: str | None = Query(default=None, alias="from"),
         to: str | None = Query(default=None, alias="to"),
         limit: int = Query(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
-        cursor: str | None = Query(default=None, max_length=128),
+        # S1: no `max_length` here — FastAPI's pre-handler 422 would echo the value and skip
+        # the Problem shape; `decode_cursor` enforces the length and returns `invalid_cursor`.
+        cursor: str | None = Query(default=None),
         price_type: str = Query(default="trade"),
         include_open: bool = Query(default=False),
         include_delta: bool = Query(default=False),
@@ -303,12 +313,15 @@ def make_market_router(
         if cache is None:
             return _problem(503, "Service unavailable", "Market data storage is not ready yet.")
         if interval not in _VALID_INTERVALS:
-            return _problem(400, "Bad request", f"The interval {interval[:8]!r} is not supported.")
+            record_param_rejected("invalid")  # A6
+            return _problem(400, "Bad request", "The interval is not a supported interval code.")
         if price_type not in _PRICE_TYPES:
+            record_param_rejected("invalid")
             return _problem(
                 400, "Bad request", "price_type must be trade, mark, index or premium_index."
             )
         if price_type not in _SERVED_PRICE_TYPES:
+            record_param_rejected("unsupported")
             return _problem(
                 422, "Unprocessable entity",
                 f"{price_type} candles are not recorded yet; request price_type=trade.",
@@ -325,23 +338,22 @@ def make_market_router(
         start_us = int(start_dt.timestamp() * 1_000_000)
         end_us = int(end_dt.timestamp() * 1_000_000)
         width = _INTERVAL_US[interval]
-        req_end_us = end_us
+        grid = None if interval == "M" else width  # `M` is calendar-variable: no fixed grid
         if cursor is not None:
             try:
-                start_us = max(start_us, decode_cursor(cursor))
+                start_us = max(start_us, decode_cursor(
+                    cursor, scope=cursor_scope("klines", symbol, interval), end_us=end_us,
+                    grid_us=grid,
+                ))  # fmt: skip
             except InvalidCursor:
                 return problem(
                     400, "invalid_cursor", "Invalid cursor",
                     "The cursor is not valid for this request; restart without a cursor.",
                 )  # fmt: skip
-            if end_us - start_us > MAX_TIME_WINDOW_US:
-                return _window_too_large()
-            # Cursor pages may span any window: read one page from the cursor onwards.
-            end_us = min(end_us, start_us + limit * width)
-        elif end_us - start_us > limit * width:
-            # Without a cursor, a window wider than one page is refused (22-api #2045 rule).
+        if end_us - start_us > MAX_TIME_WINDOW_US:
+            # The only window refusal (22-api): the SR-E12-02 hard cap. Anything narrower is
+            # served page by page.
             return _window_too_large()
-        rng = TimeRange(start_us=start_us, end_us=max(start_us, end_us))
         service = read_service_provider() if read_service_provider is not None else None
         if service is not None and symbol_listed is None:
             return _problem(
@@ -350,40 +362,54 @@ def make_market_router(
         if symbol_listed is not None and not symbol_listed(symbol):
             # 422, not 404: the only client-error statuses this route declares are 400/422.
             return _problem(422, "Unprocessable entity", "This symbol is not a listed instrument.")
+        # A1/A4: row-based paging. Time bars have a fixed width, so a slice of `limit` widths
+        # holds at most `limit` bars; read slices oldest-first (each read asks for `limit + 1`
+        # rows, bounded) until a full page plus one row proves `has_more`, the window ends, or
+        # `_MAX_SLICES` slices were scanned (a long data hole: the page then ends at the last
+        # scanned slice and the cursor resumes after it; `meta.coverage_holes` names the gap).
         recording_started: int | None = None
-        rows: list[KlineRowLike]
-        if service is not None:
-            # +1: room for the forming bar, which `include_open=false` drops below.
-            try:
-                read = await service.read(
-                    symbol, interval, Range(rng.start_us, rng.end_us), limit=limit + 1
-                )
-            except StorageTierUnavailable:  # e.g. cold-tier DuckDB timeout: typed 503, not 500
-                return _problem(503, "Service unavailable", "A kline storage tier is unavailable.")
-            rows = list[KlineRowLike](read.rows)
-            sources = read.sources
-            recording_started = read.recording_started_at_us
-        else:
-            rows = list(await cache.read_klines(symbol, interval, rng, limit=limit + 1))
-            sources = [SOURCE_HOT] if rows else []
-        if not include_open:
-            rows = [r for r in rows if r.confirmed]
-        rows = rows[-limit:]
+        rows: list[KlineRowLike] = []
+        sources: list[str] = []
+        slice_start, slices = start_us, 0
+        while slice_start < end_us and len(rows) <= limit and slices < _MAX_SLICES:
+            slice_end = min(end_us, slice_start + (limit + 1) * width)
+            rng = Range(slice_start, slice_end)
+            if service is not None:
+                try:
+                    read = await service.read(symbol, interval, rng, limit=limit + 1)
+                except StorageTierUnavailable:  # e.g. cold-tier DuckDB timeout: typed 503
+                    return _problem(
+                        503, "Service unavailable", "A kline storage tier is unavailable."
+                    )
+                got = list[KlineRowLike](read.rows)
+                sources += [t for t in read.sources if t not in sources]
+                recording_started = read.recording_started_at_us
+            else:
+                tr = TimeRange(start_us=slice_start, end_us=slice_end)
+                got = list(await cache.read_klines(symbol, interval, tr, limit=limit + 1))
+                if got and SOURCE_HOT not in sources:
+                    sources.append(SOURCE_HOT)
+            rows += [r for r in got if include_open or r.confirmed]
+            slice_start, slices = slice_end, slices + 1
+        more = len(rows) > limit or slice_start < end_us
+        rows = rows[:limit]
         next_cursor: str | None = None
-        if cursor is not None and rng.end_us < req_end_us:
-            next_cursor = encode_cursor(rng.end_us)
+        if more:
+            resume = rows[-1].ts_us + width if len(rows) == limit else slice_start
+            if grid is not None:
+                resume = -(-resume // grid) * grid  # round up onto the bar grid
+            next_cursor = encode_cursor(cursor_scope("klines", symbol, interval), resume)
+        rng = Range(start_us, slice_start)
 
         holes: list[dict[str, int]] = []
         if coverage_index_provider is not None:
             index = coverage_index_provider(symbol, interval)
             if isinstance(index, CoverageIndex):
-                cov_range = Range(rng.start_us, rng.end_us)
-                holes = [
-                    {"start_us": h.start_us, "end_us": h.end_us} for h in index.holes(cov_range)
-                ]
-        record_page("klines", len(rows), list(sources))
+                holes = [{"start_us": h.start_us, "end_us": h.end_us} for h in index.holes(rng)]
+        served = sources if rows else []  # a tier is claimed only when its rows are served
+        record_page("klines", len(rows), list(served))
         meta = build_meta(
-            count=len(rows), next_cursor=next_cursor, sources=sources,
+            count=len(rows), next_cursor=next_cursor, sources=served,
             recording_started_at_us=recording_started, generated_at_us=now_us(),
             coverage_holes=holes,
         )  # fmt: skip

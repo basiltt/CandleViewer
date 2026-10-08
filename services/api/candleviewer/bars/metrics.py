@@ -95,6 +95,12 @@ bars_endpoint_source_tier_total = Counter(
     labelnames=("endpoint_group", "stream"),
 )
 
+bars_tape_read_degraded_total = Counter(
+    "bars_tape_read_degraded_total",
+    "Tape-tier reads for /market/klines that failed and degraded to klines-only.",
+    labelnames=("reason",),
+)
+
 
 def record_page(route: str, rows: int, tiers: list[str]) -> None:
     """Count one served page; unknown label values are dropped, never minted."""
@@ -135,6 +141,7 @@ EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
         "bars_endpoint_422_no_data_recorded_total",
         "bars_endpoint_param_rejected_total",
         "bars_endpoint_source_tier_total",
+        "bars_tape_read_degraded_total",
     }
 )
 
