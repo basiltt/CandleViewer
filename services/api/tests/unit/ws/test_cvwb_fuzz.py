@@ -1,7 +1,8 @@
 """E17-T02 part B: nightly mutation fuzz of the CVWB decoder (SR-155) seeded from the corpus.
 
-Excluded from the PR lane (``-m "not fuzz"``); default 200 examples, nightly sets
-``CV_FUZZ_EXAMPLES=20000``.
+Deselected from the default lane by `addopts` (`-m "not fuzz and not perf"`); run explicitly with
+``pytest -m fuzz --no-cov``. Default 200 examples; the nightly sets ``CV_FUZZ_EXAMPLES=20000`` and
+``CV_FUZZ_SEED`` (Hypothesis runs derandomised from it, so a failure replays from the seed).
 Invariant: ``decode`` returns a ``Frame`` or raises ONLY ``FrameMalformedError``, and one decode
 never allocates more than ``MAX_PEAK_BYTES`` (SR-128: wire counts never size an allocation).
 Failing inputs are written to ``CV_FUZZ_ARTIFACT_DIR`` (uploaded as a CI artefact, never the repo).
@@ -9,15 +10,18 @@ Failing inputs are written to ``CV_FUZZ_ARTIFACT_DIR`` (uploaded as a CI artefac
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
+import random
 import struct
 import tracemalloc
 from pathlib import Path
 from typing import Final
 
 import pytest
-from hypothesis import HealthCheck, given, settings
+from hypothesis import HealthCheck, given, seed, settings
 from hypothesis import strategies as st
 
 from candleviewer.ws.binary import FrameMalformedError, decode
@@ -58,19 +62,27 @@ def mutate(seed: bytes, ops: list[tuple[str, int, int]]) -> bytes:
     return bytes(buf)
 
 
-def _save_failure(data: bytes) -> None:
+SEED: Final[int] = int(os.environ.get("CV_FUZZ_SEED", "12648430"))
+random.seed(SEED)
+
+
+def _save_failure(data: bytes) -> str:
+    """Dumps the input under CV_FUZZ_ARTIFACT_DIR by sha256; returns the replay string."""
     out = os.environ.get("CV_FUZZ_ARTIFACT_DIR")
     if out:
         Path(out).mkdir(parents=True, exist_ok=True)
-        (Path(out) / f"cvwb-fail-{abs(hash(data)):x}.bin").write_bytes(data)
+        (Path(out) / f"cvwb-fail-{hashlib.sha256(data).hexdigest()}.bin").write_bytes(data)
+    return f"seed={SEED} b64={base64.b64encode(data).decode()}"
 
 
 @pytest.mark.fuzz
+@seed(SEED)
 @settings(
     max_examples=EXAMPLES,
     deadline=None,
     suppress_health_check=list(HealthCheck),
     database=None,
+    print_blob=True,
 )
 @given(i=st.integers(0, len(SEEDS) - 1), ops=st.lists(_op, min_size=1, max_size=6))
 def test_decode_mutated_corpus_raises_only_the_typed_error(
@@ -83,12 +95,48 @@ def test_decode_mutated_corpus_raises_only_the_typed_error(
             decode(data)
         except FrameMalformedError:
             pass
-        except BaseException:
-            _save_failure(data)
-            raise
+        except BaseException as exc:
+            raise AssertionError(f"untyped {exc!r}: {_save_failure(data)}") from exc
         _, peak = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
     if peak > MAX_PEAK_BYTES:
-        _save_failure(data)
-    assert peak <= MAX_PEAK_BYTES, f"decode peaked at {peak} B on {data.hex()}"
+        pytest.fail(f"decode peaked at {peak} B: {_save_failure(data)}")
+
+
+# SR-128 (targeted): every count field that cannot fit is rejected up front by `_fits`. Removing
+# the body-prefix (row_count), per-group cell_count or trailing record-count check fails here.
+# The OUTER footprint group-count check (L235) and the per-group prefix `_fits(1, ...)` (L239) back
+# each other up (both raise "exceeds"); removing one alone costs at most a bounded loop, never an
+# allocation, so neither is separately observable and neither is probed on its own.
+_VALUES = (0, 1, 0xFFFF, 0x7FFFFFFF, 0xFFFFFFFF)
+# (body_kind, count offset, stride, bytes before the first counted record)
+_SITES = (
+    (1, 12, 17, 24),
+    (2, 12, 17, 24),
+    (3, 12, 22, 24),
+    (5, 28, 33, 32),
+    (6, 44, 16, 48),
+)
+
+
+def test_every_unfittable_wire_count_is_rejected_up_front() -> None:
+    probes = 0
+    for kind, off, stride, base in _SITES:
+        for raw in SEEDS:
+            if len(raw) < off + 4 or raw[5] != kind:
+                continue
+            try:
+                decode(raw)
+            except FrameMalformedError:
+                continue
+            avail = len(raw) - base
+            for value in (*_VALUES, avail // stride + 1):
+                if value * stride <= avail:
+                    continue
+                data = bytearray(raw)
+                struct.pack_into("<I", data, off, value)
+                with pytest.raises(FrameMalformedError, match="exceeds"):
+                    decode(bytes(data))
+                probes += 1
+    assert probes > 20

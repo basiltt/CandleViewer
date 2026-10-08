@@ -110,8 +110,12 @@ jobs:
         env:
           HYPOTHESIS_PROFILE: ci
         run: >
-          uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration) and not roundtrip"
+          uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration) and not roundtrip and not fuzz"
+          --ignore=tests/unit/ws/test_cvwb_perf.py
           --cov --cov-report=xml:coverage.xml --cov-report=term
+
+      - name: pytest CVWB decode perf (E17-T02, no coverage tracing)
+        run: uv run pytest tests/unit/ws/test_cvwb_perf.py -m perf --no-cov -p no:cacheprovider
 
       - name: uv build
         run: uv build
