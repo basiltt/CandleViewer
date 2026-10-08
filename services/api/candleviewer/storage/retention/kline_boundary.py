@@ -16,7 +16,7 @@ from typing import Any, Final
 import structlog
 
 from candleviewer.observability.context import spawn
-from candleviewer.observability.metrics import Counter
+from candleviewer.observability.kline_boundary_metrics import kline_hot_boundary_fallback_total
 from candleviewer.storage.models import StreamKind
 from candleviewer.storage.retention.policy import RetentionPolicy
 
@@ -31,12 +31,6 @@ LOAD_TIMEOUT_S: Final = 5.0
 US_PER_DAY: Final = 86_400 * 1_000_000
 SOURCE_POLICY: Final = "policy"
 SOURCE_FALLBACK: Final = "fallback"
-
-kline_hot_boundary_fallback_total = Counter(
-    "kline_hot_boundary_fallback_total",
-    "Klines hot boundary on the 90 d constant (reason: no_policy | invalid_policy | load_failed).",
-    ["reason"],
-)
 
 
 class KlineHotBoundary:

@@ -19,6 +19,7 @@ from typing import Any, Final, Protocol
 import structlog
 
 from candleviewer.bars.errors import BarsError
+from candleviewer.bars.metrics import bars_kline_refused_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.reader import RowFetcher
 from candleviewer.bars.rows import (
@@ -31,7 +32,6 @@ from candleviewer.bars.rows import (
 from candleviewer.bars.spec import from_wire
 from candleviewer.bars.writer import SourceOverwriteRefused, bars_source_overwrite_refused_total
 from candleviewer.exchange.base.models import KlineEvent
-from candleviewer.observability.metrics import Counter
 
 
 def _log() -> Any:
@@ -46,11 +46,6 @@ KLINE_REFUSE_REASONS: Final = frozenset({REFUSE_PRECEDENCE_UNKNOWN})
 #: Health reason surfaced while the stored-tape lookup is failing (#2053).
 PRECEDENCE_HEALTH_REASON: Final = "tape_precedence_unknown"
 DEFAULT_LOOKUP_TIMEOUT_S: Final = 2.0
-bars_kline_refused_total = Counter(
-    "bars_kline_refused_total",
-    "Kline rows refused before queueing (reason: precedence_unknown).",
-    ["reason"],
-)
 #: Columns a kline cannot know; always NULL on a kline-sourced row.
 ORDERFLOW_NULL_COLUMNS: Final = (
     "buy_volume",

@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from typing import Final
 
+from candleviewer.observability.kline_boundary_metrics import (  # noqa: F401 - registers it
+    kline_hot_boundary_fallback_total,
+)
 from candleviewer.observability.metrics import (
     CollectorRegistry,
     Counter,
@@ -56,6 +59,11 @@ bar_builder_quarantined_total = Counter(
 bars_restore_gap_total = Counter(
     "bars_restore_gap_total",
     "Restores whose tape lag exceeded the lane's recent-trade ring (trades missed).",
+)
+bars_kline_refused_total = Counter(
+    "bars_kline_refused_total",
+    "Kline rows refused before queueing (reason: precedence_unknown = tape lookup failed).",
+    labelnames=("reason",),
 )
 bar_emit_sink_errors_total = Counter(
     "bar_emit_sink_errors_total", "Bar emissions a sink failed to accept.", labelnames=("reason",)
