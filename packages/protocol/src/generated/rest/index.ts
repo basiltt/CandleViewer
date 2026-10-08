@@ -1640,26 +1640,27 @@ export interface paths {
      *     **Ordering and identity (#2014).** A bar's identity is `(series, generation, index)`
      *     (21 §4.8, 24 §3.1). The response serves exactly one generation: the series' current
      *     generation, pinned for the whole request (ADR-0033 Decision 2), never a mix. `bars` is
-     *     ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire). `t` MAY
+     *     ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire; until
+     *     migration 0004 the server orders by `t`, see `MarketCursor`). `t` MAY
      *     repeat for non-time bars (an N-threshold print yields N volume bars or renko bricks with
      *     one open time; two tick bars can open in the same ms). Clients MUST key bars by
      *     `(generation, index)`, never by `t`. Every bar returned here carries `index` and
      *     `generation` (they stay optional in the shared `Bar` schema only because
-     *     `/market/klines` also uses it). Pagination follows C3: `next_cursor` is opaque, encodes
-     *     the pinned `(generation, index)`, and resumes after the last returned `index` in that
-     *     generation; if the generation was swapped since, the server returns `invalid_cursor` and
-     *     the client restarts. A request whose window starts before
+     *     `/market/klines` also uses it). Pagination follows C3 and the `MarketCursor` parameter;
+     *     if the pinned generation was swapped since the cursor was issued, the server returns
+     *     `invalid_cursor` and the client restarts. A request whose window starts before
      *     `recording_started_at` returns `no_data_recorded` (422) rather than silently
      *     substituting REST klines, because tick-accurate construction is impossible there.
+     *     **Precedence:** when a non-time window both starts before `recording_started_at` and
+     *     exceeds `limit` × bar width without a cursor, `no_data_recorded` wins — it is the more
+     *     specific data-availability fact, and the client cannot fix it by paginating.
      *
      *     **Window vs cursor (#2045, E12-T05).** A request without `cursor` whose `to − from`
      *     exceeds `limit` × bar width (estimated for non-time bars) returns 422
      *     `bar_window_too_large` and the client must paginate; a request with `cursor` is bounded
      *     by `limit` per page and may span any window, with `meta.has_more` / `meta.next_cursor`
-     *     driving continuation. `cursor` is opaque and server-issued — clients must not parse it
-     *     (it encodes `ts` today and `(generation, index)` after migration 0004); a malformed or
-     *     expired cursor returns `invalid_cursor`. A page that would exceed the response ceiling
-     *     returns 422 `response_too_large`.
+     *     driving continuation. Cursor semantics are stated once, on the `MarketCursor` parameter.
+     *     A page that would exceed the response ceiling returns 422 `response_too_large`.
      */
     get: operations["getBars"];
     put?: never;
@@ -1810,10 +1811,8 @@ export interface paths {
      *     exceeds `limit` × bar width (estimated for non-time bars) returns 422
      *     `bar_window_too_large` and the client must paginate; a request with `cursor` is bounded
      *     by `limit` per page and may span any window, with `meta.has_more` / `meta.next_cursor`
-     *     driving continuation. `cursor` is opaque and server-issued — clients must not parse it
-     *     (it encodes `ts` today and `(generation, index)` after migration 0004); a malformed or
-     *     expired cursor returns `invalid_cursor`. A page that would exceed the response ceiling
-     *     returns 422 `response_too_large`.
+     *     driving continuation. Cursor semantics are stated once, on the `MarketCursor` parameter.
+     *     A page that would exceed the response ceiling returns 422 `response_too_large`.
      */
     get: operations["getKlines"];
     put?: never;
@@ -7417,7 +7416,7 @@ export interface components {
     LayoutId: string;
     /** @description Page size. */
     Limit: number;
-    /** @description Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`, `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`. */
+    /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. */
     MarketCursor: string;
     MethodId: string;
     OrderId: string;
@@ -10368,7 +10367,7 @@ export interface operations {
     parameters: {
       query: {
         bar_type: components["schemas"]["BarType"];
-        /** @description Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`, `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`. */
+        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. */
         cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
@@ -10589,7 +10588,7 @@ export interface operations {
   getKlines: {
     parameters: {
       query: {
-        /** @description Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`, `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`. */
+        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. */
         cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
