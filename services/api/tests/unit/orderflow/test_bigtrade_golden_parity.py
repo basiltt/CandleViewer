@@ -353,4 +353,32 @@ def test_second_symbol_synthetic_tick_001_smoke_engine_equals_oracle(tmp_path: P
     assert [(c.side, c.price_bucket) for c in got] == [(w["side"], w["price_bucket"]) for w in want]
     assert [len(c.trade_ids) for c in got] == [4, 2, 1]
     with pytest.raises(ValueError, match="tick_size"):
-        Recompute(path, Decimal("0.001"))
+        Recompute(path, Decimal("0.000000001"))
+
+
+def test_sub_cent_synthetic_tick_0001_smoke_engine_equals_oracle(tmp_path: Path) -> None:
+    """SYNTHETIC prints, tick 0.0001, tolerance 2 (bucket width 0.0002): smoke only (C-13.5).
+    Prices sit on both sides of bucket edges (0.5000/0.5001 | 0.5002/0.5003 | 0.5004)."""
+    tick = Decimal("0.0001")
+    px = ["0.5000", "0.5001", "0.5002", "0.5003", "0.5001", "0.5004", "0.4999", "0.5000"]
+    base = 1_700_000_000_000_000
+    rows = [f"u{i:03d},{base + i * 10_000},sell,{p},10.0,0" for i, p in enumerate(px)]
+    path = _write_csv(tmp_path / "subcent.csv.gz", rows)
+    cfg = _CFG[CLUSTERED].__class__(
+        mode="notional", value=Decimal("1"), cluster_window_ms=250, cluster_tolerance_ticks=2
+    )
+    evs = G.to_events(_rows(rows), "XRPUSDT", tick)
+    eng = BigTradeEngine("XRPUSDT", tick, cfg)
+    got = sorted(
+        (c for c in G.run(cfg, evs, engine=eng) if isinstance(c, TradeClusterEvent)),
+        key=lambda c: (c.first_ts_event, c.first_trade_id),
+    )
+    want = Recompute(path, tick).clusters(2, 250)
+    assert [list(c.trade_ids) for c in got] == [w["trade_ids"] for w in want]
+    assert [(c.side, c.price_bucket) for c in got] == [(w["side"], w["price_bucket"]) for w in want]
+    assert [len(c.trade_ids) for c in got] == [
+        4,
+        2,
+        1,
+        1,
+    ]  # buckets 2500 (x4), 2501 (x2), 2502, 2499

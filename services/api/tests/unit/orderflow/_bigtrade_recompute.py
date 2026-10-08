@@ -13,18 +13,20 @@ from typing import Any
 
 import duckdb
 
+PRICE_SCALE = 10**8  # 8 price decimals: tick_size * PRICE_SCALE must be an integer >= 1
+
 _LOAD = """
 CREATE TABLE prints AS
 SELECT trade_id, ts_event_us AS ts, side,
-       CAST(price AS DECIMAL(18,2)) AS price, CAST(qty AS DECIMAL(18,8)) AS qty,
-       CAST(price AS DECIMAL(18,2)) * CAST(qty AS DECIMAL(18,8)) AS notional,
-       CAST(CAST(price AS DECIMAL(18,2)) * 100 AS BIGINT) // ? AS ticks
+       CAST(price AS DECIMAL(18,8)) AS price, CAST(qty AS DECIMAL(18,8)) AS qty,
+       CAST(price AS DECIMAL(38,8)) * CAST(qty AS DECIMAL(38,8)) AS notional,
+       CAST(CAST(price AS DECIMAL(38,8)) * ? AS BIGINT) // ? AS ticks
 FROM read_csv(?, header = true, delim = ',',
               columns = {'trade_id': 'VARCHAR', 'ts_event_us': 'BIGINT', 'side': 'VARCHAR',
                          'price': 'VARCHAR', 'qty': 'VARCHAR', 'is_block_trade': 'INTEGER'})
 """
-# Tick is a bound parameter (integer hundredths, exact): ticks = floor(price_cents / tick_cents).
-# Prices are DECIMAL(18,2), so the tick must be a whole multiple of 0.01 (checked in __init__).
+# Prices load as DECIMAL(18,8); PRICE_SCALE is the single scale used for the load, the multiply and
+# the tick conversion, so ticks = floor(price * SCALE / (tick * SCALE)) in exact integer arithmetic.
 
 _CLUSTERS = """
 WITH RECURSIVE keyed AS (
@@ -53,11 +55,12 @@ ORDER BY first_ts, first_id
 
 class Recompute:
     def __init__(self, trades_csv_gz: Path, tick_size: Decimal) -> None:
-        cents = tick_size * 100
-        if cents <= 0 or cents != cents.to_integral_value():
-            raise ValueError(f"tick_size must be a positive multiple of 0.01, got {tick_size}")
+        """`tick_size * PRICE_SCALE` (1e8) must be an integer >= 1, i.e. at most 8 decimals."""
+        scaled = tick_size * PRICE_SCALE
+        if scaled < 1 or scaled != scaled.to_integral_value():
+            raise ValueError(f"tick_size must be a multiple of 1e-8 and >= 1e-8, got {tick_size}")
         self.con = duckdb.connect(":memory:")
-        self.con.execute(_LOAD, [int(cents), trades_csv_gz.as_posix()])
+        self.con.execute(_LOAD, [PRICE_SCALE, int(scaled), trades_csv_gz.as_posix()])
 
     def flagged_notional(self, threshold: str) -> list[dict[str, Any]]:
         rows = self.con.execute(

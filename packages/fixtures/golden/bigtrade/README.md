@@ -24,9 +24,12 @@ symbol-day capture exists (E16, #42).
 
 ## Independent recompute
 
+Limit: prices load as DECIMAL(18,8) and bucket in integer `PRICE_SCALE = 1e8` units, so
+`tick_size` must be a multiple of 1e-8 (>= 1e-8); anything finer raises. Covers 0.0001 and 0.005.
+
 `tests/unit/orderflow/_bigtrade_recompute.py` (DuckDB SQL, no engine imports): `WHERE` over a
 DECIMAL notional for flags (tick bound as a parameter from `summary.json`; a second-symbol smoke
-case with SYNTHETIC prints at tick 0.01 checks oracle shape/determinism only, never a golden), a recursive-CTE island query over `(side, price_bucket)` for clusters.
+case with SYNTHETIC prints at tick 0.01 (plus a sub-cent 0.0001 case) checks oracle shape/determinism only, never a golden), a recursive-CTE island query over `(side, price_bucket)` for clusters.
 Percentile mode (P2 estimate, not exactly recomputable) is checked as flags == ASOF join of the
 engine's emitted threshold schedule, plus a rank sanity bound.
 
