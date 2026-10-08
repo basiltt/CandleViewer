@@ -39,14 +39,27 @@ unauthenticated", and only the resolver can tell those apart (mirrors
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+import inspect
+import time
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
+from candleviewer.api.market_response import (
+    InvalidCursor,
+    build_meta,
+    decode_cursor,
+    encode_cursor,
+    kline_response,
+    problem,
+    serialize_bar,
+)
+from candleviewer.bars.limits import DEFAULT_LIMIT, MAX_LIMIT, MAX_TIME_WINDOW_US
+from candleviewer.bars.metrics import record_page
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
 from candleviewer.ingestion.kline_read import SOURCE_HOT, KlineReadService
 from candleviewer.storage.errors import StorageTierUnavailable
@@ -54,8 +67,10 @@ from candleviewer.storage.models import TierHint, TimeRange
 
 _REQUIRED_PERMISSION = "marketdata:read"
 
-_MAX_LIMIT = 5000
-_DEFAULT_LIMIT = 1000
+#: `price_type` values the contract enumerates; only `trade` klines are stored today (the
+#: mark/index/premium-index kline streams are not ingested), so the others are refused 422.
+_PRICE_TYPES = frozenset({"trade", "mark", "index", "premium_index"})
+_SERVED_PRICE_TYPES = frozenset({"trade"})
 
 #: exchange-compatible interval codes, mirrors `22-api-openapi.yaml`'s
 #: `KlineInterval` enum — kept as a plain tuple (not an import from
@@ -110,7 +125,9 @@ class PrincipalResolver(Protocol):
     between a resolver that found no session (401) and no resolver being
     wired at all (501, see `_authorize_or_raise` below)."""
 
-    def resolve(self, request: Request) -> MarketDataPrincipal | None: ...
+    def resolve(
+        self, request: Request
+    ) -> MarketDataPrincipal | Awaitable[MarketDataPrincipal | None] | None: ...
 
 
 class CoverageIndexProvider(Protocol):
@@ -163,11 +180,20 @@ class MarketDataCacheLike(Protocol):
 
 
 def _problem(status_code: int, title: str, detail: str) -> JSONResponse:
-    return JSONResponse(
-        status_code=status_code,
-        content={"type": "about:blank", "title": title, "status": status_code, "detail": detail},
-        media_type="application/problem+json",
+    """Problem with the catalogued `code` for this status (OpenAPI `Problem.code` is required)."""
+    return problem(
+        status_code, _CODE_BY_STATUS.get(status_code, "validation_failed"), title, detail
     )
+
+
+_CODE_BY_STATUS: dict[int, str] = {
+    400: "validation_failed",
+    401: "unauthenticated",
+    403: "forbidden",
+    422: "validation_failed",
+    501: "internal_error",
+    503: "store_unavailable",
+}
 
 
 def _parse_time(value: str | None, *, default: datetime | None) -> datetime | None:
@@ -179,21 +205,15 @@ def _parse_time(value: str | None, *, default: datetime | None) -> datetime | No
     return parsed
 
 
-def _iso(ts_us: int) -> str:
-    return datetime.fromtimestamp(ts_us / 1_000_000, tz=UTC).isoformat()
+def _wall_now_us() -> int:
+    return time.time_ns() // 1000
 
 
-def _row_to_bar(row: KlineRowLike) -> dict[str, object]:
-    return {
-        "t": _iso(row.ts_us),
-        "o": row.open,
-        "h": row.high,
-        "l": row.low,
-        "c": row.close,
-        "v": row.volume,
-        "turnover": row.turnover,
-        "confirm": row.confirmed,
-    }
+def _window_too_large() -> JSONResponse:
+    return problem(
+        422, "bar_window_too_large", "Window too large",
+        "The from/to window holds more bars than one page; narrow it or page with a cursor.",
+    )  # fmt: skip
 
 
 def make_market_router(
@@ -203,6 +223,7 @@ def make_market_router(
     principal_resolver: PrincipalResolver | None = None,
     read_service_provider: Callable[[], KlineReadService | None] | None = None,
     symbol_listed: Callable[[str], bool] | None = None,
+    now_us: Callable[[], int] = _wall_now_us,
 ) -> APIRouter:
     """Bind `GET /market/klines` to a concrete cache reader.
 
@@ -244,23 +265,19 @@ def make_market_router(
         def __init__(self, response: JSONResponse) -> None:
             self.response = response
 
-    def _authorize_or_raise(request: Request) -> None:
+    async def _authorize_or_raise(request: Request) -> None:
         if principal_resolver is None:
             raise _HttpProblem(
-                _problem(
-                    501,
-                    "Not implemented",
-                    "no principal resolver wired — session verification is out of this "
-                    "ticket's scope",
-                )
+                _problem(501, "Not implemented", "Session verification is not wired yet.")
             )
-        principal = principal_resolver.resolve(request)
+        got = principal_resolver.resolve(request)
+        principal = await got if inspect.isawaitable(got) else got
         if principal is None:
-            raise _HttpProblem(
-                _problem(401, "Unauthorized", "no verified session for this request")
-            )
+            raise _HttpProblem(_problem(401, "Unauthorized", "Sign in to read market data."))
         if not principal.has(_REQUIRED_PERMISSION):
-            raise _HttpProblem(_problem(403, "Forbidden", f"requires {_REQUIRED_PERMISSION}"))
+            raise _HttpProblem(
+                _problem(403, "Forbidden", f"Reading market data requires {_REQUIRED_PERMISSION}.")
+            )
 
     @router.get("/market/klines")
     async def get_klines(
@@ -269,54 +286,71 @@ def make_market_router(
         interval: str,
         from_: str | None = Query(default=None, alias="from"),
         to: str | None = Query(default=None, alias="to"),
-        limit: int = Query(default=_DEFAULT_LIMIT, ge=1, le=_MAX_LIMIT),
+        limit: int = Query(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+        cursor: str | None = Query(default=None, max_length=128),
         price_type: str = Query(default="trade"),
         include_open: bool = Query(default=False),
         include_delta: bool = Query(default=False),
-    ) -> JSONResponse:
+    ) -> Response:
         try:
-            _authorize_or_raise(request)
-        except _HttpProblem as problem:
-            return problem.response
+            await _authorize_or_raise(request)
+        except _HttpProblem as problem_:
+            return problem_.response
         try:
             cache = cache_provider()
         except StorageTierUnavailable:
             cache = None
         if cache is None:
-            return _problem(503, "Service unavailable", "market-data cache is not wired")
+            return _problem(503, "Service unavailable", "Market data storage is not ready yet.")
         if interval not in _VALID_INTERVALS:
-            return _problem(400, "Bad request", f"unsupported interval {interval!r}")
-        try:
-            end_dt = _parse_time(to, default=datetime.now(UTC))
-            start_dt = _parse_time(from_, default=None)
-        except ValueError as exc:
-            return _problem(400, "Bad request", f"invalid from/to timestamp: {exc}")
-        if end_dt is None:
-            return _problem(400, "Bad request", "invalid 'to' timestamp")
-        if start_dt is None:
-            return _problem(400, "Bad request", "'from' is required")
-        if start_dt > end_dt:
-            return _problem(400, "Bad request", "'from' must be <= 'to'")
-
-        # Server-side bound on the requested range (security notes: "an
-        # authenticated user cannot request an unbounded range and force a
-        # large ... database scan") — `limit` already caps rows returned;
-        # this additionally caps how far back a single call may scan.
-        rng = TimeRange(
-            start_us=int(start_dt.timestamp() * 1_000_000),
-            end_us=int(end_dt.timestamp() * 1_000_000),
-        )
-        if rng.end_us - rng.start_us > limit * _INTERVAL_US[interval]:
+            return _problem(400, "Bad request", f"The interval {interval[:8]!r} is not supported.")
+        if price_type not in _PRICE_TYPES:
             return _problem(
-                422, "Unprocessable entity", "the from/to window spans more than 'limit' bars"
+                400, "Bad request", "price_type must be trade, mark, index or premium_index."
             )
+        if price_type not in _SERVED_PRICE_TYPES:
+            return _problem(
+                422, "Unprocessable entity",
+                f"{price_type} candles are not recorded yet; request price_type=trade.",
+            )  # fmt: skip
+        try:
+            end_dt = _parse_time(to, default=datetime.fromtimestamp(now_us() / 1e6, tz=UTC))
+            start_dt = _parse_time(from_, default=None)
+        except ValueError:
+            return _problem(400, "Bad request", "from/to must be RFC 3339 timestamps.")
+        if end_dt is None or start_dt is None:
+            return _problem(400, "Bad request", "'from' is required.")
+        if start_dt > end_dt:
+            return _problem(400, "Bad request", "'from' must not be after 'to'.")
+        start_us = int(start_dt.timestamp() * 1_000_000)
+        end_us = int(end_dt.timestamp() * 1_000_000)
+        width = _INTERVAL_US[interval]
+        req_end_us = end_us
+        if cursor is not None:
+            try:
+                start_us = max(start_us, decode_cursor(cursor))
+            except InvalidCursor:
+                return problem(
+                    400, "invalid_cursor", "Invalid cursor",
+                    "The cursor is not valid for this request; restart without a cursor.",
+                )  # fmt: skip
+            if end_us - start_us > MAX_TIME_WINDOW_US:
+                return _window_too_large()
+            # Cursor pages may span any window: read one page from the cursor onwards.
+            end_us = min(end_us, start_us + limit * width)
+        elif end_us - start_us > limit * width:
+            # Without a cursor, a window wider than one page is refused (22-api #2045 rule).
+            return _window_too_large()
+        rng = TimeRange(start_us=start_us, end_us=max(start_us, end_us))
         service = read_service_provider() if read_service_provider is not None else None
         if service is not None and symbol_listed is None:
-            return _problem(503, "Service unavailable", "instrument catalogue is not wired")
+            return _problem(
+                503, "Service unavailable", "The instrument catalogue is not ready yet."
+            )
         if symbol_listed is not None and not symbol_listed(symbol):
             # 422, not 404: the only client-error statuses this route declares are 400/422.
-            return _problem(422, "Unprocessable entity", "unknown instrument")
-        recording_started: str | None = None
+            return _problem(422, "Unprocessable entity", "This symbol is not a listed instrument.")
+        recording_started: int | None = None
         rows: list[KlineRowLike]
         if service is not None:
             # +1: room for the forming bar, which `include_open=false` drops below.
@@ -325,17 +359,19 @@ def make_market_router(
                     symbol, interval, Range(rng.start_us, rng.end_us), limit=limit + 1
                 )
             except StorageTierUnavailable:  # e.g. cold-tier DuckDB timeout: typed 503, not 500
-                return _problem(503, "Service unavailable", "kline storage tier unavailable")
+                return _problem(503, "Service unavailable", "A kline storage tier is unavailable.")
             rows = list[KlineRowLike](read.rows)
             sources = read.sources
-            if read.recording_started_at_us is not None:
-                recording_started = _iso(read.recording_started_at_us)
+            recording_started = read.recording_started_at_us
         else:
             rows = list(await cache.read_klines(symbol, interval, rng, limit=limit + 1))
             sources = [SOURCE_HOT] if rows else []
         if not include_open:
             rows = [r for r in rows if r.confirmed]
-        rows = rows[-limit:]  # newest `limit` (the window cap makes this the whole window)
+        rows = rows[-limit:]
+        next_cursor: str | None = None
+        if cursor is not None and rng.end_us < req_end_us:
+            next_cursor = encode_cursor(rng.end_us)
 
         holes: list[dict[str, int]] = []
         if coverage_index_provider is not None:
@@ -345,23 +381,16 @@ def make_market_router(
                 holes = [
                     {"start_us": h.start_us, "end_us": h.end_us} for h in index.holes(cov_range)
                 ]
-
-        body = {
-            "symbol": symbol,
-            "interval": interval,
-            "bar_type": "time",
-            "bars": [_row_to_bar(r) for r in rows],
-            "meta": {
-                "next_cursor": None,
-                "has_more": False,
-                "count": len(rows),
-                "sources": sources,
-                "recording_started_at": recording_started,
-                "generated_at": datetime.now(UTC).isoformat(),
-                "coverage_holes": holes,
-            },
-        }
-        return JSONResponse(status_code=200, content=body)
+        record_page("klines", len(rows), list(sources))
+        meta = build_meta(
+            count=len(rows), next_cursor=next_cursor, sources=sources,
+            recording_started_at_us=recording_started, generated_at_us=now_us(),
+            coverage_holes=holes,
+        )  # fmt: skip
+        return kline_response(
+            symbol=symbol, interval=interval, bar_type="time",
+            bars=[serialize_bar(r, include_delta=include_delta) for r in rows], meta=meta,
+        )  # fmt: skip
 
     return router
 

@@ -4,9 +4,10 @@ Source priority (OpenAPI): (1) tape-built bars, (2) exchange REST kline backfill
 the store does not hold, (3) the Parquet cold tier for windows older than QuestDB hot
 retention.
 
-**Scope today: klines only.** Tier (1), merging `bars_time` (source=tape) so tape wins on
-overlap, is deferred to E12-T05 (#398): nothing persists `bars_time` rows in production yet
-(`bars_wiring`, #2037) and no `bars_time` read is composed, so `sources` never claims tape.
+**Tape wins over klines on overlap (E12-T05, #398).** When the composition root injects a
+`tape` reader (tape-built `bars_time` rows), its bars replace kline rows with the same open time
+and `sources` gains `tape` only when such a row is actually returned. Without one (no `BarWriter`
+composed, `bars_enabled` off) the read is klines-only and never claims tape.
 The cold tier is wired by the composition root (`ParquetKlineReader`, #2048); the route's
 catalogue check precedes any cold path join.
 
@@ -34,6 +35,7 @@ from candleviewer.ingestion.kline_coverage import Range
 SOURCE_HOT: Final = "questdb"
 SOURCE_COLD: Final = "parquet"
 SOURCE_EXCHANGE: Final = "exchange_rest"
+SOURCE_TAPE: Final = "tape"
 #: Row `source` tags that mean "this bar came from the exchange REST kline endpoint".
 _EXCHANGE_ROW_SOURCES: Final = frozenset({"rest", "kline"})
 
@@ -70,6 +72,10 @@ class HotKlineReader(Protocol):
 RecordingStart = Callable[[str], Awaitable[int | None]]
 
 ColdKlineReader = Callable[[str, str, Range], Awaitable[Sequence[KlineRowLike]]]
+#: `(symbol, interval, window, limit) -> tape-built time bars`, ascending; rows report
+#: `source == "tape"`. Composed from `bars.reader` at the composition root (ingestion never
+#: imports bars, C-3.1).
+TapeBarReader = Callable[[str, str, Range, int | None], Awaitable[Sequence[KlineRowLike]]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +107,7 @@ class KlineReadService:
         cold: ColdKlineReader | None = None,
         hot_boundary_us: Callable[[], int] = lambda: 0,
         recording_started_at_us: RecordingStart | None = None,
+        tape: TapeBarReader | None = None,
         max_backfill_bars: int = 400_000,
         max_tracked_keys: int = 512,
     ) -> None:
@@ -109,9 +116,14 @@ class KlineReadService:
         self._cold = cold
         self._boundary = hot_boundary_us
         self._recording_started = recording_started_at_us
+        self._tape = tape
         self._max_backfill_bars = max_backfill_bars
         self._primed: OrderedDict[tuple[str, str], None] = OrderedDict()
         self._max_primed = max(1, max_tracked_keys)
+
+    def attach_tape(self, tape: TapeBarReader) -> None:
+        """Compose tier (1) once a `bars_time` reader exists (wired after the bars runtime)."""
+        self._tape = tape
 
     async def read(
         self, symbol: str, interval: str, rng: Range, limit: int | None = None
@@ -137,6 +149,14 @@ class KlineReadService:
             rows.extend(hot_rows)
             hot_ids = {id(r) for r in hot_rows}
             holes, backfilling = await self._schedule_backfill(symbol, interval, hot_rng)
+        tape_ids: set[int] = set()
+        if self._tape is not None:
+            tape_rows = await self._tape(symbol, interval, rng, limit)
+            if tape_rows:
+                taped = {r.ts_us for r in tape_rows}
+                rows = [r for r in rows if r.ts_us not in taped]  # tape wins on overlap
+                rows.extend(tape_rows)
+                tape_ids = {id(r) for r in tape_rows}
         # A4: claim the exchange tier only once exchange-sourced rows are actually merged into
         # this response; a running job alone is reported via `backfilling`, not `sources`.
         rows.sort(key=lambda r: r.ts_us)
@@ -148,6 +168,8 @@ class KlineReadService:
             sources.append(SOURCE_COLD)
         if any(id(r) in hot_ids for r in rows):
             sources.append(SOURCE_HOT)
+        if any(id(r) in tape_ids for r in rows):
+            sources.append(SOURCE_TAPE)
         if any(r.source in _EXCHANGE_ROW_SOURCES for r in rows):
             sources.append(SOURCE_EXCHANGE)
         started = await self._recording_started(symbol) if self._recording_started else None
@@ -180,9 +202,11 @@ __all__ = [
     "SOURCE_COLD",
     "SOURCE_EXCHANGE",
     "SOURCE_HOT",
+    "SOURCE_TAPE",
     "ColdKlineReader",
     "HotKlineReader",
     "KlineRead",
     "KlineReadService",
     "RecordingStart",
+    "TapeBarReader",
 ]
