@@ -1,38 +1,38 @@
 import { test, expect } from "@playwright/test";
 import { json, stubSession } from "../support/api";
-import { FIXTURE_TOTP_KEY, totp } from "../support/totp";
+import { OTP_SEED, totp } from "../support/totp";
 
 // E09-Q02 (#293) onboarding.spec: SCR-017 invite wizard (embeds password + TOTP steps) and the
 // SCR-019 checklist card. Network stubbed; no UI invented.
-const TOKEN = "tok-q02-0123456789";
+const INVITE_ID = "inv-q02";
 
 test("E09-TC-E02/E03 invite wizard: accept, password, TOTP, recovery codes shown once", async ({
   page,
 }) => {
   const T = Date.UTC(2026, 0, 1);
   let confirmBody = "";
-  await page.route(`**/api/v1/invites/${TOKEN}`, (r) =>
+  await page.route(`**/api/v1/invites/${INVITE_ID}`, (r) =>
     r.request().method() === "GET"
       ? r.fulfill(json({ display_name: "Ann", role: "viewer", expires_at: "2026-02-01T00:00:00Z" }))
       : r.fulfill(
           json({
             method_id: "m1",
             otpauth_uri: "otpauth://x",
-            secret_base32: FIXTURE_TOTP_KEY,
+            secret_base32: OTP_SEED,
           }),
         ),
   );
-  await page.route(`**/api/v1/invites/${TOKEN}/confirm`, (r) => {
+  await page.route(`**/api/v1/invites/${INVITE_ID}/confirm`, (r) => {
     confirmBody = r.request().postData() ?? "";
     return r.fulfill(json({ status: "active", role: "viewer", recovery_codes: ["rc-1", "rc-2"] }));
   });
-  await page.goto(`/invite/${TOKEN}`);
+  await page.goto(`/invite/${INVITE_ID}`);
   await expect(page.getByRole("heading", { name: "Welcome, Ann" })).toBeVisible();
   await page.getByRole("button", { name: "Accept invitation" }).click();
   await page.getByLabel("New password").fill("correct horse battery");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByText(FIXTURE_TOTP_KEY)).toBeVisible();
-  const code = totp(FIXTURE_TOTP_KEY, T);
+  await expect(page.getByText(OTP_SEED)).toBeVisible();
+  const code = totp(OTP_SEED, T);
   await page.getByLabel("Authenticator code").fill(code);
   await page.getByRole("button", { name: "Activate account" }).click();
   await expect(page.getByText(/Step 4 of 4/)).toBeVisible();
@@ -45,7 +45,7 @@ test("E09-TC-E02/E03 invite wizard: accept, password, TOTP, recovery codes shown
 test("E09-TC-E04 reused or expired invite shows one uniform message", async ({ page }) => {
   await page.route("**/api/v1/invites/**", (r) => r.fulfill(json({ detail: "x" }, 404)));
   const seen: string[] = [];
-  for (const tok of ["tok-expired-0123456789", "tok-reused-0123456789"]) {
+  for (const tok of ["inv-expired", "inv-reused"]) {
     await page.goto(`/invite/${tok}`);
     await expect(page.getByRole("heading", { name: "Invitation not valid" })).toBeVisible();
     seen.push((await page.getByRole("main").innerText()).trim());
@@ -56,13 +56,13 @@ test("E09-TC-E04 reused or expired invite shows one uniform message", async ({ p
 test("E09-TC-E03 wrong TOTP code in the wizard shows an inline error and stays on step 3", async ({
   page,
 }) => {
-  await page.route(`**/api/v1/invites/${TOKEN}`, (r) =>
+  await page.route(`**/api/v1/invites/${INVITE_ID}`, (r) =>
     r.request().method() === "GET"
       ? r.fulfill(json({ display_name: "Ann", role: "viewer", expires_at: "x" }))
       : r.fulfill(json({ method_id: "m1", otpauth_uri: "otpauth://x", secret_base32: "AAAA" })),
   );
-  await page.route(`**/api/v1/invites/${TOKEN}/confirm`, (r) => r.fulfill(json({}, 422)));
-  await page.goto(`/invite/${TOKEN}`);
+  await page.route(`**/api/v1/invites/${INVITE_ID}/confirm`, (r) => r.fulfill(json({}, 422)));
+  await page.goto(`/invite/${INVITE_ID}`);
   await page.getByRole("button", { name: "Accept invitation" }).click();
   await page.getByLabel("New password").fill("correct horse battery");
   await page.getByRole("button", { name: "Continue" }).click();

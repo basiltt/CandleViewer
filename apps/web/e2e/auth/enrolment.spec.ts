@@ -7,7 +7,7 @@ import { json } from "../support/api";
 const NEW_PW = "correct horse battery staple";
 
 async function fillChange(page: import("@playwright/test").Page, next: string, confirm = next) {
-  await page.getByLabel("Current password").fill("temp-password-1");
+  await page.getByLabel("Current password").fill("pw-old");
   await page.getByLabel("New password", { exact: true }).fill(next);
   await page.getByLabel("Confirm new password").fill(confirm);
   await page.getByRole("button", { name: "Change password" }).click();
@@ -22,7 +22,7 @@ test("E09-TC-B06 forced password change succeeds and links back to sign-in", asy
   await page.goto("/login/change-password");
   await fillChange(page, NEW_PW);
   await expect(page.getByRole("heading", { name: "Password changed" })).toBeVisible();
-  expect(JSON.parse(body)).toEqual({ current_password: "temp-password-1", new_password: NEW_PW });
+  expect(JSON.parse(body)).toEqual({ current_password: "pw-old", new_password: NEW_PW });
   await expect(page.getByRole("link", { name: "Continue to sign in" })).toHaveAttribute(
     "href",
     "/login",
@@ -63,7 +63,7 @@ test("E09-TC-B09 wrong current password is refused and the form stays put", asyn
 test("E09-TC-B06 mismatched confirmation is caught; keyboard submit works", async ({ page }) => {
   await page.goto("/login/change-password");
   await page.getByLabel("Current password").focus();
-  await page.keyboard.type("temp-password-1");
+  await page.keyboard.type("pw-old");
   await page.keyboard.press("Tab");
   await page.keyboard.type(NEW_PW);
   await page.getByLabel("Confirm new password").fill("something else entirely");

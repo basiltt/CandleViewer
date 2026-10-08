@@ -17,7 +17,7 @@ export function base32Encode(data: Buffer): string {
 }
 
 /** Fixture key (base32) derived from the public RFC seed. */
-export const FIXTURE_TOTP_KEY = base32Encode(Buffer.from(RFC6238_SEED_ASCII, "ascii"));
+export const OTP_SEED = base32Encode(Buffer.from(RFC6238_SEED_ASCII, "ascii"));
 export const TOTP_STEP_S = 30;
 
 function base32Decode(input: string): Buffer {

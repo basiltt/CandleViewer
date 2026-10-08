@@ -59,15 +59,15 @@ test("E09-TC-C09 session cookie is never readable by page script (HttpOnly contr
 test("E09-TC-C01 sign-in response body carries no token or secret (SR-012)", async ({ page }) => {
   const seen: string[] = [];
   await page.route("**/api/v1/auth/login", (r) => {
-    const body = json({ status: "mfa_required", mfa_token: "challenge-id", methods: ["totp"] });
+    const body = json({ status: "mfa_required", mfa_token: "ch-1", methods: ["totp"] });
     seen.push(body.body);
     return r.fulfill(body);
   });
   await page.goto("/login");
   await page.getByLabel("Username or email").fill("ann");
-  await page.getByLabel("Password", { exact: true }).fill("fixture-password-1");
+  await page.getByLabel("Password", { exact: true }).fill("pw-a1");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Two-factor code" })).toBeVisible();
   expect(seen.join("")).not.toMatch(/session|password|recovery/iu);
-  await expect(page.locator("body")).not.toContainText("fixture-password-1");
+  await expect(page.locator("body")).not.toContainText("pw-a1");
 });
