@@ -395,7 +395,8 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         "counter",
         "computations",
         ("reason",),
-        "Klines hot boundary on the 90 d constant (reason: no_policy | invalid_policy | load_failed).",
+        "Klines hot boundary on the 90 d constant "
+        "(reason: no_policy | invalid_policy | load_failed).",
         "sustained = retention policy unreadable; boundary may differ from the reaper's",
         _L,
         "E12",
