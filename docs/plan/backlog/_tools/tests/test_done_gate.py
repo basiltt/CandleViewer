@@ -285,10 +285,15 @@ def test_fetch_links_closing_prs_and_merged_refs_prs_only() -> None:
         {"number": 1, "body": "Closes #380", "mergedAt": None},
         {
             "number": 2,
-            "body": "Part B. Refs #380 #2042",
+            "body": "Part B.\nRefs #380 #2042",
             "mergedAt": "2026-10-08T05:00:00Z",
         },
         {"number": 3, "body": "Refs #380", "mergedAt": None},
+        {
+            "number": 5,
+            "body": "unrelated; see Refs #380 for context",
+            "mergedAt": "2026-10-08T05:00:00Z",
+        },
         {
             "number": 4,
             "body": "see #3800 and #380x",
@@ -305,3 +310,44 @@ def test_fetch_links_closing_prs_and_merged_refs_prs_only() -> None:
 
     _, linked = dg.fetch("380", fake_gh)
     assert [p["number"] for p in linked] == [1, 2]
+
+
+def test_security_rc_on_one_part_is_not_masked_by_later_approve_on_another() -> None:
+    """Multi-PR tickets: verdicts are keyed per (PR, reviewer). Agent reviewers share one
+    login, so a later APPROVE on part B must not override an RC on part A."""
+    t = ticket([], ["security-review"])
+    rc_then_ok = [
+        {
+            "number": 1,
+            "body": "",
+            "reviews": [],
+            "comments": [
+                {
+                    "body": "Security review — VERDICT: REQUEST_CHANGES",
+                    "createdAt": "2026-10-08T01:00:00Z",
+                    "author": {"login": "basiltt"},
+                }
+            ],
+        },
+        {
+            "number": 2,
+            "body": "",
+            "reviews": [],
+            "comments": [
+                {
+                    "body": "Security review — VERDICT: APPROVE",
+                    "createdAt": "2026-10-08T02:00:00Z",
+                    "author": {"login": "basiltt"},
+                }
+            ],
+        },
+    ]
+    assert rules(dg.evaluate(t, issue([QA_PASS]), rc_then_ok)) == ["security"]
+    rc_then_ok[0]["comments"].append(
+        {
+            "body": "Security review (re-verdict) — VERDICT: APPROVE",
+            "createdAt": "2026-10-08T03:00:00Z",
+            "author": {"login": "basiltt"},
+        }
+    )
+    assert dg.evaluate(t, issue([QA_PASS]), rc_then_ok)["ok"]
