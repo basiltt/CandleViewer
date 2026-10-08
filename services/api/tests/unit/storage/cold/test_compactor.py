@@ -12,7 +12,9 @@ import pyarrow.parquet as pq
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
+from structlog.testing import capture_logs
 
+from candleviewer.observability.logging import configure_logging
 from candleviewer.storage.cold import compactor as compactor_mod
 from candleviewer.storage.cold.compactor import Compactor, should_compact
 from candleviewer.storage.cold.manifest import ManifestEntry, ManifestStore, sha256_of
@@ -106,17 +108,19 @@ async def test_six_small_files_merge_to_part_0000_with_manifest_before_delete(
 
 
 async def test_active_replay_session_skips_partition_and_logs_session_id(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path,
 ) -> None:
     _seed(tmp_path, [[(1, 1.0)], [(2, 1.0)]])
 
     async def guard(_p: Path) -> str | None:
         return "sess-42"
 
-    result = await _compact(tmp_path, idle_guard=guard)
+    configure_logging(env="demo")  # as an earlier suite would: pins the cached chain + stdout
+    with capture_logs() as logs:
+        result = await _compact(tmp_path, idle_guard=guard)
     assert result.skipped and "sess-42" in result.reason
     assert len(list((tmp_path / PART).iterdir())) == 2
-    assert "sess-42" in capsys.readouterr().out
+    assert [e["session_id"] for e in logs] == ["sess-42"]
 
 
 async def test_default_idle_guard_reads_empty_set_and_compacts(tmp_path: Path) -> None:

@@ -36,8 +36,6 @@ from candleviewer.storage.cold.writer import (
 )
 from candleviewer.storage.errors import StorageExportVerifyFailed
 
-logger = structlog.get_logger(__name__)
-
 _PART_RE = re.compile(r"^part-(\d{4})\.parquet$")
 
 #: Sec.5.4 trigger thresholds.
@@ -110,7 +108,7 @@ class Compactor:
         rel_dir = partition_dir.relative_to(cold_root).as_posix()
         session_id = await self._idle_guard(partition_dir)
         if session_id is not None:
-            logger.info(
+            structlog.get_logger(__name__).info(
                 "cold_compaction_skip_active_replay", partition=rel_dir, session_id=session_id
             )
             return CompactionResult(

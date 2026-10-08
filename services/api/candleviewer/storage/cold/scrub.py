@@ -27,8 +27,6 @@ from candleviewer.storage.cold.observability import (
 from candleviewer.storage.errors import StorageExportVerifyFailed
 from candleviewer.storage.models import StreamKind
 
-logger = structlog.get_logger(__name__)
-
 
 def _first_mismatch(paths: ColdPaths) -> tuple[str, str] | None:
     """Blocking: returns `(file, reason)` for the first bad entry, else None."""
@@ -116,7 +114,7 @@ async def run_weekly_scrub(
             bad = await scrub_all(registry, events, clock)
             await events.emit("INFO", "STORAGE_COLD_SCRUB_RUN", {"mismatches": bad})
         except Exception:
-            logger.exception("cold_scrub_run_failed")
+            structlog.get_logger(__name__).exception("cold_scrub_run_failed")
             await events.emit("WARNING", "STORAGE_COLD_SCRUB_FAILED", {})
         await sleep(interval_s)
 
