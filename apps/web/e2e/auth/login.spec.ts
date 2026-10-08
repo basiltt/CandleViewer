@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { json } from "../support/api";
+import { assertNoClientSecrets, json, watchForLeaks } from "../support/api";
 import { OTP_SEED, totp } from "../support/totp";
 
 // E09-Q02 (#293) login.spec. API stubbed at the network layer (C-13.5); SCR-002 UI is not built
@@ -15,6 +15,7 @@ async function signIn(page: import("@playwright/test").Page): Promise<void> {
 test("E09-TC-A01 password step returns mfa_required and shows the second-factor step @electron", async ({
   page,
 }) => {
+  const guard = watchForLeaks(page, ["pw-a1"]);
   let body = "";
   await page.route("**/api/v1/auth/login", (r) => {
     body = r.request().postData() ?? "";
@@ -26,6 +27,8 @@ test("E09-TC-A01 password step returns mfa_required and shows the second-factor 
   expect(JSON.parse(body)).toEqual({ identifier: "ann", password: "pw-a1" });
   // No session cookie before MFA completes.
   expect(await page.context().cookies()).toEqual([]);
+  await assertNoClientSecrets(page, ["pw-a1", "t-1"]);
+  await guard.flush();
 });
 
 test("E09-TC-A03 disabled account is refused with no session @electron", async ({ page }) => {
@@ -47,10 +50,10 @@ test("E09-TC-A07 unknown user and wrong password are indistinguishable in the UI
     await page.getByLabel("Password", { exact: true }).fill("pw-bad");
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page.getByRole("alert")).not.toBeEmpty();
-    messages.push((await page.getByRole("alert").textContent()) ?? "");
+    await expect(page.getByRole("alert")).toHaveText("Username or password is incorrect");
+    messages.push(id);
   }
-  expect(messages[0]).toBe(messages[1]);
-  expect(messages[0]).toBe("Username or password is incorrect");
+  expect(messages).toHaveLength(2);
 });
 
 test("E09-TC-A08 (UI half) lockout shows remaining time and disables submit", async ({ page }) => {

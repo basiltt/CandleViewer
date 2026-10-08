@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { json, stubSession } from "../support/api";
+import { assertNoClientSecrets, json, stubSession, watchForLeaks } from "../support/api";
 import { OTP_SEED, totp } from "../support/totp";
 
 // E09-Q02 (#293) stepup.spec. The browser clock is controlled with page.clock (no sleeps). The
@@ -26,6 +26,7 @@ test("E09-TC-C05 step-up with a TOTP code succeeds and the grace window is shown
   page,
 }) => {
   await page.clock.install({ time: T0 });
+  const guard = watchForLeaks(page, ["step-up-marker-x"]);
   await stubSession(page, { role: "owner", elevatedUntil: () => null });
   let sent = "";
   await page.route("**/api/v1/auth/step-up", (r) => {
@@ -41,9 +42,11 @@ test("E09-TC-C05 step-up with a TOTP code succeeds and the grace window is shown
   const code = totp(OTP_SEED, T0.getTime());
   await page.getByLabel("Authenticator code").fill(code);
   await page.getByRole("button", { name: "Confirm" }).click();
-  await expect(page.getByTestId("step-up-grace")).toContainText("Grace window: 5:00 remaining");
+  await expect(page.getByText(/Grace window/u)).toContainText("Grace window: 5:00 remaining");
   expect(JSON.parse(sent)).toEqual({ code });
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
+  await assertNoClientSecrets(page, [code, "step-up-marker-x"]);
+  await guard.flush();
 });
 
 test("E09-TC-C06 after the window the grace countdown reaches zero (fake clock)", async ({
@@ -62,9 +65,9 @@ test("E09-TC-C06 after the window the grace countdown reaches zero (fake clock)"
   await page.goto("/admin/users");
   await page.getByLabel("Authenticator code").fill("123456");
   await page.getByRole("button", { name: "Confirm" }).click();
-  await expect(page.getByTestId("step-up-grace")).toContainText("remaining");
+  await expect(page.getByText(/Grace window/u)).toContainText("remaining");
   await page.clock.runFor(6 * MIN);
-  await expect(page.getByTestId("step-up-grace")).not.toContainText("remaining");
+  await expect(page.getByText(/Grace window/u)).toHaveCount(0);
 });
 
 test("E09-TC-C05 rejected code keeps the gate closed with an accessible error", async ({

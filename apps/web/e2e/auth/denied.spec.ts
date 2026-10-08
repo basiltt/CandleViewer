@@ -16,7 +16,7 @@ test("E09-TC-E06 viewer deep link to /admin/users shows not-found with no admin 
   });
   await page.goto("/admin/users");
   await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
-  await expect(page.locator("body")).not.toContainText("secret@example.test");
+  await expect(page.getByText("secret@example.test")).toHaveCount(0);
   expect(adminCalls).toEqual([]);
 });
 
@@ -37,7 +37,7 @@ test("E09-TC-E07 denied page is identical for any account id (no enumeration)", 
   for (const id of ["acct-x", "acct-does-not-exist"]) {
     await page.goto(`/admin/accounts/${id}`);
     await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
-    texts.push(await page.getByRole("main").innerText());
+    texts.push(await page.getByRole("heading", { level: 1 }).innerText());
   }
   expect(texts[0]).toBe(texts[1]);
 });

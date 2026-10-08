@@ -2,7 +2,7 @@
 
 Specs live in `apps/web/e2e/auth/` (repo convention; the ticket text says `tests/e2e/auth/`).
 API is stubbed at the network layer (C-13.5); the backend-driven suite needs the E03 ephemeral stack.
-Browser clock is `page.clock` (no sleeps); server-side clock endpoint does not exist yet.
+Browser clock is `page.clock` (no sleeps); server-side clock endpoint and server step-up expiry (E09-TC-C06 server half) -> #2086.
 
 | Case                         | Status                                                                               |
 | ---------------------------- | ------------------------------------------------------------------------------------ |
@@ -13,7 +13,7 @@ Browser clock is `page.clock` (no sleeps); server-side clock endpoint does not e
 | B01-B05                      | deferred -> #1640 (SCR-003 standalone unbuilt); enrolment steps seen in wizard (E03) |
 | C01, C09                     | automated: session.spec.ts (stub-level)                                              |
 | C04, C05, C06                | automated: stepup.spec.ts (SPA grace window, fake clock)                             |
-| C02, C03, C07, D01-D06       | deferred -> #1640 (SCR-005/111/112) and server test clock endpoint                   |
+| C02, C03, C07, D01-D06       | deferred -> #1640 (SCR-005/111/112) and #2086 (server test clock)                    |
 | E02-E05                      | automated: onboarding.spec.ts                                                        |
 | E06, E07 (UI half)           | automated: denied.spec.ts; server half owned by E09-Q03                              |
 | E08, E09, C08                | not E2E (manual / CI / E09-Q05)                                                      |

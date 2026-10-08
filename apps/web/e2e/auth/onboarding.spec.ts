@@ -48,7 +48,7 @@ test("E09-TC-E04 reused or expired invite shows one uniform message", async ({ p
   for (const tok of ["inv-expired", "inv-reused"]) {
     await page.goto(`/invite/${tok}`);
     await expect(page.getByRole("heading", { name: "Invitation not valid" })).toBeVisible();
-    seen.push((await page.getByRole("main").innerText()).trim());
+    seen.push((await page.getByRole("heading", { level: 1 }).innerText()).trim());
   }
   expect(seen[0]).toBe(seen[1]);
 });

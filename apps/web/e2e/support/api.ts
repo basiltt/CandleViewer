@@ -28,17 +28,46 @@ export async function stubSession(page: Page, opts: MeOptions): Promise<void> {
   await page.route("**/api/v1/me/keymap", (r) => r.fulfill(json({ bindings: [] })));
 }
 
-/** Fails the test if any response body the page saw contains a secret-looking value (SR-012). */
-export function watchForLeaks(page: Page, forbidden: readonly string[]): () => string[] {
+export interface LeakGuard {
+  /** Awaits every pending body check, then fails if any forbidden value was seen (SR-012). */
+  readonly flush: () => Promise<void>;
+}
+
+/** Records response bodies the page receives and fails on any forbidden value. */
+export function watchForLeaks(page: Page, forbidden: readonly string[]): LeakGuard {
   const leaks: string[] = [];
+  const pending: Promise<void>[] = [];
   page.on("response", (res) => {
-    void res
-      .text()
-      .then((t) => {
-        for (const f of forbidden)
-          if (t.includes(f)) leaks.push(`${res.url()} leaked ${f.length}-char value`);
-      })
-      .catch(() => undefined);
+    pending.push(
+      res
+        .text()
+        .then((t) => {
+          for (const f of forbidden)
+            if (t.includes(f)) leaks.push(`${res.url()} leaked a ${f.length}-char value`);
+        })
+        .catch(() => undefined),
+    );
   });
-  return () => leaks;
+  return {
+    flush: async () => {
+      await Promise.all(pending);
+      if (leaks.length > 0) throw new Error(leaks.join("; "));
+    },
+  };
+}
+
+/** No forbidden value in localStorage, sessionStorage, the URL or readable cookies (SR-012). */
+export async function assertNoClientSecrets(
+  page: Page,
+  forbidden: readonly string[],
+): Promise<void> {
+  const where = await page.evaluate(() => ({
+    local: JSON.stringify({ ...window.localStorage }),
+    session: JSON.stringify({ ...window.sessionStorage }),
+    url: window.location.href,
+    cookie: document.cookie,
+  }));
+  for (const [name, text] of Object.entries(where))
+    for (const f of forbidden)
+      if (text.includes(f)) throw new Error(`${name} contains a forbidden ${f.length}-char value`);
 }

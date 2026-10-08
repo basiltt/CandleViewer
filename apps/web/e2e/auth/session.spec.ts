@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { json, stubSession } from "../support/api";
+import { assertNoClientSecrets, json, stubSession, watchForLeaks } from "../support/api";
 
 // E09-Q02 (#293) session.spec. SCR-005 (idle lock) and SCR-111/112 (sessions list, sign-out
 // everywhere) are design-gated -> #1640 and are NOT built; those cases are deferred in
@@ -56,18 +56,19 @@ test("E09-TC-C09 session cookie is never readable by page script (HttpOnly contr
   expect(cookie?.sameSite).toBe("Strict");
 });
 
-test("E09-TC-C01 sign-in response body carries no token or secret (SR-012)", async ({ page }) => {
-  const seen: string[] = [];
-  await page.route("**/api/v1/auth/login", (r) => {
-    const body = json({ status: "mfa_required", mfa_token: "ch-1", methods: ["totp"] });
-    seen.push(body.body);
-    return r.fulfill(body);
-  });
+test("E09-TC-C01 sign-in leaves no password or challenge in storage, URL or DOM (SR-012)", async ({
+  page,
+}) => {
+  const guard = watchForLeaks(page, ["pw-a1"]);
+  await page.route("**/api/v1/auth/login", (r) =>
+    r.fulfill(json({ status: "mfa_required", mfa_token: "ch-1", methods: ["totp"] })),
+  );
   await page.goto("/login");
   await page.getByLabel("Username or email").fill("ann");
   await page.getByLabel("Password", { exact: true }).fill("pw-a1");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Two-factor code" })).toBeVisible();
-  expect(seen.join("")).not.toMatch(/session|password|recovery/iu);
-  await expect(page.locator("body")).not.toContainText("pw-a1");
+  await assertNoClientSecrets(page, ["pw-a1", "ch-1"]);
+  await expect(page.getByText("pw-a1")).toHaveCount(0);
+  await guard.flush();
 });
