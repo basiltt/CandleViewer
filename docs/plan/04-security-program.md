@@ -358,10 +358,10 @@ Rebuild controls depend on ADR-0033 (Proposed).
 
 **E13 indicator framework, presets & metric exposure** (`docs/security/threat-models/E13-indicators.md`, ticket
 E13-X01) is integrity-first where indicators become safety-relevant: ATR feeding `sl_offset_unit="atr"` stop
-sizing (IR-12, Critical: a display-only worker value must never be the source) and provisional Zig Zag swings
+sizing (IR-12 and IR-45 fail-closed, Critical: a display-only worker value must never be the source) and provisional Zig Zag swings
 (IR-11), then preset BOLA/forged built-ins (IR-01, IR-02, IR-10), unvalidated `params`/`style` (IR-07, IR-09) and
-availability of the compute surface (IR-29..IR-34). Controls SR-E13-01..11 (proposed caps, to be confirmed by
-E13-Q03) are requested on E13-T01/T02/T03/S01/S05/S07/S08; abuse cases AC-01..AC-22 go to E13-X02/Q06 (see
+availability of the compute surface (IR-29..IR-34). Controls SR-E13-01..13 (proposed caps, to be confirmed by
+E13-Q03) are requested on E13-T01/T02/T03/S01/S05/S07/S08/X02; abuse cases AC-01..AC-24 go to E13-X02/Q06 (see
 RSK-060, RSK-061). Status Draft; depends on ADR-0034 (Proposed).
 
 **E35 rule engine** (`docs/security/threat-models/e35-rule-engine.md`, ticket E35-X01) models the IR,
