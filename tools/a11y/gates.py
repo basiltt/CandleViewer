@@ -191,7 +191,7 @@ def check_tree(snapshot_dir: str, actual_dir: str) -> list[str]:
 
 
 def check_keyboard(result: dict) -> list[str]:
-    """result: {"mouseEvents": n, "steps": [{"name":..,"ok":bool}]}."""
+    """result: {"mouseEvents": n, "perScreen": {id: n}, "steps": [{"name":..,"ok":bool}]}."""
     steps = result.get("steps")
     if not steps:
         raise InfraError("A11Y-INFRA keyboard E2E reported no steps")
@@ -201,7 +201,12 @@ def check_keyboard(result: dict) -> list[str]:
         if not s.get("ok")
     ]
     if result.get("mouseEvents", 0):
-        msgs.append(f"A11Y-G004 {result['mouseEvents']} mouse event(s) dispatched")
+        per = result.get("perScreen") or {}
+        screens = ", ".join(f"{k}={v}" for k, v in per.items() if v)
+        where = f" on screen(s) {screens}" if screens else ""
+        msgs.append(
+            f"A11Y-G004 {result['mouseEvents']} mouse event(s) dispatched{where}"
+        )
     return msgs
 
 
