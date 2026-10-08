@@ -1,5 +1,5 @@
 // E09-Q05 auth perf profile. Run against STAGING on recorded fixtures only (C-13.5):
-//   k6 run -e BASE_URL=http://127.0.0.1:8000 -e CV_PERF_USER=... perf/k6/auth.js
+//   k6 run -e BASE_URL=http://127.0.0.1:8000 -e CV_PERF_USER=... tests/load/k6/auth.js
 // Credentials come from the environment (never committed). CV_CACHE_DISABLED=1 is the
 // negative control: the session_bootstrap budget MUST then fail.
 import http from 'k6/http';

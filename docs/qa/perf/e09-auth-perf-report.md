@@ -8,7 +8,7 @@ No number in this file is invented.
 
 - Reference host spec: pending CI/nightly run (record CPU, RAM, kernel at run time).
 - Argon2id in force: `DEFAULT_ARGON2_PARAMS` = m=65536 KiB (64 MiB), t=3, p=4
-  (`candleviewer/auth/hashing.py`). `perf/k6/auth.js` `setup()` aborts if below this floor.
+  (`candleviewer/auth/hashing.py`). `tests/load/k6/auth.js` `setup()` aborts if below this floor.
 
 ## Budgets
 

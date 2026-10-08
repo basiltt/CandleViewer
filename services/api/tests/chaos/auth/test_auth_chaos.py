@@ -2,7 +2,7 @@
 exercise the WS revocation / session-store paths in-process).
 
 Wall-clock rule (T14): every time-dependent assert uses an injected clock or a fixed `unix_time`;
-no sleeps and no real-time budgets here (latency budgets live in perf/k6/auth.js).
+no sleeps and no real-time budgets here (latency budgets live in tests/load/k6/auth.js).
 """
 
 from __future__ import annotations
