@@ -228,3 +228,190 @@ def test_route_maps_cold_timeout_to_503(tmp_path: Path) -> None:
         },
     )
     assert r.status_code == 503
+
+
+async def test_round_trip_through_real_exporter(tmp_path: Path) -> None:
+    """Writes via `ColdExporter.export_partition` so an E07 layout change breaks this test."""
+    from candleviewer.storage.cold.exporter import ColdExporter
+    from candleviewer.storage.models import TimeRange
+    from tests.unit.storage.cold._helpers import FakeHotSource
+
+    t0 = _us(2026, 3)
+    n = 4
+    table = pa.table(
+        {
+            "ts": pa.array([t0 + i * H for i in range(n)], type=pa.int64()),
+            "symbol": ["BTCUSDT"] * n,
+            "interval": ["60"] * n,
+            "open": [100.5] * n,
+            "high": [101.0] * n,
+            "low": [99.0] * n,
+            "close": [100.0] * n,
+            "volume": [1.0] * n,
+            "turnover": [100.0] * n,
+            "confirmed": [True] * n,
+            "source": ["rest"] * n,
+        }
+    )
+    reg = DatasetRegistry(tmp_path)
+    exporter = ColdExporter(reg, FakeHotSource(table))
+    await exporter.export_partition(
+        "BTCUSDT",
+        StreamKind.KLINES,
+        TimeRange(start_us=t0, end_us=_us(2026, 4)),
+        partition_extra={"interval": "60", "ym": "2026-03"},
+    )
+    rows = await ParquetKlineReader(reg)("BTCUSDT", "60", Range(t0, t0 + 10 * H))
+    assert [r.ts_us for r in rows] == [t0 + i * H for i in range(n)]
+    assert rows[0].open == "100.5"
+    assert rows[0].source == "rest"
+
+
+async def test_missing_optional_columns_do_not_fail(tmp_path: Path) -> None:
+    t0 = _us(2026, 3)
+    paths = DatasetRegistry(tmp_path).resolve_partition(
+        StreamKind.KLINES,
+        partition_values={"symbol": "BTCUSDT", "interval": "60", "ym": "2026-03"},
+    )
+    paths.partition_dir.mkdir(parents=True, exist_ok=True)
+    f = paths.partition_dir / "part-0000.parquet"
+    pq.write_table(
+        pa.table({"ts": pa.array([t0], type=pa.timestamp("us", tz="UTC")), "open": [1.0]}), f
+    )
+    ManifestStore(paths.manifests_dir).append_reconciled(
+        paths.partition_dir,
+        paths.root,
+        ManifestEntry(f.name, sha256_of(f), 1, "klines", "r", 0),
+    )
+    [row] = await ParquetKlineReader(DatasetRegistry(tmp_path))("BTCUSDT", "60", Range(t0, t0 + H))
+    assert (row.source, row.confirmed, row.close) == ("parquet", True, "0")
+
+
+async def test_unreadable_parquet_is_typed_error(tmp_path: Path) -> None:
+    t0 = _us(2026, 3)
+    paths = DatasetRegistry(tmp_path).resolve_partition(
+        StreamKind.KLINES,
+        partition_values={"symbol": "BTCUSDT", "interval": "60", "ym": "2026-03"},
+    )
+    paths.partition_dir.mkdir(parents=True, exist_ok=True)
+    f = paths.partition_dir / "part-0000.parquet"
+    pq.write_table(pa.table({"x": [1]}), f)  # no `ts` column
+    ManifestStore(paths.manifests_dir).append_reconciled(
+        paths.partition_dir,
+        paths.root,
+        ManifestEntry(f.name, sha256_of(f), 1, "klines", "r", 0),
+    )
+    with pytest.raises(kr.ColdKlineReadError):
+        await ParquetKlineReader(DatasetRegistry(tmp_path))("BTCUSDT", "60", Range(t0, t0 + H))
+
+
+async def test_duplicate_ts_deduped_before_limit(tmp_path: Path) -> None:
+    t0 = _us(2026, 3)
+    _write(tmp_path, "2026-03", [t0, t0, t0, t0 + H])
+    rows = await ParquetKlineReader(DatasetRegistry(tmp_path), max_rows=2)(
+        "BTCUSDT", "60", Range(t0, t0 + 2 * H)
+    )
+    assert [r.ts_us for r in rows] == [t0, t0 + H]
+
+
+async def test_concurrent_reads_bounded(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    t0 = _us(2026, 3)
+    _write(tmp_path, "2026-03", [t0])
+    lock = threading.Lock()
+    live = 0
+    peak = 0
+
+    def fake(*a: object, **k: object) -> list[ColdKlineRow]:
+        nonlocal live, peak
+        with lock:
+            live += 1
+            peak = max(peak, live)
+        threading.Event().wait(0.05)
+        with lock:
+            live -= 1
+        return []
+
+    monkeypatch.setattr(kr, "_read_rows", fake)
+    reader = ParquetKlineReader(DatasetRegistry(tmp_path), max_concurrency=2, timeout_s=5)
+    await asyncio.gather(*[reader("BTCUSDT", "60", Range(t0, t0 + H)) for _ in range(6)])
+    assert peak == 2
+
+
+def _first_part(root: Path) -> Path:
+    return next(root.rglob("part-0000.parquet"))
+
+
+async def test_checksum_mismatch_fails_read_with_typed_error(tmp_path: Path) -> None:
+    t0 = _us(2026, 3)
+    _write(tmp_path, "2026-03", [t0])
+    f = _first_part(tmp_path)
+    f.write_bytes(f.read_bytes() + b"x")  # corrupt after manifesting
+    with pytest.raises(kr.ColdKlineReadError):
+        await ParquetKlineReader(DatasetRegistry(tmp_path))("BTCUSDT", "60", Range(t0, t0 + H))
+
+
+async def test_unmanifested_file_is_ignored(tmp_path: Path) -> None:
+    t0 = _us(2026, 3)
+    _write(tmp_path, "2026-03", [t0])
+    part = _first_part(tmp_path).parent
+    pq.write_table(
+        pa.table({"ts": pa.array([t0 + H], type=pa.timestamp("us", tz="UTC")), "open": [9.0]}),
+        part / "part-0001.parquet",
+    )
+    rows = await ParquetKlineReader(DatasetRegistry(tmp_path))(
+        "BTCUSDT", "60", Range(t0, t0 + 3 * H)
+    )
+    assert [r.ts_us for r in rows] == [t0]
+
+
+async def test_window_straddling_boundary_merges_cold_and_hot(tmp_path: Path) -> None:
+    t0 = _us(2026, 3)
+    _write(tmp_path, "2026-03", [t0, t0 + H])
+    hot = _Hot([ColdKlineRow(t0 + 2 * H, "1", "1", "1", "1", "1", "1", True, "ws")])
+    svc = _svc(ParquetKlineReader(DatasetRegistry(tmp_path)), t0 + 2 * H, hot)
+    res = await svc.read("BTCUSDT", "60", Range(t0, t0 + 3 * H))
+    assert [r.ts_us for r in res.rows] == [t0, t0 + H, t0 + 2 * H]
+    assert sorted(res.sources) == ["parquet", "questdb"]
+
+
+async def test_connection_created_before_thread_and_interrupted_on_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    t0 = _us(2026, 3)
+    _write(tmp_path, "2026-03", [t0])
+    events: list[str] = []
+    real = kr.duckdb.connect
+
+    class _Con:
+        def __init__(self) -> None:
+            self.inner = real(":memory:")
+
+        def interrupt(self) -> None:
+            events.append("interrupt")
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self.inner, name)
+
+    def fake_connect(*a: object, **k: object) -> _Con:
+        events.append("connect")
+        return _Con()
+
+    release = threading.Event()
+
+    def slow(*a: object, **k: object) -> list[object]:
+        events.append("thread")
+        release.wait(2)
+        return []
+
+    monkeypatch.setattr(kr.duckdb, "connect", fake_connect)
+    monkeypatch.setattr(kr, "_read_rows", slow)
+    reader = ParquetKlineReader(DatasetRegistry(tmp_path), timeout_s=0.05)
+    try:
+        with pytest.raises(ColdKlineReadTimeout):
+            await reader("BTCUSDT", "60", Range(t0, t0 + H))
+    finally:
+        release.set()
+    assert events[0] == "connect"
+    assert "interrupt" in events

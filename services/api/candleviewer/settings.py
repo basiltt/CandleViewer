@@ -176,6 +176,8 @@ class Settings(BaseSettings):
     book_depth: int = 200
     recorder_retention_days: int = 30
     recorder_hot_days: int = 7
+    # #2048: max concurrent DuckDB scans for the /market/klines cold tier (C-2.18).
+    cold_kline_concurrency: int = 2
     disk_cap_gb: int = 500
     # E08-T04: public WS ingestion skeleton flag (C-4.13: off by default;
     # removal tracked by E08-T05). Public data only — no credentials.

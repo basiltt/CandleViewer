@@ -12,9 +12,8 @@ under a timeout (C-2.18) that interrupts the DuckDB connection.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -26,17 +25,30 @@ from candleviewer.storage.cold.layout import ColdPaths, DatasetRegistry
 from candleviewer.storage.cold.manifest import ManifestStore
 from candleviewer.storage.cold.observability import LoggingSystemEventSink, SystemEventSink
 from candleviewer.storage.cold.scrub import verify_partition
-from candleviewer.storage.errors import StorageTierUnavailable
+from candleviewer.storage.errors import StorageExportVerifyFailed, StorageTierUnavailable
 from candleviewer.storage.models import StreamKind
 
 _MAX_MONTHS = 120
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 _DEFAULT_MAX_ROWS = 5_100
+_DEFAULT_CONCURRENCY = 2
+_MEMORY_LIMIT = "256MiB"
+_THREADS = 2
 
 
 class ColdKlineReadTimeout(StorageTierUnavailable):
     """The DuckDB kline read exceeded its deadline (route maps this to 503)."""
 
     code = "COLD_KLINE_READ_TIMEOUT"
+
+
+class ColdKlineReadError(StorageTierUnavailable):
+    """Integrity failure (checksum/row-count mismatch, quarantined partition: the whole cold
+    read fails, never a partial window), schema drift or a corrupt file.
+
+    DuckDB/Parquet could not serve the read (schema drift, corrupt file): route -> 503."""
+
+    code = "COLD_KLINE_READ_ERROR"
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,11 +94,14 @@ class ParquetKlineReader:
         events: SystemEventSink | None = None,
         timeout_s: float = 5.0,
         max_rows: int = _DEFAULT_MAX_ROWS,
+        max_concurrency: int = _DEFAULT_CONCURRENCY,
     ) -> None:
         self._registry = registry
         self._events: SystemEventSink = events or LoggingSystemEventSink()
         self._timeout_s = timeout_s
         self._max_rows = max_rows
+        # C-2.18: bound concurrent DuckDB scans (each is a thread + an in-memory instance).
+        self._sem = asyncio.Semaphore(max(1, max_concurrency))
         self._verified: dict[Path, tuple[int, int]] = {}
 
     def _partition(self, symbol: str, interval: str, ym: str) -> ColdPaths:
@@ -99,12 +114,16 @@ class ParquetKlineReader:
             ManifestStore(paths.manifests_dir).read, paths.partition_dir, paths.root
         )
         files = [paths.partition_dir / e.file for e in entries]
-        stamps: dict[Path, tuple[int, int]] = {}
-        for f in files:
-            st = f.stat() if f.is_file() else None
-            stamps[f] = (st.st_size, st.st_mtime_ns) if st else (-1, -1)
-        if files and any(self._verified.get(f) != stamps[f] for f in files):
-            await verify_partition(paths, self._events)
+        if not files:
+            return []
+        stamps = await asyncio.to_thread(_stamps, files)
+        if any(self._verified.get(f) != stamps[f] for f in files):
+            try:
+                await verify_partition(paths, self._events)
+            except StorageExportVerifyFailed as exc:
+                # B1: a quarantined partition is an integrity event. Fail the cold read (503)
+                # rather than silently serving a partial window.
+                raise ColdKlineReadError("cold kline partition failed verification") from exc
             self._verified.update(stamps)
         return [f.as_posix() for f in files]
 
@@ -119,58 +138,81 @@ class ParquetKlineReader:
         return await self._query(files, lo, hi)
 
     async def _query(self, files: list[str], lo: int, hi: int) -> list[ColdKlineRow]:
-        holder: list[duckdb.DuckDBPyConnection] = []
+        async with self._sem:
+            return await self._query_unbounded(files, lo, hi)
+
+    async def _query_unbounded(self, files: list[str], lo: int, hi: int) -> list[ColdKlineRow]:
+        # N4: connect BEFORE the worker thread starts so `interrupt()` can never be a no-op.
+        # Limits go through connect-config (no SQL text). The worker closes the connection.
+        con = duckdb.connect(
+            ":memory:", config={"memory_limit": _MEMORY_LIMIT, "threads": str(_THREADS)}
+        )
         task = spawn(
-            asyncio.to_thread(_read_rows, files, lo, hi, self._max_rows, holder),
+            asyncio.to_thread(_read_rows, con, files, lo, hi, self._max_rows),
             name="cold-kline-read",
         )
         try:
             async with asyncio.timeout(self._timeout_s):
                 return await asyncio.shield(task)
         except TimeoutError as exc:
-            for con in holder:
-                con.interrupt()
+            con.interrupt()
             raise ColdKlineReadTimeout(f"cold kline read exceeded {self._timeout_s}s") from exc
 
 
+def _stamps(files: list[Path]) -> dict[Path, tuple[int, int]]:
+    out: dict[Path, tuple[int, int]] = {}
+    for f in files:
+        st = f.stat() if f.is_file() else None
+        out[f] = (st.st_size, st.st_mtime_ns) if st else (-1, -1)
+    return out
+
+
 def _read_rows(
+    con: duckdb.DuckDBPyConnection,
     files: list[str],
     lo: int,
     hi: int,
     max_rows: int,
-    holder: list[duckdb.DuckDBPyConnection],
-    connect: Callable[[], duckdb.DuckDBPyConnection] = lambda: duckdb.connect(":memory:"),
 ) -> list[ColdKlineRow]:
-    con = connect()
-    holder.append(con)
     try:
         con.execute("SET TimeZone = 'UTC'")
+        # union_by_name tolerates schema drift; optional columns default in Python. Dedup on
+        # ts happens before LIMIT so duplicate part-file rows never eat the cap.
         table = con.execute(
-            "SELECT CAST(epoch_us(ts) AS BIGINT) AS ts_us, open, high, low, close, volume, "
-            "turnover, confirmed, source FROM read_parquet($files, hive_partitioning = false) "
+            "SELECT * FROM read_parquet($files, hive_partitioning = false, union_by_name = true) "
             "WHERE ts >= make_timestamptz($lo::BIGINT) AND ts < make_timestamptz($hi::BIGINT) "
+            "QUALIFY row_number() OVER (PARTITION BY ts ORDER BY ts) = 1 "
             "ORDER BY ts DESC LIMIT $n",
             {"files": files, "lo": lo, "hi": hi, "n": max_rows},
         ).to_arrow_table()
+    except duckdb.Error as exc:
+        raise ColdKlineReadError(f"cold kline read failed: {type(exc).__name__}") from exc
     finally:
         con.close()
-    seen: dict[int, ColdKlineRow] = {}
+    out: list[ColdKlineRow] = []
     for r in table.to_pylist():
-        seen.setdefault(
-            int(r["ts_us"]),
+        ts = r["ts"]
+        out.append(
             ColdKlineRow(
-                ts_us=int(r["ts_us"]),
-                open=_num(r["open"]),
-                high=_num(r["high"]),
-                low=_num(r["low"]),
-                close=_num(r["close"]),
-                volume=_num(r["volume"]),
-                turnover=_num(r["turnover"]),
-                confirmed=bool(r["confirmed"]),
-                source=str(r["source"]),
-            ),
+                ts_us=(ts - _EPOCH) // timedelta(microseconds=1),
+                open=_num(r.get("open", "0")),
+                high=_num(r.get("high", "0")),
+                low=_num(r.get("low", "0")),
+                close=_num(r.get("close", "0")),
+                volume=_num(r.get("volume", "0")),
+                turnover=_num(r.get("turnover", "0")),
+                confirmed=bool(r.get("confirmed", True)),
+                source=str(r.get("source") or "parquet"),
+            )
         )
-    return [seen[k] for k in sorted(seen)]
+    out.sort(key=lambda x: x.ts_us)
+    return out
 
 
-__all__ = ["ColdKlineReadTimeout", "ColdKlineRow", "ParquetKlineReader", "months_between"]
+__all__ = [
+    "ColdKlineReadError",
+    "ColdKlineReadTimeout",
+    "ColdKlineRow",
+    "ParquetKlineReader",
+    "months_between",
+]

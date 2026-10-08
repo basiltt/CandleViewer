@@ -1402,6 +1402,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     return manager
 
 
+# TODO(#2060): derive from the retention policy / oldest hot row (constant mirrors §7).
 _KLINE_HOT_RETENTION_US = 90 * 86_400 * 1_000_000
 
 
@@ -1428,7 +1429,10 @@ def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
 
     hot = _HotKlines()
     backfill = KlineBackfillService(fetch_klines=fetch_klines, cache=hot)
-    cold = ParquetKlineReader(DatasetRegistry(ctx.settings.parquet_root))
+    cold = ParquetKlineReader(
+        DatasetRegistry(ctx.settings.parquet_root),
+        max_concurrency=ctx.settings.cold_kline_concurrency,
+    )
     ctx.ingestion.attach_klines(
         KlineReadService(
             hot,
