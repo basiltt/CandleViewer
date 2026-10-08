@@ -27,16 +27,28 @@ def matrix() -> dict[str, Any]:
     return loaded
 
 
-@pytest.fixture(scope="session")
-def _world_session() -> Iterator[World]:
-    with pytest.MonkeyPatch.context() as mp:
+@pytest.fixture(scope="module")
+def _world_module() -> Iterator[World]:
+    """The real-app world, built once per test module of this pack.
+
+    `app.py` has no injection seam for the identity provider or the alert repository, so the two
+    module-level names are patched. The patches MUST NOT outlive this package (C-13.7: no shared
+    mutable global state), so they are applied through an explicit `MonkeyPatch` that is undone in
+    a `finally` at module teardown, and `test_zz_patches_do_not_leak.py` asserts it afterwards.
+    Module scope is deliberate: this directory has no `__init__.py`, so pytest has no Package node
+    and `scope="package"` would silently behave like `session` and leak into every later test.
+    """
+    mp = pytest.MonkeyPatch()
+    try:
         yield build_world(mp)
+    finally:
+        mp.undo()
 
 
 @pytest.fixture
-def world(_world_session: World) -> World:
+def world(_world_module: World) -> World:
     """The shared real-app world, reset to a clean state before every test."""
-    w = _world_session
+    w = _world_module
     w.rule_store._rows.clear()
     w.scope_events.clear()
     w.audit.records.clear()
