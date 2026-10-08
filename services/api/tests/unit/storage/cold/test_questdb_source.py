@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import pytest
+import structlog
+from structlog.testing import capture_logs
 
+from candleviewer.observability.logging import configure_logging
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.questdb_source import (
     QuestDbHotTierSource,
@@ -82,8 +85,13 @@ async def test_unmapped_stream_is_rejected() -> None:
 
 
 @pytest.mark.parametrize("severity", ["INFO", "WARNING", "CRITICAL"])
-async def test_logging_sink_emits_every_level(
-    severity: str, capsys: pytest.CaptureFixture[str]
-) -> None:
-    await LoggingSystemEventSink().emit(severity, "CODE_X", {"partition": "trades/x"})  # type: ignore[arg-type]  # parametrised literal
-    assert "CODE_X" in capsys.readouterr().out
+async def test_logging_sink_emits_every_level(severity: str) -> None:
+    sink = LoggingSystemEventSink()
+    configure_logging(env="demo")
+    try:
+        await sink.emit(severity, "CODE_X", {"partition": "trades/x"})  # type: ignore[arg-type]  # parametrised literal
+        with capture_logs() as logs:
+            await sink.emit(severity, "CODE_X", {"partition": "trades/x"})  # type: ignore[arg-type]  # parametrised literal
+        assert [e["code"] for e in logs] == ["CODE_X"]
+    finally:
+        structlog.reset_defaults()
