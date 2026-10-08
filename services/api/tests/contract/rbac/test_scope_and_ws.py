@@ -5,11 +5,15 @@ from __future__ import annotations
 
 import json
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from candleviewer.auth.generated_permissions import Permission, Scope
+from candleviewer.auth.scopes import Allow, Deny, decide
 from tests.contract.rbac.rbac_harness import (
     ACTORS,
     FOREIGN,
@@ -74,6 +78,53 @@ def test_manager_without_any_grant_cannot_create_even_with_the_capability(world:
     )
     assert resp.status_code == 403
     assert not world.rule_store._rows
+
+
+# -- granted_accounts HTTP cells, pinned against the policy decision point ----------------------
+#
+# `decide()` (auth/scopes.py) is the single policy decision point. Today only the WS gateway calls
+# it; the mounted HTTP routes enforce the same grant through `ScopeResolver.authorize_accounts`.
+# Each cell below asserts the HTTP outcome AND that `decide()` returns the matching decision for
+# the same principal, so HTTP and PDP cannot silently diverge.
+
+
+@pytest.mark.parametrize(
+    ("actor", "account", "http_status", "decision"),
+    [
+        ("manager_with_grant", GRANTED, 201, Allow),
+        ("manager_with_grant", FOREIGN, 403, Deny),
+        ("manager_without_grant", GRANTED, 403, Deny),
+        ("owner", GRANTED, 201, Allow),
+        ("owner", FOREIGN, 201, Allow),
+        ("viewer", GRANTED, 403, Deny),
+    ],
+)
+def test_granted_accounts_http_cell_agrees_with_the_decision_point(
+    world: World, actor: str, account: uuid.UUID, http_status: int, decision: type
+) -> None:
+    resp = world.client.post(
+        "/rules", json=_rule_body(account, f"{actor}-{str(account)[-1]}"), headers=bearer(actor)
+    )
+    assert resp.status_code == http_status, f"{actor} on {str(account)[-1]}: {resp.status_code}"
+    snap = world.resolver.snapshot(actor)
+    pdp = decide(
+        snap, Permission.RULES_WRITE, scope=Scope.GRANTED_ACCOUNTS, exchange_account_id=account
+    )
+    assert isinstance(pdp, decision), f"decide() disagrees with HTTP for {actor}: {pdp!r}"
+    created = len(world.rule_store._rows)
+    assert created == (1 if http_status == 201 else 0), "a denied call must create nothing"
+
+
+def test_granted_accounts_read_cell_allows_granted_and_hides_foreign(world: World) -> None:
+    mine = world.client.post("/rules", json=_rule_body(GRANTED, "m"), headers=bearer("owner"))
+    theirs = world.client.post("/rules", json=_rule_body(FOREIGN, "t"), headers=bearer("owner"))
+    assert mine.status_code == theirs.status_code == 201
+    got = world.client.get(f"/rules/{mine.json()['id']}", headers=bearer("manager_with_grant"))
+    assert got.status_code == 200, "granted account: allow"
+    other = world.client.get(f"/rules/{theirs.json()['id']}", headers=bearer("manager_with_grant"))
+    absent = world.client.get(f"/rules/{uuid.uuid4()}", headers=bearer("manager_with_grant"))
+    assert other.status_code == 404 == absent.status_code, "non-granted account: indistinguishable"
+    assert other.json() == absent.json() or other.json().get("code") == absent.json().get("code")
 
 
 # -- SR-051: scope applied at construction -------------------------------------------------------
@@ -174,10 +225,26 @@ def test_administrative_mutations_require_step_up_even_for_the_owner(
 # -- WS parity ----------------------------------------------------------------------------------
 
 
+_WS_TIMEOUT_S = 5.0
+
+
+def _recv(ws: Any) -> dict[str, Any]:
+    """`receive_json` with a hard deadline: a missing frame fails the test instead of hanging the
+    suite. The blocking read runs in a worker thread; leaving the `with` block closes the socket,
+    which unblocks it."""
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        frame: dict[str, Any] = pool.submit(ws.receive_json).result(timeout=_WS_TIMEOUT_S)
+    except FutureTimeout:
+        pytest.fail(f"no WS frame within {_WS_TIMEOUT_S}s (expected frame never arrived)")
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+    return frame
+
+
 def _auth(ws: Any, actor: str) -> dict[str, Any]:
     ws.send_json({"t": "auth", "id": "a", "p": {"access_token": f"tok-{actor}"}})
-    frame: dict[str, Any] = ws.receive_json()
-    return frame
+    return _recv(ws)
 
 
 def _sub(ws: Any, ch: str, account: uuid.UUID | None) -> dict[str, Any]:
@@ -185,7 +252,7 @@ def _sub(ws: Any, ch: str, account: uuid.UUID | None) -> dict[str, Any]:
     if account is not None:
         entry["opts"] = {"exchange_account_ids": [str(account)]}
     ws.send_json({"t": "sub", "id": ch, "p": {"topics": [entry]}})
-    frame: dict[str, Any] = ws.receive_json()
+    frame = _recv(ws)
     if frame["t"] != "sub_ok":
         return {"ok": False, "error": {"code": frame["p"]["code"]}}
     result: dict[str, Any] = frame["p"]["results"][0]
@@ -241,7 +308,7 @@ def test_in_flight_subscription_gets_revoked_when_the_grant_is_withdrawn(world: 
             f"/users/{mgr}/roles", json={"roles": ["manager"]}, headers=bearer("owner")
         )
         assert resp.status_code == 200
-        change, revoked = ws.receive_json(), ws.receive_json()
+        change, revoked = _recv(ws), _recv(ws)
         assert change["t"] == "permission_change"
         assert (revoked["t"], revoked["ch"]) == ("revoked", "orders")
         assert revoked["p"]["reason"] == "account_scope_changed"
