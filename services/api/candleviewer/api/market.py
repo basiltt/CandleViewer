@@ -343,6 +343,7 @@ def make_market_router(
             try:
                 start_us = max(start_us, decode_cursor(
                     cursor, scope=cursor_scope("klines", symbol, interval), end_us=end_us,
+                    start_us=start_us,
                     grid_us=grid,
                 ))  # fmt: skip
             except InvalidCursor:

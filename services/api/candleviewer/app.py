@@ -68,6 +68,7 @@ from candleviewer.api.deny_by_default import (
 from candleviewer.api.error_redaction import install_error_redaction
 from candleviewer.api.hotkey_audit import make_hotkey_audit_router
 from candleviewer.api.invites import make_invites_router
+from candleviewer.api.market_bars import make_market_bars_router
 from candleviewer.api.onboarding import make_onboarding_router
 from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
 from candleviewer.api.rules_actor import SessionRulesActorResolver, make_rules_audit
@@ -715,6 +716,7 @@ def create_app(
         wire_public_ws(ctx, kline_boundary)
     # E12 #2031 (flag `bars_enabled`, default off - C-4.13; removal with #398/#399): the set
     # and its writer are started/stopped by the lifespan (set first, then writer).
+    bars_reader: BarReader | None = None
     if resolved.bars_enabled:
         bars_sink = _build_bars_sink(resolved)
         app.state.bars_runtime = wire_bars(
@@ -725,12 +727,12 @@ def create_app(
             now_us=bars_now_us or (lambda: time.time_ns() // 1000),
             tick_size=lambda sym: _catalogue_tick_size(ctx, sym),
         )
-        if bars_sink is not None and ctx.ingestion.klines is not None:
+        if bars_sink is not None:
+            bars_reader = BarReader(bars_sink.pgwire, _no_rebuild_executor)
+        if bars_reader is not None and ctx.ingestion.klines is not None:
             # E12-T05: `/market/klines` tier (1) — tape-built `bars_time` wins over klines.
             ctx.ingestion.klines.attach_tape(
-                tape_time_bar_reader(
-                    BarReader(bars_sink.pgwire, _no_rebuild_executor), timeout_s=QUERY_TIMEOUT_S
-                )
+                tape_time_bar_reader(bars_reader, timeout_s=QUERY_TIMEOUT_S)
             )
     # E07-X02 (SR-094): supervised weekly scrub; started/stopped by the lifespan.
     app.state.scrub_task = (
@@ -980,6 +982,16 @@ def create_app(
             read_service_provider=lambda: ctx.ingestion.klines,
             # SR-E12-08: only catalogue-listed, trading symbols may start a backfill.
             symbol_listed=lambda sym: _catalogue_listed(ctx, sym),
+        )
+    )
+    # E12-T05: `/market/bars` over `bars_*` (503 until a real QuestDB reader is composed).
+    app.include_router(
+        make_market_bars_router(
+            lambda: bars_reader,
+            recording_started_at_us=recording_started_at_us(ctx),
+            principal_resolver=audit_resolver,
+            symbol_listed=lambda sym: _catalogue_listed(ctx, sym),
+            now_us=lambda: time.time_ns() // 1000,
         )
     )
     # E08-S01-2: served from the scheduler's in-memory snapshot; `503` until

@@ -702,8 +702,9 @@ operations:
     permissions: ['marketdata:read']
     scope: none
     public: false
-    state: not_mounted
-    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
     outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
   GET /market/data-coverage:
     permissions: ['marketdata:read']

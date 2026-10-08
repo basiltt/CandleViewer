@@ -79,12 +79,14 @@ def encode_cursor(scope: str, ts_us: int) -> str:
     return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
 
 
-def decode_cursor(cursor: str, *, scope: str, end_us: int, grid_us: int | None = None) -> int:
+def decode_cursor(
+    cursor: str, *, scope: str, end_us: int, start_us: int = 0, grid_us: int | None = None
+) -> int:
     """`ts_us` from a cursor this server issued for exactly this request, else `InvalidCursor`.
 
     Rejects: wrong length/encoding/version, a different route/symbol/series, a `ts` outside the
-    plausible range or after the request's `to`, and (time bars) a `ts` off the interval grid —
-    rejected, never clamped.
+    plausible range, before the request's `from` or after its `to`, and (time bars) a `ts` off
+    the interval grid — rejected, never clamped.
     """
     if not cursor or len(cursor) > _CURSOR_MAX_LEN or not cursor.isascii():
         raise InvalidCursor("cursor is empty or too long")
@@ -97,7 +99,7 @@ def decode_cursor(cursor: str, *, scope: str, end_us: int, grid_us: int | None =
     if body == raw or got_scope != scope or not ts.isdigit() or len(ts) > 19:
         raise InvalidCursor("cursor does not belong to this request")
     ts_us = int(ts)
-    if not _TS_MIN_US <= ts_us <= _TS_MAX_US or ts_us > end_us:
+    if not _TS_MIN_US <= ts_us <= _TS_MAX_US or not start_us <= ts_us <= end_us:
         raise InvalidCursor("cursor position is outside this request")
     if grid_us is not None and ts_us % grid_us:
         raise InvalidCursor("cursor position is not on a bar boundary")
