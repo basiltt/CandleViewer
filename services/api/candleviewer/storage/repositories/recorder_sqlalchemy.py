@@ -208,3 +208,9 @@ class SqlAlchemyRecorderRepository:
         """Retention days for (symbol, stream); `None` is the infinite sentinel (pinned)."""
         rows = await self._all(_RESOLVE, {"symbol": symbol, "stream": stream})
         return HARD_DEFAULT_RETAIN_DAYS if not rows else rows[0]["retain_days"]
+
+    async def explicit_policy_days(self, symbol: str, stream: str) -> int | None:
+        """Days of an EXPLICIT enabled rule for (symbol, stream); `None` when no rule exists (or
+        the rule is infinite) — unlike `resolve_policy`, never the 30 d repository default."""
+        rows = await self._all(_RESOLVE, {"symbol": symbol, "stream": stream})
+        return None if not rows else rows[0]["retain_days"]

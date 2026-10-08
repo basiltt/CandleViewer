@@ -120,10 +120,20 @@ class TapePrecedenceUnknown(BarPersistError):
 
 
 class PrecedenceHealth:
-    """Sticky-until-success flag: the last stored-tape lookup failed (health DEGRADED)."""
+    """Per-(symbol, interval) refusal flags: a success for one key never clears another's."""
 
     def __init__(self) -> None:
-        self.degraded = False
+        self._keys: set[tuple[str, str]] = set()
+
+    @property
+    def degraded(self) -> bool:
+        return bool(self._keys)
+
+    def mark(self, key: tuple[str, str]) -> None:
+        self._keys.add(key)
+
+    def clear(self, key: tuple[str, str]) -> None:
+        self._keys.discard(key)
 
     def reason(self) -> str:
         return PRECEDENCE_HEALTH_REASON if self.degraded else ""
@@ -187,7 +197,7 @@ async def submit_kline_bars(
         except TapePrecedenceUnknown as exc:
             bars_kline_refused_total.labels(REFUSE_PRECEDENCE_UNKNOWN).inc(len(rows))
             if health is not None:
-                health.degraded = True
+                health.mark((symbol, interval))
             _log().error(
                 "kline_rows_refused_precedence_unknown",
                 symbol=symbol,
@@ -196,7 +206,7 @@ async def submit_kline_bars(
             )
             return 0
         if health is not None:
-            health.degraded = False
+            health.clear((symbol, interval))
         if taken:
             refused = [r for r in rows if int(str(r["ts"])) in taken]
             bars_source_overwrite_refused_total.labels(KLINE_SOURCE, "tape").inc(len(refused))

@@ -698,12 +698,15 @@ def create_app(
     # (`load_kline_policy`), until then (and on failure) the 90 d fallback applies.
     kline_boundary = KlineHotBoundary()
     app.state.kline_boundary = kline_boundary
-    _kb_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "kline-boundary")
+    _kb_pg = (
+        SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "kline-boundary")
+        if resolved.storage_backend == "real"
+        else None
+    )
+    app.state.kline_boundary_pg = _kb_pg
     app.state.kline_boundary_refresh = KlineBoundaryRefreshTask(
         kline_boundary,
-        kline_policy_loader(
-            SqlAlchemyRecorderRepository(_kb_pg) if resolved.storage_backend == "real" else None
-        ),
+        kline_policy_loader(SqlAlchemyRecorderRepository(_kb_pg) if _kb_pg is not None else None),
         float(resolved.kline_boundary_refresh_s),
     )
     if resolved.ingestion_ws_enabled:
@@ -1263,12 +1266,13 @@ def kline_policy_loader(
     repo: SqlAlchemyRecorderRepository | None,
 ) -> Callable[[], Awaitable[RetentionPolicy | None]]:
     """#2060: loader of the klines hot window from the DB-seeded `retention_policies` (via the
-    recorder repository). No repository (fake backend) -> no policy -> the 90 d fallback."""
+    recorder repository). Only an EXPLICIT rule counts: no rule (or no repository, fake backend)
+    -> no policy -> the 90 d fallback."""
 
     async def load() -> RetentionPolicy | None:
         if repo is None:
             return None
-        days = await repo.resolve_policy("", StreamKind.KLINES.value)
+        days = await repo.explicit_policy_days("", StreamKind.KLINES.value)
         if days is None:
             return None
         return RetentionPolicy([], [RetentionRule(StreamKind.KLINES, days, None)])

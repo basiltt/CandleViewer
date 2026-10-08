@@ -121,6 +121,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         health_pg = getattr(app.state, "health_pg", None)
         if health_pg is not None:
             await health_pg.dispose()
+        kline_pg = getattr(app.state, "kline_boundary_pg", None)
+        if kline_pg is not None:
+            await kline_pg.dispose()
         if overrides is not None:
             await overrides.stop()
         if kline_refresh is not None:

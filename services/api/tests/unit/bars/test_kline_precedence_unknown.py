@@ -77,7 +77,7 @@ async def test_tape_present_is_refused_as_overwrite_and_absent_is_written() -> N
         return set()
 
     w, health = _writer(), PrecedenceHealth()
-    health.degraded = True
+    health.mark(("BTCUSDT", "5"))
     ev = [_k(T0)]
     refused = guarded_tape_lookup(present)
     written = guarded_tape_lookup(absent)
@@ -94,3 +94,18 @@ async def test_writer_side_tape_refusal_unchanged() -> None:
     spec = kline_spec("5")
     w._sources[("bars_time", spec.spec_hash + "BTCUSDT", T0)] = "tape"
     assert await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0)], stored_higher=absent) == 0
+
+
+async def test_health_is_per_key_success_for_one_symbol_keeps_other_degraded() -> None:
+    async def absent(s: str, p: str, t: list[int]) -> set[int]:
+        return set()
+
+    w, health = _writer(), PrecedenceHealth()
+    bad = guarded_tape_lookup(_raise_oserror)
+    await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0)], stored_higher=bad, health=health)
+    ok = guarded_tape_lookup(absent)
+    ev = [_k(T0, symbol="ETHUSDT")]
+    await submit_kline_bars(w, "ETHUSDT", "5", ev, stored_higher=ok, health=health)
+    assert health.degraded  # BTCUSDT still refused
+    await submit_kline_bars(w, "BTCUSDT", "5", [_k(T0)], stored_higher=ok, health=health)
+    assert not health.degraded
