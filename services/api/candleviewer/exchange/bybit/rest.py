@@ -15,6 +15,7 @@ call wired to live keys, key storage/encryption.
 from __future__ import annotations
 
 import asyncio
+import json
 import random
 import re
 import time
@@ -79,6 +80,43 @@ def validate_rest_path(path: str) -> str:
     if not isinstance(path, str) or not _SAFE_PATH.match(path):
         raise RestPathRejected("REST path must be a relative /v5/ path (SR-040a)")
     return path
+
+
+#: Per-endpoint-class cap on the raw response body (SR-E12-09, #2046), enforced
+#: while streaming and BEFORE JSON decode. A 1000-row kline page is ~80 KiB and
+#: the largest legitimate market-data reply (instruments-info, ~600 symbols) is
+#: well under 1 MiB, so 2 MiB leaves >2x headroom without letting a hostile or
+#: broken upstream make us buffer unbounded memory. Signed account/order/position
+#: replies are small; 1 MiB is generous.
+_MAX_BODY_BYTES: Mapping[EndpointClass, int] = {
+    EndpointClass.MARKET_DATA: 2 * 1024 * 1024,
+    EndpointClass.ORDER: 1024 * 1024,
+    EndpointClass.POSITION: 1024 * 1024,
+    EndpointClass.ACCOUNT: 1024 * 1024,
+}
+
+
+class RestBodyTooLarge(ExchangeError):
+    """The response body exceeded the per-endpoint-class byte cap (SR-E12-09).
+
+    Never retryable: a hostile/broken upstream will not shrink on resend. The
+    message carries sizes only, never any payload bytes."""
+
+
+async def _read_capped(response: httpx.Response, cap: int) -> bytes | None:
+    """Stream the body; return None if it exceeds `cap` (checked per chunk, so
+    peak memory is ~cap + one chunk). `Content-Length` is an early hint only."""
+    declared = response.headers.get("Content-Length")
+    if declared is not None and declared.isdigit() and int(declared) > cap:
+        return None
+    chunks: list[bytes] = []
+    total = 0
+    async for chunk in response.aiter_bytes():
+        total += len(chunk)
+        if total > cap:
+            return None
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 ClockOffsetProvider = Callable[[], Awaitable[int]] | Callable[[], int]
@@ -326,13 +364,18 @@ class BybitRestClient:
 
             start = time.monotonic()
             try:
-                response = await self._client.request(
+                request = self._client.build_request(
                     method,
                     path,
                     params=query if method.upper() in ("GET", "DELETE") else None,
                     content=payload_str if method.upper() in ("POST", "PUT") else None,
                     headers=headers,
                 )
+                response = await self._client.send(request, stream=True)
+                try:
+                    raw = await _read_capped(response, _MAX_BODY_BYTES[endpoint_class])
+                finally:
+                    await response.aclose()
             except (TimeoutError, httpx.TransportError) as exc:
                 bybit_rest_requests_total.labels(endpoint=path, result="transport_error").inc()
                 if attempt > self._config.max_retries:
@@ -341,6 +384,18 @@ class BybitRestClient:
                 continue
             finally:
                 bybit_rest_latency_seconds.labels(endpoint=path).observe(time.monotonic() - start)
+
+            if raw is None:
+                bybit_rest_requests_total.labels(endpoint=path, result="oversized").inc()
+                logger.warning(
+                    "bybit_rest_body_too_large",
+                    path=path,
+                    endpoint_class=str(endpoint_class),
+                    cap_bytes=_MAX_BODY_BYTES[endpoint_class],
+                )
+                raise RestBodyTooLarge(
+                    f"{path} response body exceeds {_MAX_BODY_BYTES[endpoint_class]} bytes"
+                )
 
             self._observe_rate_headers(response, endpoint_class)
 
@@ -358,7 +413,7 @@ class BybitRestClient:
                 bybit_rest_requests_total.labels(endpoint=path, result="4xx").inc()
 
             try:
-                data = response.json()
+                data = json.loads(raw)
             except ValueError as exc:
                 bybit_rest_requests_total.labels(endpoint=path, result="error").inc()
                 exchange_errors_total.labels(**{"class": UnknownStateError.code.value}).inc()
@@ -478,8 +533,6 @@ class BybitRestClient:
 
 
 def _json_dumps(body: Mapping[str, Any]) -> str:
-    import json
-
     return json.dumps(body, separators=(",", ":"), sort_keys=True)
 
 
