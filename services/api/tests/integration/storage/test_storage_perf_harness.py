@@ -59,7 +59,6 @@ from tests.integration.storage.test_questdb_hot_tier import (
 _REPO = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(_REPO / "tests" / "perf" / "storage"))
 from stats import (  # type: ignore[import-not-found]  # noqa: E402  # harness module, on sys.path above
-    PerfRegressionError,
     assert_within_baseline,
     write_report_section,
 )
@@ -320,7 +319,7 @@ async def test_reaper_loop_lag_real_reaper_real_drop_partition(
             "lag_samples": len(lags),
             "lag_max_ms": round(lags[-1], 2) if lags else None,
             "lag_p95_ms": round(lags[int(0.95 * (len(lags) - 1))], 2) if lags else None,
-            "threshold_ms": "50-100 (AC); gate uses the committed baseline",
+            "threshold_ms": "50-100 (AC); gate: p95 vs baseline_integration.json reaper_lag_p95_ms",
             "engine": "questdb:8.1.1 DROP PARTITION, injected clock",
         }
         write_report_section(REPORT, "reaper_loop_lag", result)
@@ -328,18 +327,16 @@ async def test_reaper_loop_lag_real_reaper_real_drop_partition(
         assert lags, "no lag samples: the run never yielded to the loop"
         # DROP PARTITION on a WAL table applies asynchronously: bounded wait.
         await wait_for_row_count(conn, "trades", hot_days * per_day, timeout_s=120.0)
-        # Quarantined gate (C-9.3, #2038): the *maximum* loop-lag sample is dominated by
-        # shared-runner scheduler jitter and has failed unrelated PRs (#2025, #2027, #2033).
-        # The functional assertions above stay blocking; the figure is still recorded in
-        # the report section; only the baseline comparison is non-fatal until #2038 lands.
-        try:
-            assert_within_baseline(
-                {"reaper_lag_max_ms": _baseline()["reaper_lag_max_ms"]},
-                {"reaper_lag_max_ms": lags[-1]},
-                abs_slack_ms=25.0,
-            )
-        except PerfRegressionError as exc:
-            pytest.xfail(f"quarantined loop-lag gate (#2038): {exc}")
+        # Robust gate (#2038): the p95 loop-lag sample (design 06 s7.4 gates p95, not max). One
+        # shared-runner scheduler stall moves the max (#2025/#2027/#2033: 150 -> 235 ms) but
+        # not the p95. Fails only if > +50 % AND > 25 ms over baseline. lag_max_ms stays in the
+        # report for information only.
+        assert_within_baseline(
+            {"reaper_lag_p95_ms": _baseline()["reaper_lag_p95_ms"]},
+            {"reaper_lag_p95_ms": result["lag_p95_ms"]},
+            threshold=0.5,
+            abs_slack_ms=25.0,
+        )
     finally:
         await conn.close()
 
