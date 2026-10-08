@@ -163,6 +163,7 @@ from candleviewer.rules_store_pg import PostgresRuleStore
 from candleviewer.settings import Environment, Settings, get_settings
 from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
+from candleviewer.storage.cold.kline_reader import ParquetKlineReader
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
@@ -1401,6 +1402,10 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     return manager
 
 
+# TODO(#2060): derive from the retention policy / oldest hot row (constant mirrors §7).
+_KLINE_HOT_RETENTION_US = 90 * 86_400 * 1_000_000
+
+
 def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
     """E12-S05: cache-first `/market/klines` with background exchange backfill.
 
@@ -1424,9 +1429,18 @@ def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
 
     hot = _HotKlines()
     backfill = KlineBackfillService(fetch_klines=fetch_klines, cache=hot)
+    cold = ParquetKlineReader(
+        DatasetRegistry(ctx.settings.parquet_root),
+        max_concurrency=ctx.settings.cold_kline_concurrency,
+    )
     ctx.ingestion.attach_klines(
         KlineReadService(
-            hot, backfill=backfill, recording_started_at_us=recording_started_at_us(ctx)
+            hot,
+            backfill=backfill,
+            cold=cold,
+            # klines stay hot 90 d (21-database-schema.md §7); older windows read from Parquet.
+            hot_boundary_us=lambda: time.time_ns() // 1000 - _KLINE_HOT_RETENTION_US,
+            recording_started_at_us=recording_started_at_us(ctx),
         ),
         backfill,
     )

@@ -7,8 +7,8 @@ retention.
 **Scope today: klines only.** Tier (1), merging `bars_time` (source=tape) so tape wins on
 overlap, is deferred to E12-T05 (#398): nothing persists `bars_time` rows in production yet
 (`bars_wiring`, #2037) and no `bars_time` read is composed, so `sources` never claims tape.
-The cold tier is supported here but not wired by the composition root (follow-up issue, see
-PR); symbol validation must precede any cold path join when it is.
+The cold tier is wired by the composition root (`ParquetKlineReader`, #2048); the route's
+catalogue check precedes any cold path join.
 
 `read()` never waits on the exchange: it serves what the tiers hold now and, if the hot part
 of the window has holes, starts (or joins) the single background backfill job for that
@@ -121,29 +121,35 @@ class KlineReadService:
         boundary = self._boundary()
         sources: list[str] = []
         rows: list[KlineRowLike] = []
+        cold_ids: set[int] = set()
+        hot_ids: set[int] = set()
         if self._cold is not None and rng.start_us < boundary:
             cold_rows = await self._cold(
                 symbol, interval, Range(rng.start_us, min(rng.end_us, boundary))
             )
-            if cold_rows:
-                sources.append(SOURCE_COLD)
-                rows.extend(cold_rows)
+            rows.extend(cold_rows)
+            cold_ids = {id(r) for r in cold_rows}
         holes: list[Range] = []
         backfilling = False
         if rng.end_us > boundary:
             hot_rng = Range(max(rng.start_us, boundary), rng.end_us)
             hot_rows = await self._hot.read_klines(symbol, interval, hot_rng, limit=limit)
-            if hot_rows:
-                sources.append(SOURCE_HOT)
-                rows.extend(hot_rows)
+            rows.extend(hot_rows)
+            hot_ids = {id(r) for r in hot_rows}
             holes, backfilling = await self._schedule_backfill(symbol, interval, hot_rng)
         # A4: claim the exchange tier only once exchange-sourced rows are actually merged into
         # this response; a running job alone is reported via `backfilling`, not `sources`.
-        if any(r.source in _EXCHANGE_ROW_SOURCES for r in rows):
-            sources.append(SOURCE_EXCHANGE)
         rows.sort(key=lambda r: r.ts_us)
         if limit is not None:
             rows = rows[-limit:] if limit else []  # newest `limit` across both tiers
+        # `sources` describes the rows actually returned (a tier whose rows were all trimmed
+        # away is not claimed).
+        if any(id(r) in cold_ids for r in rows):
+            sources.append(SOURCE_COLD)
+        if any(id(r) in hot_ids for r in rows):
+            sources.append(SOURCE_HOT)
+        if any(r.source in _EXCHANGE_ROW_SOURCES for r in rows):
+            sources.append(SOURCE_EXCHANGE)
         started = await self._recording_started(symbol) if self._recording_started else None
         return KlineRead(rows, sources, started, holes, backfilling)
 
