@@ -70,7 +70,9 @@ def read_trade_rows() -> list[dict[str, str]]:
         return list(csv.DictReader(fh))
 
 
-def to_events(rows: Sequence[dict[str, str]]) -> list[TradeEvent]:
+def to_events(
+    rows: Sequence[dict[str, str]], symbol: str = SYMBOL, tick: Decimal = TICK
+) -> list[TradeEvent]:
     """Same mapping as `ingestion/trade_stream.py` (`notional = price * qty`)."""
     out: list[TradeEvent] = []
     for i, r in enumerate(rows, start=1):
@@ -82,13 +84,13 @@ def to_events(rows: Sequence[dict[str, str]]) -> list[TradeEvent]:
                     "ts_event": int(r["ts_event_us"]),
                     "ts_ingest": int(r["ts_event_us"]),
                     "source": "replay",
-                    "symbol": SYMBOL,
+                    "symbol": symbol,
                     "trade_id": r["trade_id"],
                     "price": p,
                     "qty": q,
                     "side": r["side"],
                     "is_block_trade": r["is_block_trade"] == "1",
-                    "price_ticks": int((p / TICK).to_integral_value()),
+                    "price_ticks": int((p / tick).to_integral_value()),
                     "notional": p * q,
                     "seq": i,
                 }
@@ -192,6 +194,7 @@ def build_artifacts() -> tuple[dict[str, list[str]], dict[str, object]]:
         "algo_version": ALGO_VERSION,
         "symbol": SYMBOL,
         "prints": len(prints),
+        "tick_size": str(TICK),
         "cases": cases,
     }
     return lines, summary

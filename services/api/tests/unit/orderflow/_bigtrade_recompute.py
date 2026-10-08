@@ -7,6 +7,7 @@ open-cluster map with a deadline sweep. Spec: 24-internal-schemas §2.10 "Cluste
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -17,12 +18,13 @@ CREATE TABLE prints AS
 SELECT trade_id, ts_event_us AS ts, side,
        CAST(price AS DECIMAL(18,2)) AS price, CAST(qty AS DECIMAL(18,8)) AS qty,
        CAST(price AS DECIMAL(18,2)) * CAST(qty AS DECIMAL(18,8)) AS notional,
-       CAST(round(CAST(price AS DECIMAL(18,2)) * 10) AS BIGINT) AS ticks
+       CAST(CAST(price AS DECIMAL(18,2)) * 100 AS BIGINT) // ? AS ticks
 FROM read_csv(?, header = true, delim = ',',
               columns = {'trade_id': 'VARCHAR', 'ts_event_us': 'BIGINT', 'side': 'VARCHAR',
                          'price': 'VARCHAR', 'qty': 'VARCHAR', 'is_block_trade': 'INTEGER'})
 """
-# NOTE: the tick is HARD-CODED for BTCUSDT (0.1 => ticks = price * 10); follow-up: parameterise.
+# Tick is a bound parameter (integer hundredths, exact): ticks = floor(price_cents / tick_cents).
+# Prices are DECIMAL(18,2), so the tick must be a whole multiple of 0.01 (checked in __init__).
 
 _CLUSTERS = """
 WITH RECURSIVE keyed AS (
@@ -50,9 +52,12 @@ ORDER BY first_ts, first_id
 
 
 class Recompute:
-    def __init__(self, trades_csv_gz: Path) -> None:
+    def __init__(self, trades_csv_gz: Path, tick_size: Decimal) -> None:
+        cents = tick_size * 100
+        if cents <= 0 or cents != cents.to_integral_value():
+            raise ValueError(f"tick_size must be a positive multiple of 0.01, got {tick_size}")
         self.con = duckdb.connect(":memory:")
-        self.con.execute(_LOAD, [trades_csv_gz.as_posix()])
+        self.con.execute(_LOAD, [int(cents), trades_csv_gz.as_posix()])
 
     def flagged_notional(self, threshold: str) -> list[dict[str, Any]]:
         rows = self.con.execute(

@@ -57,7 +57,9 @@ def outputs(prints: list) -> dict[str, list]:  # type: ignore[type-arg]
 
 @pytest.fixture(scope="module")
 def sql() -> Recompute:
-    return Recompute(G.TRADES_GZ)
+    tick = Decimal(json.loads(G.SUMMARY.read_text("utf-8"))["tick_size"])
+    assert tick == G.TICK  # golden metadata and the engine tick must agree
+    return Recompute(G.TRADES_GZ, tick)
 
 
 def regen_guard(stored_version: str | None, current_version: str) -> None:
@@ -251,7 +253,7 @@ def test_flag_threshold_boundary_canonical_case_matches_duckdb(tmp_path: Path) -
         rows.append(f"f{i:03d},{1_700_000_000_000_000 + i * 1000},buy,{px},{q},0")
     p = _write_csv(tmp_path / "flags.csv.gz", rows)
     evs = G.to_events(_rows(rows))
-    sql = Recompute(p)
+    sql = Recompute(p, G.TICK)
     for cut in ("30000", "250000"):
         cfg = _CFG[N250].__class__(mode="notional", value=Decimal(cut))
         got = [e.trade_id for e in G.run(cfg, evs) if isinstance(e, BigTradeEvent)]
@@ -305,7 +307,7 @@ def test_cluster_deadline_boundary_canonical_case_matches_duckdb(tmp_path: Path)
         (c for c in G.run(cfg, evs) if isinstance(c, TradeClusterEvent)),
         key=lambda c: (c.first_ts_event, c.first_trade_id),
     )
-    want = Recompute(p).clusters(1, 250)
+    want = Recompute(p, G.TICK).clusters(1, 250)
     assert [list(c.trade_ids) for c in got] == [w["trade_ids"] for w in want]
     assert [len(c.trade_ids) for c in got] == [2, 3, 2]  # exact-deadline print merges, +1 us splits
 
@@ -323,6 +325,32 @@ def test_cluster_tolerance_two_ticks_matches_duckdb(tmp_path: Path) -> None:
         (c for c in G.run(cfg, G.to_events(_rows(rows))) if isinstance(c, TradeClusterEvent)),
         key=lambda c: (c.first_ts_event, c.first_trade_id),
     )
-    want = Recompute(path).clusters(2, 250)
+    want = Recompute(path, G.TICK).clusters(2, 250)
     assert [list(c.trade_ids) for c in got] == [w["trade_ids"] for w in want]
     assert [len(c.trade_ids) for c in got] == [4, 2]
+
+
+def test_second_symbol_synthetic_tick_001_smoke_engine_equals_oracle(tmp_path: Path) -> None:
+    """SYNTHETIC prints (ETHUSDT-shaped, tick 0.01): oracle-shape/determinism smoke ONLY, not a
+    golden (C-13.5). Proves the oracle's tick is a parameter: with tick 0.01 the prices 2000.00 /
+    2000.01 share a 2-tick bucket, 2000.02 / 2000.03 the next (a fixed 0.1 tick would differ)."""
+    tick = Decimal("0.01")
+    px = ["2000.00", "2000.01", "2000.02", "2000.03", "2000.01", "2000.00", "2000.50"]
+    base = 1_700_000_000_000_000
+    rows = [f"s{i:03d},{base + i * 10_000},buy,{p},1.0,0" for i, p in enumerate(px)]
+    path = _write_csv(tmp_path / "eth_synth.csv.gz", rows)
+    cfg = _CFG[CLUSTERED].__class__(
+        mode="notional", value=Decimal("1"), cluster_window_ms=250, cluster_tolerance_ticks=2
+    )
+    evs = G.to_events(_rows(rows), "ETHUSDT", tick)
+    eng = BigTradeEngine("ETHUSDT", tick, cfg)
+    got = sorted(
+        (c for c in G.run(cfg, evs, engine=eng) if isinstance(c, TradeClusterEvent)),
+        key=lambda c: (c.first_ts_event, c.first_trade_id),
+    )
+    want = Recompute(path, tick).clusters(2, 250)
+    assert [list(c.trade_ids) for c in got] == [w["trade_ids"] for w in want]
+    assert [(c.side, c.price_bucket) for c in got] == [(w["side"], w["price_bucket"]) for w in want]
+    assert [len(c.trade_ids) for c in got] == [4, 2, 1]
+    with pytest.raises(ValueError, match="tick_size"):
+        Recompute(path, Decimal("0.001"))

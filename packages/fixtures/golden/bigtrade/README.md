@@ -2,7 +2,8 @@
 
 Files: `trades_BTCUSDT.csv.gz` (input prints), `expected_BTCUSDT.jsonl.gz` (every engine event
 for the three configurations, canonical JSON), `summary.json` (`algo_version`, per-case counts and
-sha256). Consumed by `services/api/tests/unit/orderflow/test_bigtrade_golden_parity.py`.
+sha256, and `tick_size` -- golden metadata read by the oracle, not an engine output, so adding it
+needs no `ALGO_VERSION` bump). Consumed by `services/api/tests/unit/orderflow/test_bigtrade_golden_parity.py`.
 
 ## Provenance (C-13.5)
 
@@ -18,10 +19,14 @@ is ~31.6 k USDT; the empty set is itself the parity result, and a 30 000 cut pro
 non-vacuous); (2) percentile 99 / 1 h; (3) notional 100 000, `cluster_window_ms=250`,
 `cluster_tolerance_ticks=1`.
 
+**Window scope:** the golden window is 542 prints / 2.99 h, NOT a symbol-day, until a recorded
+symbol-day capture exists (E16, #42).
+
 ## Independent recompute
 
 `tests/unit/orderflow/_bigtrade_recompute.py` (DuckDB SQL, no engine imports): `WHERE` over a
-DECIMAL notional for flags, a recursive-CTE island query over `(side, price_bucket)` for clusters.
+DECIMAL notional for flags (tick bound as a parameter from `summary.json`; a second-symbol smoke
+case with SYNTHETIC prints at tick 0.01 checks oracle shape/determinism only, never a golden), a recursive-CTE island query over `(side, price_bucket)` for clusters.
 Percentile mode (P2 estimate, not exactly recomputable) is checked as flags == ASOF join of the
 engine's emitted threshold schedule, plus a rank sanity bound.
 
