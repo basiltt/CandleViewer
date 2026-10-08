@@ -211,3 +211,19 @@ def configure_logging(
     # every log line carries it without every call site passing it manually.
     structlog.contextvars.clear_contextvars()
     structlog.contextvars.bind_contextvars(env=env)
+
+
+def reset_logging() -> None:
+    """Undo `configure_logging()`: stop the listener, drop its root handler, reset structlog.
+
+    Test-isolation helper (C-13.7); safe to call when nothing was configured.
+    """
+    global _listener
+    if _listener is not None:
+        _listener.stop()
+        _listener = None
+    root = logging.getLogger()
+    root.handlers = [h for h in root.handlers if not isinstance(h, _RawQueueHandler)]
+    root.setLevel(logging.WARNING)
+    structlog.reset_defaults()
+    structlog.contextvars.clear_contextvars()
