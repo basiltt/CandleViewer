@@ -63,3 +63,14 @@ def b16_audit() -> Iterator[RecordingAuditSink]:
     b16_session.set_audit_sink(sink)
     yield sink
     b16_session.set_audit_sink(None)
+
+
+@pytest.fixture(autouse=True)
+def _reset_structlog_state() -> Iterator[None]:
+    """C-13.7: `configure_logging()` pins renderers via `cache_logger_on_first_use=True`, installs a
+    QueueListener and root handler, and binds contextvars. Undo all of it after every test so no
+    ordering can leak it into a later module-level-logger test (#2049, #2057)."""
+    from candleviewer.observability.logging import reset_logging
+
+    yield
+    reset_logging()

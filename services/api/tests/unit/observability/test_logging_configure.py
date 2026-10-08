@@ -10,9 +10,8 @@ from __future__ import annotations
 
 import io
 import json
-import logging
 import re
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from contextlib import redirect_stdout
 from typing import Any
 
@@ -22,13 +21,6 @@ import structlog
 from candleviewer.observability.logging import RedactionFilter, configure_logging
 
 _ISO_UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z?$")
-
-
-@pytest.fixture(autouse=True)
-def _reset_logging() -> Iterator[None]:
-    yield
-    logging.getLogger().handlers = []
-    structlog.reset_defaults()
 
 
 def _configure_and_capture_stdout(fn: Callable[[], None], **kwargs: Any) -> str:
