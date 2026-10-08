@@ -320,9 +320,12 @@ def make_market_router(
         rows: list[KlineRowLike]
         if service is not None:
             # +1: room for the forming bar, which `include_open=false` drops below.
-            read = await service.read(
-                symbol, interval, Range(rng.start_us, rng.end_us), limit=limit + 1
-            )
+            try:
+                read = await service.read(
+                    symbol, interval, Range(rng.start_us, rng.end_us), limit=limit + 1
+                )
+            except StorageTierUnavailable:  # e.g. cold-tier DuckDB timeout: typed 503, not 500
+                return _problem(503, "Service unavailable", "kline storage tier unavailable")
             rows = list[KlineRowLike](read.rows)
             sources = read.sources
             if read.recording_started_at_us is not None:
