@@ -423,7 +423,7 @@ jobs:
   engine-bench:
     name: engine-bench
     needs: changed-paths
-    if: ${{ needs.changed-paths.outputs.engine == 'true' }}
+    if: ${{ needs.changed-paths.outputs.engine == 'true' || needs.changed-paths.outputs.protocol == 'true' }}
     uses: ./.github/workflows/_job-engine-bench.yml
 
   coverage-thresholds:
@@ -545,7 +545,7 @@ jobs:
               },
               e2e: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_E2E },
               a11y: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_A11Y },
-              "engine-bench": { applicable: isTrue(process.env.FILTER_ENGINE), result: process.env.RESULT_ENGINE_BENCH },
+              "engine-bench": { applicable: isTrue(process.env.FILTER_ENGINE) || isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_ENGINE_BENCH },
               "coverage-thresholds": {
                 applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY),
                 result: process.env.RESULT_COVERAGE_THRESHOLDS,

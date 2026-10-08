@@ -1,0 +1,76 @@
+name: fuzz-nightly
+
+# E17-T02 part B (#2042, Refs #380): nightly mutation fuzz of the CVWB binary-frame decoders,
+# seeded from tests/fuzz/ws-frames/corpus.json (SR-155). Invariant: decoders raise ONLY the typed
+# malformed error, bounded memory. Failing inputs are uploaded as artefacts, never committed.
+# No atheris dependency (C-12): Python uses a Hypothesis mutation strategy, TS a seeded-PRNG loop.
+
+on:
+  schedule:
+    - cron: "43 3 * * *"
+  workflow_dispatch:
+    inputs:
+      examples:
+        description: "Mutated inputs per suite"
+        default: "20000"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-nightly
+  cancel-in-progress: false
+
+env:
+  CV_FUZZ_EXAMPLES: ${{ inputs.examples || '20000' }}
+  CV_FUZZ_SEED: ${{ github.run_id }}
+  CV_FUZZ_ARTIFACT_DIR: ${{ github.workspace }}/fuzz-failures
+
+jobs:
+  python:
+    name: fuzz-nightly-python
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+      - name: uv sync --frozen
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+      - name: CVWB mutation fuzz (Hypothesis)
+        working-directory: services/api
+        run: uv run pytest tests/unit/ws/test_cvwb_fuzz.py -m fuzz --no-cov -p no:randomly -p no:cacheprovider
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: fuzz-failures-python
+          path: fuzz-failures/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  typescript:
+    name: fuzz-nightly-typescript
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ".nvmrc"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: CVWB mutation fuzz (vitest fuzz project)
+        run: pnpm --filter @candleviewer/protocol test:fuzz
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: fuzz-failures-typescript
+          path: fuzz-failures/
+          if-no-files-found: ignore
+          retention-days: 30
