@@ -1,7 +1,8 @@
 {
-  "_note": "E07-Q03 real-engine gate (QuestDB 8.1.1 on the GitHub ubuntu-latest runner). Seeded generously before the first CI measurement; tighten from build/reports/storage-perf.json with CODEOWNER approval. Gate: >20% AND >25 ms absolute over these values fails.",
+  "_note": "E07-Q03 real-engine gate (QuestDB 8.1.1 on the GitHub ubuntu-latest runner). Seeded generously before the first CI measurement; tighten from build/reports/storage-perf.json with CODEOWNER approval. Gate: >20% AND >25 ms absolute over these values fails. reaper_lag_p95_ms (NEW, #2038) gates loop-lag on p95 with +50% and 25 ms slack; seeded from 56 recorded PR-lane artefacts (p95 median 1.1 ms, max 1.82 ms). reaper_lag_max_ms is informational only (no longer gated).",
   "metrics_ms": {
     "reaper_lag_max_ms": 150.0,
-    "query_warm_p95_ms": 100.0
+    "query_warm_p95_ms": 100.0,
+    "reaper_lag_p95_ms": 2.0
   }
 }
