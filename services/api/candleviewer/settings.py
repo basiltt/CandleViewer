@@ -178,6 +178,8 @@ class Settings(BaseSettings):
     recorder_hot_days: int = 7
     # #2048: max concurrent DuckDB scans for the /market/klines cold tier (C-2.18).
     cold_kline_concurrency: int = 2
+    # #2060: seconds between reloads of the klines hot-retention rule (rules are editable).
+    kline_boundary_refresh_s: int = 600
     disk_cap_gb: int = 500
     # E08-T04: public WS ingestion skeleton flag (C-4.13: off by default;
     # removal tracked by E08-T05). Public data only — no credentials.

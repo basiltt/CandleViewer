@@ -203,7 +203,10 @@ from candleviewer.storage.repositories.sessions_sqlalchemy import (
 )
 from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
 from candleviewer.storage.retention.alert_tasks import AlertDeliveriesPurgeTask, AlertGaugeTask
-from candleviewer.storage.retention.kline_boundary import KlineHotBoundary
+from candleviewer.storage.retention.kline_boundary import (
+    KlineBoundaryRefreshTask,
+    KlineHotBoundary,
+)
 from candleviewer.storage.retention.policy import RetentionPolicy, RetentionRule
 from candleviewer.storage.retention.rule_prune import RulePruneTask
 from candleviewer.storage.retention.schedule import RetentionSchedule
@@ -695,6 +698,14 @@ def create_app(
     # (`load_kline_policy`), until then (and on failure) the 90 d fallback applies.
     kline_boundary = KlineHotBoundary()
     app.state.kline_boundary = kline_boundary
+    _kb_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "kline-boundary")
+    app.state.kline_boundary_refresh = KlineBoundaryRefreshTask(
+        kline_boundary,
+        kline_policy_loader(
+            SqlAlchemyRecorderRepository(_kb_pg) if resolved.storage_backend == "real" else None
+        ),
+        float(resolved.kline_boundary_refresh_s),
+    )
     if resolved.ingestion_ws_enabled:
         wire_public_ws(ctx, kline_boundary)
     # E12 #2031 (flag `bars_enabled`, default off - C-4.13; removal with #398/#399): the set
@@ -1248,26 +1259,21 @@ def _write_behind_buffers(ctx: AppContext) -> list[WriteBehindLike]:
     return out
 
 
-async def load_kline_policy(
-    boundary: KlineHotBoundary, repo: SqlAlchemyRecorderRepository | None
-) -> None:
-    """#2060: resolve the klines hot window from the DB-seeded `retention_policies` (via the
-    recorder repository) into `boundary`. No repository (fake backend) keeps the fallback."""
-    if repo is None:
-        await boundary.refresh(_no_policy)
-        return
+def kline_policy_loader(
+    repo: SqlAlchemyRecorderRepository | None,
+) -> Callable[[], Awaitable[RetentionPolicy | None]]:
+    """#2060: loader of the klines hot window from the DB-seeded `retention_policies` (via the
+    recorder repository). No repository (fake backend) -> no policy -> the 90 d fallback."""
 
     async def load() -> RetentionPolicy | None:
+        if repo is None:
+            return None
         days = await repo.resolve_policy("", StreamKind.KLINES.value)
         if days is None:
             return None
         return RetentionPolicy([], [RetentionRule(StreamKind.KLINES, days, None)])
 
-    await boundary.refresh(load)
-
-
-async def _no_policy() -> RetentionPolicy | None:
-    return None
+    return load
 
 
 def wire_public_ws(

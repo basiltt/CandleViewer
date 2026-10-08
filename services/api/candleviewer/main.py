@@ -21,12 +21,11 @@ from typing import Any
 import structlog
 from fastapi import FastAPI
 
-from candleviewer.app import AppContext, Supervisor, create_app, load_kline_policy
+from candleviewer.app import AppContext, Supervisor, create_app
 from candleviewer.observability.logging import configure_logging
 from candleviewer.observability.metrics import Metrics
 from candleviewer.observability.metrics_server import MetricsRuntime
 from candleviewer.settings import Settings
-from candleviewer.storage.repositories.recorder_sqlalchemy import SqlAlchemyRecorderRepository
 
 # E04-T01: logging must be configured before anything else logs a line, and
 # exactly once per process (`configure_logging()`'s own docstring). Every
@@ -78,12 +77,10 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     bars_runtime = getattr(app.state, "bars_runtime", None)
     if bars_runtime is not None:
         await bars_runtime.start()
-    kline_boundary = getattr(app.state, "kline_boundary", None)
-    if kline_boundary is not None:  # #2060: load the klines hot window; failure keeps 90 d
-        _pg = getattr(app.state, "health_pg", None)
-        await load_kline_policy(
-            kline_boundary, SqlAlchemyRecorderRepository(_pg) if _pg is not None else None
-        )
+    kline_refresh = getattr(app.state, "kline_boundary_refresh", None)
+    if kline_refresh is not None:  # #2060: initial load, then periodic (rules are editable)
+        await kline_refresh.load_now()
+        kline_refresh.start()
     alert_tasks = [
         t
         for t in (
@@ -126,6 +123,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await health_pg.dispose()
         if overrides is not None:
             await overrides.stop()
+        if kline_refresh is not None:
+            await kline_refresh.stop()
         if rule_prune is not None:
             await rule_prune.stop()
         if funding_task is not None:

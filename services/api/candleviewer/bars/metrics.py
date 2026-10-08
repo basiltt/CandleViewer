@@ -79,6 +79,8 @@ EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
         "bar_emit_sink_errors_total",
         "bar_builder_quarantined_total",
         "bars_restore_gap_total",
+        "bars_kline_refused_total",  # bars.kline_rows (#2053)
+        "kline_hot_boundary_fallback_total",  # storage.retention.kline_boundary (#2060)
     }
 )
 

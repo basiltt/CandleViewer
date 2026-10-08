@@ -133,11 +133,15 @@ def guarded_tape_lookup(
     lookup: StoredHigherSource,
     *,
     timeout_s: float = DEFAULT_LOOKUP_TIMEOUT_S,
-    transient: tuple[type[Exception], ...] = (),
+    transient: tuple[type[Exception], ...] = (),  # caller-supplied driver errors
 ) -> StoredHigherSource:
     """Wrap a stored-tape lookup: `OSError`, timeouts and the caller's driver errors
     (`transient`, e.g. asyncpg's, supplied by the composition root: `bars` imports no driver)
     become `TapePrecedenceUnknown`. Cancellation is never swallowed."""
+    # Default `(OSError, TimeoutError)`. asyncpg errors derive from `asyncpg.PostgresError` /
+    # `asyncpg.InterfaceError`, NOT `OSError`, so they are NOT caught until the caller passes
+    # them in `transient` (#398 must wire `(asyncpg.PostgresError, asyncpg.InterfaceError)`;
+    # `bars` may not import a driver, #2053).
     caught: tuple[type[BaseException], ...] = (OSError, TimeoutError, *transient)
 
     async def guarded(symbol: str, bar_param: str, ts: list[int]) -> set[int]:
@@ -184,7 +188,7 @@ async def submit_kline_bars(
             bars_kline_refused_total.labels(REFUSE_PRECEDENCE_UNKNOWN).inc(len(rows))
             if health is not None:
                 health.degraded = True
-            _log.error(
+            _log().error(
                 "kline_rows_refused_precedence_unknown",
                 symbol=symbol,
                 refused=len(rows),
