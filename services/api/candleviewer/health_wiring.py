@@ -34,7 +34,11 @@ from candleviewer.observability.health_probes import (
     SystemEvent,
 )
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 _DISK_WARN = 0.90
 _DISK_DOWN = 0.97

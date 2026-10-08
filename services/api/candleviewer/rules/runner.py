@@ -13,6 +13,7 @@ import contextlib
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 import structlog
 
@@ -27,12 +28,17 @@ from candleviewer.rules.evaluator.engine import EvaluationResult, scope_instance
 from candleviewer.rules.evaluator.snapshot import Value
 from candleviewer.rules.ir.models import MetricRef, Rule
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 QUEUE_BOUND = 1024
 
 
 def _log_error(exc: Exception) -> None:
-    _log.error("rule evaluation failed", exc_info=exc)
+    _log().error("rule evaluation failed", exc_info=exc)
 
 
 @dataclass(frozen=True, slots=True)

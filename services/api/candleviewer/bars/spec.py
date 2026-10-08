@@ -17,7 +17,7 @@ import hashlib
 import json
 import re
 from decimal import Decimal, localcontext
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
 import structlog
 
@@ -51,7 +51,11 @@ _UINT = re.compile(r"^[1-9][0-9]{0,17}$")
 bar_specs_registered_total = Counter(
     "bar_specs_registered_total", "Distinct bar specs registered (spec_hash -> BarSpec)."
 )
-_log = structlog.get_logger(__name__)
+
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
 
 
 def dec_str(d: Decimal) -> str:
@@ -180,7 +184,7 @@ class SpecRegistry:
         if h not in self._specs:
             self._specs[h] = spec
             bar_specs_registered_total.inc()
-            _log.info("bar_spec_registered", spec_hash=h, spec=canonical_json(spec))
+            _log().info("bar_spec_registered", spec_hash=h, spec=canonical_json(spec))
         return h
 
     def resolve(self, spec_hash: str) -> BarSpec | None:

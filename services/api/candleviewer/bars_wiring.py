@@ -23,7 +23,7 @@ import sys
 from collections.abc import AsyncIterator, Awaitable, Callable
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import structlog
 
@@ -39,7 +39,11 @@ from candleviewer.storage.models import TimeRange
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 #: `head_us` looks this far back; an older tape reports None (the ahead-of-tape check is skipped).
 HEAD_WINDOW_US: Final = 5 * 60 * 1_000_000
@@ -167,12 +171,12 @@ class BarsRuntime:
         await self.builder_set.stop()
         remaining = await self.writer.stop()
         if remaining:
-            logger.error("bars_writer_rows_unwritten_at_shutdown", remaining=remaining)
+            logger().error("bars_writer_rows_unwritten_at_shutdown", remaining=remaining)
         if self._sink_stop is not None:
             try:
                 await self._sink_stop()
             except Exception:
-                logger.exception("bars_sink_stop_failed")
+                logger().exception("bars_sink_stop_failed")
 
 
 def wire_bars(
@@ -186,7 +190,7 @@ def wire_bars(
 ) -> BarsRuntime:
     """Build the set + writer, attach the set to `ctx.bars`, return the lifecycle owner."""
     if inner_sink is None:
-        logger.warning(
+        logger().warning(
             "bars_rows_not_persisted",
             reason="no hot-tier row sink composed (non-QuestDB storage backend); bar rows dropped",
         )

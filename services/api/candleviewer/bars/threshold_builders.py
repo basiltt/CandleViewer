@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from decimal import Decimal
-from typing import Final
+from typing import Any, Final
 
 import orjson
 import structlog
@@ -61,7 +61,11 @@ bar_range_jump_gaps_total = Counter(
     "Range bars closed by a trade that skipped at least one whole range.",
     labelnames=("symbol",),
 )
-_log = structlog.get_logger(__name__)
+
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
 
 
 class RangeBarUpdate(ActivityBarUpdate):
@@ -74,7 +78,7 @@ def _check_rate(b: _ThresholdBuilder, n_trades: int) -> None:
     # Same-module helper; reads the builder's counters directly (cosmetic, kept deliberately).
     if not b._warned and n_trades >= _RATE_WARN_MIN_TRADES and b._n_bars * 10 >= n_trades * 9:
         b._warned = True
-        _log.warning(
+        _log().warning(
             "bars_emit_rate_high",
             symbol=b.symbol,
             spec_hash=b._hash,

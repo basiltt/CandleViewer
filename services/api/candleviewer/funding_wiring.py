@@ -32,7 +32,11 @@ from candleviewer.storage.errors import StorageTierUnavailable
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 _US: Final = 1_000_000
 _DAY_US: Final = 86_400 * _US
@@ -122,7 +126,7 @@ class FundingRefreshTask:
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # counted by the service; one symbol never stops the loop
-                logger.warning("funding_refresh_skipped", symbol=symbol, error=type(exc).__name__)
+                logger().warning("funding_refresh_skipped", symbol=symbol, error=type(exc).__name__)
         if ok > 0:
             self._first = False  # deep backfill is retried until one symbol succeeds
         return ok
@@ -146,7 +150,7 @@ class FundingRefreshTask:
             except asyncio.CancelledError:
                 raise
             except Exception:
-                logger.exception("funding_refresh_failed")
+                logger().exception("funding_refresh_failed")
                 delay = self._next_delay(0, True)
             await self._sleep(delay)
 

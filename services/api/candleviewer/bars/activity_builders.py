@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Final
+from typing import Any, Final
 
 import orjson
 import structlog
@@ -60,7 +60,11 @@ bars_partial_series_total = Counter(
     "Series whose first bar is partial (tape starts mid-bar).",
     labelnames=("kind",),
 )
-_log = structlog.get_logger(__name__)
+
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
 
 
 class ActivityBarUpdate(BarUpdate):
@@ -206,7 +210,7 @@ class VolumeBarBuilder(_ActivityBuilder):
         n = self._n_trades
         if not self._warned and n >= _SPLIT_WARN_MIN_TRADES and self._n_splits * 100 >= n * 99:
             self._warned = True
-            _log.warning(
+            _log().warning(
                 "bars_volume_split_rate_high",
                 symbol=self.symbol,
                 spec_hash=self._hash,

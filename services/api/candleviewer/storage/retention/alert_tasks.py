@@ -26,7 +26,12 @@ from candleviewer.observability.metrics import BoundedMetric
 from candleviewer.storage.retention.policy import ALERT_DELIVERIES_HOT_DAYS
 from candleviewer.storage.retention.schedule import RetentionSchedule
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 INTERVAL_SECONDS = 24 * 3600
 GAUGE_INTERVAL_SECONDS = 15.0
 ALERT_DELIVERIES_DATASET = "alert_deliveries"
@@ -124,7 +129,7 @@ class AlertDeliveriesPurgeTask(_Loop):
         # so the loop stays off (and says so) instead of failing silently forever.
         enabled = bool(schedule.alert_jobs()) and has_owner_dsn
         if bool(schedule.alert_jobs()) and not has_owner_dsn:
-            logger.warning("alert_deliveries_purge_disabled_no_owner_dsn")
+            logger().warning("alert_deliveries_purge_disabled_no_owner_dsn")
         super().__init__("alert-deliveries-purge", enabled, interval_s, sleep)
         self._repo = repo
         self._root = archive_root
@@ -141,9 +146,9 @@ class AlertDeliveriesPurgeTask(_Loop):
                 total += await self._repo.delete_ids([r.id for r in rows])
                 if len(rows) < PURGE_BATCH:
                     break
-            logger.info("alert_deliveries_archived_and_purged", deleted=total)
+            logger().info("alert_deliveries_archived_and_purged", deleted=total)
         except Exception:
-            logger.exception("alert_deliveries_purge_failed")
+            logger().exception("alert_deliveries_purge_failed")
 
 
 class AlertGaugeTask(_Loop):
@@ -168,7 +173,7 @@ class AlertGaugeTask(_Loop):
         try:
             g = await self._repo.gauges()
         except Exception:
-            logger.exception("alert_gauges_failed")
+            logger().exception("alert_gauges_failed")
             return
         self._total.labels("true").set(g["cv_alerts_total{enabled=true}"])
         self._total.labels("false").set(g["cv_alerts_total{enabled=false}"])

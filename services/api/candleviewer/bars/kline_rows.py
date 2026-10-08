@@ -13,7 +13,7 @@ only *confirmed* klines become rows (an unconfirmed candle is never persisted as
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Final, Protocol
+from typing import Any, Final, Protocol
 
 import structlog
 
@@ -25,7 +25,11 @@ from candleviewer.bars.spec import from_wire
 from candleviewer.bars.writer import SourceOverwriteRefused, bars_source_overwrite_refused_total
 from candleviewer.exchange.base.models import KlineEvent
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 KLINE_SOURCE: Final = "kline"
 #: Columns a kline cannot know; always NULL on a kline-sourced row.
@@ -116,7 +120,7 @@ async def submit_kline_bars(
         if taken:
             refused = [r for r in rows if int(str(r["ts"])) in taken]
             bars_source_overwrite_refused_total.labels(KLINE_SOURCE, "tape").inc(len(refused))
-            _log.info("kline_rows_refused_over_stored_tape", symbol=symbol, refused=len(refused))
+            _log().info("kline_rows_refused_over_stored_tape", symbol=symbol, refused=len(refused))
             rows = [r for r in rows if int(str(r["ts"])) not in taken]
     if not rows:
         return 0
@@ -131,7 +135,7 @@ async def submit_kline_bars(
                 queued += 1
             except SourceOverwriteRefused:
                 continue  # counted by the writer (`bars_source_overwrite_refused_total`)
-        _log.info("kline_rows_skipped_over_tape", symbol=symbol, skipped=len(rows) - queued)
+        _log().info("kline_rows_skipped_over_tape", symbol=symbol, skipped=len(rows) - queued)
         return queued
 
 

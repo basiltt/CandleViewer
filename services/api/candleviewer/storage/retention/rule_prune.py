@@ -9,14 +9,19 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
 from candleviewer.observability.context import spawn
 from candleviewer.storage.retention.schedule import RetentionSchedule
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 PRUNE_INTERVAL_SECONDS = 24 * 3600
 
 
@@ -49,7 +54,7 @@ class RulePruneTask:
         try:
             await self._repo.prune_unmatched()
         except Exception:
-            logger.exception("rule_runs_prune_failed")
+            logger().exception("rule_runs_prune_failed")
 
     async def _loop(self) -> None:
         while True:

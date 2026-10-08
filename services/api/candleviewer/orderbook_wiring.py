@@ -27,7 +27,7 @@ import random
 import time
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
@@ -51,7 +51,11 @@ from candleviewer.ingestion.write_behind import WriteBehindBuffer
 from candleviewer.observability.context import spawn
 from candleviewer.storage.repositories.rows import BookDeltaRow, BookSnapshotRow
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 WRITE_QUEUE_MAXSIZE = 8192
 SNAPSHOT_TIMEOUT_S = 10.0
@@ -432,7 +436,7 @@ class BookStream:
             raise
         except Exception:  # write-behind must never take ingest down
             self._writes.requeue(batch[done:])
-            logger.warning(
+            logger().warning(
                 "book write-behind failed; requeued",
                 rows=len(batch) - done,
                 failures=self._writes.failures,

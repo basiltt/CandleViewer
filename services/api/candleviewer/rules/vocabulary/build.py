@@ -21,7 +21,11 @@ from candleviewer.rules.vocabulary.catalogue import (
 from candleviewer.rules.vocabulary.metrics import DEFAULT_DOCS
 from candleviewer.rules.vocabulary.registry import RECORDED_INPUTS, MetricRegistry
 
-log = structlog.get_logger(__name__)
+
+def log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 VOCABULARY_VERSION = 1
 RECORDER_ACTION = {"method": "POST", "path": "/api/v1/recording/symbols"}
@@ -107,7 +111,7 @@ def build_vocabulary(
     if len(registry) == 0:
         raise VocabularyUnavailableError("metric registry is empty")
     for name in undescribed_metrics(registry):
-        log.warning("rule vocabulary: registry metric %s has no descriptor docs", name)
+        log().warning("rule vocabulary: registry metric %s has no descriptor docs", name)
     ops = [
         {"id": op, "arity": ar, "operand_types": list(units), "units": list(units),
          "result_type": "boolean"}

@@ -1,0 +1,38 @@
+rules:
+  - id: cv-module-level-structlog-logger
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Module-level `structlog.get_logger(...)` binding. With
+      `cache_logger_on_first_use=True` the first emit pins the processor chain,
+      so an import-time logger captured before configure/reset keeps a stale
+      chain and `capture_logs` flakes (#2004, #2005, #2009, #2056). Resolve the
+      logger per call (`structlog.get_logger(__name__)` inside the function, or
+      a module-level `def _log(): return structlog.get_logger(__name__)`
+      helper called at emit sites; never on per-tick hot paths). A justified
+      exception uses `# nosemgrep: cv-module-level-structlog-logger
+      reason=<why> owner=@CandleViewer/security review=YYYY-MM-DD` (CI-SEC-006).
+    metadata:
+      rule-id: cv-module-level-structlog-logger
+      category: security
+      references:
+        - https://github.com/basiltt/CandleViewer/issues/2008
+    patterns:
+      - pattern-either:
+          - pattern: $X = structlog.get_logger(...)
+          - pattern: "$X: $T = structlog.get_logger(...)"
+          - pattern: $X = structlog.stdlib.get_logger(...)
+          - pattern: "$X: $T = structlog.stdlib.get_logger(...)"
+      - pattern-not-inside: |
+          def $F(...):
+              ...
+      - pattern-not-inside: |
+          async def $F(...):
+              ...
+      - pattern-not-inside: |
+          class $C:
+              ...
+    paths:
+      include:
+        - "services/api/candleviewer/**"
+        - ".semgrep/tests/**"

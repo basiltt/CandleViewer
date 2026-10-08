@@ -62,7 +62,11 @@ bars_late_trade_dropped_total = Counter(
     "Late trades not applied to any bar (older than 60 s, or the interval had no bar).",
     labelnames=("symbol", "reason"),
 )
-_log = structlog.get_logger(__name__)
+
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
 
 
 def validate_time_spec(spec: BarSpec) -> int:
@@ -254,7 +258,7 @@ class TimeBarBuilder:
         self._last_close = d.close_time
         self._built.inc()
         if d.index == 0:
-            _log.info("bars_first_bar", symbol=self.symbol, spec_hash=self._hash, kind="time")
+            _log().info("bars_first_bar", symbol=self.symbol, spec_hash=self._hash, kind="time")
         return self._emit("close", d, closed=True)
 
     def _prune(self) -> None:
@@ -302,7 +306,7 @@ class TimeBarBuilder:
         # closed in-window is retained, so it was an `empty_interval`.
         old = self._watermark - bucket_bounds(self.spec, ts)[1] > LATE_WINDOW_US
         (self._drop_old if old else self._drop_empty).inc()
-        _log.warning(
+        _log().warning(
             "bars_late_trade_dropped",
             symbol=self.symbol,
             spec_hash=self._hash,

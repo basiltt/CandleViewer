@@ -64,7 +64,7 @@ import random
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
@@ -75,7 +75,11 @@ from candleviewer.storage.errors import (
     UnknownIlpTable,
 )
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 DEFAULT_STOP_TIMEOUT_S = 30.0
 _FLUSH_ROWS = 5_000
@@ -313,7 +317,7 @@ class IlpWriter:
         gap = self._rows_written_total - committed
         self._unreconciled_rows = max(gap, 0)
         if gap > 0:
-            logger.warning(
+            logger().warning(
                 "questdb_ilp_sent_vs_committed_gap",
                 sent=self._rows_written_total,
                 committed=committed,
@@ -347,7 +351,7 @@ class IlpWriter:
             except Exception as exc:
                 self._write_errors_total += 1
                 jittered_delay_s = self._jittered_delay_s()
-                logger.warning(
+                logger().warning(
                     "questdb_ilp_connect_failed",
                     error=str(exc),
                     retry_in_s=jittered_delay_s,
@@ -463,7 +467,7 @@ class IlpWriter:
                 if not isinstance(exc, Exception):
                     raise  # CancelledError etc.: never swallowed
                 self._write_errors_total += 1
-                logger.error("questdb_ilp_write_failed", table=name, error=str(exc))
+                logger().error("questdb_ilp_write_failed", table=name, error=str(exc))
                 raise StorageTierUnavailable(f"questdb ILP write failed for {name!r}") from exc
             self._rows_written_total += len(rows_to_send)
             buf.last_flush = self._clock()
@@ -472,7 +476,7 @@ class IlpWriter:
         try:
             await self._transport.close()
         except Exception as exc:
-            logger.warning("questdb_ilp_close_failed", error=str(exc))
+            logger().warning("questdb_ilp_close_failed", error=str(exc))
 
     async def stop(self, timeout_s: float | None = DEFAULT_STOP_TIMEOUT_S) -> None:
         """Close: refuse new writes, drain every buffered row (bounded by
@@ -487,7 +491,7 @@ class IlpWriter:
             async with asyncio.timeout(timeout_s):
                 await self.flush(None)
         except (TimeoutError, StorageTierUnavailable) as exc:
-            logger.error("questdb_ilp_drain_failed", buffered=self._total_buffered)
+            logger().error("questdb_ilp_drain_failed", buffered=self._total_buffered)
             raise StorageTierUnavailable(
                 f"questdb ILP drain failed on stop; {self._total_buffered} rows "
                 "remain buffered and are the caller's to spill/log"

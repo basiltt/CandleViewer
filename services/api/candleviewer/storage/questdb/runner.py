@@ -15,7 +15,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
@@ -23,7 +23,11 @@ from candleviewer.storage.errors import StorageSchemaDrift
 from candleviewer.storage.questdb.ddl import TableDef, parse_ddl_dir
 from candleviewer.storage.sql_identifiers import checked_identifier
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 _MIGRATIONS_TABLE = "_cv_migrations"
 
@@ -88,7 +92,7 @@ async def run_migrations(executor: QuestDbExecutor, ddl_dir: Path) -> list[str]:
             sql_path.name,
         )
         newly_applied.append(sql_path.name)
-        logger.info("questdb_migration_applied", filename=sql_path.name)
+        logger().info("questdb_migration_applied", filename=sql_path.name)
     return newly_applied
 
 

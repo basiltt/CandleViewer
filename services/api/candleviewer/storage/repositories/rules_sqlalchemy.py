@@ -29,7 +29,11 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 #: Non-matched runs (and, by cascade, their events) are dropped after this many days.
 UNMATCHED_RETENTION_DAYS = 7
@@ -195,5 +199,5 @@ class SqlAlchemyRulesRepository:
         elapsed = int((time.monotonic() - started) * 1000)
         if self._on_pruned is not None:
             self._on_pruned(deleted)
-        _log.info("rule_runs retention pruned", deleted=deleted, duration_ms=elapsed)
+        _log().info("rule_runs retention pruned", deleted=deleted, duration_ms=elapsed)
         return PruneResult(deleted, elapsed)

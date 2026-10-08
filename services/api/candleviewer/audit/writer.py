@@ -55,7 +55,11 @@ from candleviewer.audit.repository import AuditRepository
 from candleviewer.audit.wal import AuditWal, AuditWalFull
 from candleviewer.observability.context import spawn
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 AlarmCallback = Callable[[str], Awaitable[None]] | None
 Clock = Callable[[], datetime]
@@ -169,7 +173,7 @@ class AuditWriter:
         try:
             await self.flush(grace_s)
         except TimeoutError:
-            logger.warning("AuditWriter.stop: WAL not drained within %.1fs", grace_s)
+            logger().warning("AuditWriter.stop: WAL not drained within %.1fs", grace_s)
         self._task.cancel()
         try:
             await self._task
@@ -241,7 +245,7 @@ class AuditWriter:
             reason_text = f"audit WAL unavailable: {type(exc).__name__}"
             if self._on_alarm is not None:
                 await self._on_alarm(reason_text)
-            logger.critical(reason_text)
+            logger().critical(reason_text)
             raise AuditUnavailable(reason_text) from exc
         self._wake.set()
 
@@ -266,7 +270,7 @@ class AuditWriter:
             self._failure = exc
             self._running = False
             reason_text = f"audit flusher died: {type(exc).__name__}; emit() now fails closed"
-            logger.critical(reason_text)
+            logger().critical(reason_text)
             if self._on_alarm is not None:
                 await self._on_alarm(reason_text)
             raise
@@ -308,7 +312,7 @@ class AuditWriter:
                 self._write_errors_total += 1
                 if self._max_insert_attempts is not None and attempts >= self._max_insert_attempts:
                     raise
-                logger.warning(
+                logger().warning(
                     "audit insert failed (%s), retrying in %.2fs", type(exc).__name__, delay
                 )
                 await self._sleep(delay)
@@ -329,7 +333,7 @@ class AuditUnavailable(AuditError):
 
 def _log_task_failure(task: asyncio.Task[None]) -> None:
     if not task.cancelled() and task.exception() is not None:
-        logger.critical("audit writer task died", exc_info=task.exception())
+        logger().critical("audit writer task died", exc_info=task.exception())
 
 
 def _path(raw: str) -> Path:

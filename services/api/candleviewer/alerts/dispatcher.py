@@ -43,7 +43,11 @@ from candleviewer.alerts.outbox import TOPIC_ALERT_DELIVER
 from candleviewer.observability import spawn
 from candleviewer.observability.redaction import redact_text
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 MAX_BACKOFF_S = 300.0
 #: `alert_deliveries.attempt` CHECK (0..10).
@@ -303,7 +307,7 @@ class AlertDispatcher:
             except asyncio.CancelledError:
                 raise
             except Exception:  # one bad row must not stall the poller; its lease expires
-                _log.exception("alert_dispatch_failed", outbox_id=job.id)
+                _log().exception("alert_dispatch_failed", outbox_id=job.id)
         if changed and self._on_change is not None:
             await self._on_change(changed)
         return len(jobs)
@@ -343,7 +347,7 @@ class AlertDispatcher:
         except asyncio.CancelledError:
             raise
         except Exception as exc:  # poison row: count the attempt, dead-letter at the cap
-            _log.warning("alert_adapter_error", delivery_id=d.id, error=type(exc).__name__)
+            _log().warning("alert_adapter_error", delivery_id=d.id, error=type(exc).__name__)
             return Outcome("retry", f"adapter_error: {type(exc).__name__}")
 
     async def _retry_or_fail(self, job: OutboxJob, d: Delivery, out: Outcome, attempt: int) -> bool:
@@ -380,7 +384,7 @@ class AlertDispatcher:
             except asyncio.CancelledError:
                 raise
             except Exception:  # storage blip: keep polling
-                _log.exception("alert_dispatch_poll_failed")
+                _log().exception("alert_dispatch_poll_failed")
                 n = 0
             if n >= self._batch or self._stopping:
                 continue

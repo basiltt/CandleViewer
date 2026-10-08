@@ -45,7 +45,12 @@ from candleviewer.rules.evaluator.nodes import (
 from candleviewer.rules.evaluator.snapshot import Value
 from candleviewer.rules.ir.models import MetricRef
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 QUEUE_BOUND: Final = 1024
 SUMMARY_CHANNEL: Final = "in_app"
 #: Provisional wording until E40-D02's copy deck lands (ticket a11y note); one place only.
@@ -227,7 +232,7 @@ class AlertEvaluator:
             a = state_of(row)
             cond = AlertCondition.model_validate(row.condition_ir)
         except ValidationError:
-            _log.error("alert_condition_invalid", alert_id=row.id)
+            _log().error("alert_condition_invalid", alert_id=row.id)
             return
         if old is not None and old.condition_hash == a.condition_hash:
             a.fired_bars.update(old.fired_bars)  # same condition: bar memory survives edits
@@ -280,7 +285,7 @@ class AlertEvaluator:
             except asyncio.CancelledError:
                 raise
             except Exception:  # one bad tick must not kill the evaluator task
-                _log.exception("alert_tick_failed")
+                _log().exception("alert_tick_failed")
 
     async def stop(self, grace_s: float) -> None:
         """Graceful drain: an in-flight firing transaction completes (or the store rolls
@@ -373,7 +378,7 @@ class AlertEvaluator:
         self.storm.record(a.owner_user_id, now)
         self.metrics.inc("cv_alert_fires_total", a.trigger_mode)
         self.metrics.observe("cv_alert_eval_latency_seconds", self._perf() - start)
-        _log.info("alert_fired", alert_id=a.id, condition_hash=a.condition_hash,
+        _log().info("alert_fired", alert_id=a.id, condition_hash=a.condition_hash,
                   trigger_mode=a.trigger_mode, delivery_ids=ids)  # fmt: skip
         await self._emit("alert.fired", a, after_state={"delivery_ids": ids, "once": once})
         if self._charts is not None:
@@ -399,7 +404,7 @@ class AlertEvaluator:
                 object_id=a.id, **kw,
             )  # fmt: skip
         except Exception:  # the delivery row is already committed; never lose it
-            _log.exception("alert_audit_failed", alert_id=a.id, action=action)
+            _log().exception("alert_audit_failed", alert_id=a.id, action=action)
 
     # --- storm suppression ----------------------------------------------------------
 

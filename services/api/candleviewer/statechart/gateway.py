@@ -35,7 +35,11 @@ from candleviewer.statechart.config import Lane
 from candleviewer.statechart.factory import InboxFullError, re_mint
 from candleviewer.statechart.plugins._base import LogPager, Pager, Severity
 
-logger = structlog.get_logger("candleviewer.statechart.gateway")
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger("candleviewer.statechart.gateway")
+
 
 #: `reason` label values for `cv_machine_send_refused_total`.
 REASON_QUEUE_FULL: Final = "queue_full"
@@ -165,7 +169,9 @@ class Gateway:
         if count:
             entry.metrics.record_send_refused(REASON_QUEUE_FULL)
         severity: Severity = "page" if entry.lane == "order" else "alert"
-        logger.error("statechart_send_refused", key=key, kind=entry.kind, reason=REASON_QUEUE_FULL)
+        logger().error(
+            "statechart_send_refused", key=key, kind=entry.kind, reason=REASON_QUEUE_FULL
+        )
         self._pager.raise_alert(
             severity, f"inbox full: {key} ({entry.lane} lane)", machine_kind=entry.kind
         )
@@ -195,7 +201,7 @@ class Gateway:
             raise self._overloaded(key, entry, count=True) from None
         except Exception as exc:
             entry.metrics.record_send_refused(REASON_SEND_FAILED)
-            logger.error(
+            logger().error(
                 "statechart_send_failed", key=key, kind=entry.kind, error=type(exc).__name__
             )
             raise
@@ -205,7 +211,7 @@ class Gateway:
     def _read_future(self, key: str, entry: _Entry, fut: concurrent.futures.Future[None]) -> None:
         if fut.cancelled():
             entry.metrics.record_send_refused(REASON_SEND_FAILED)
-            logger.error("statechart_send_failed", key=key, kind=entry.kind, error="cancelled")
+            logger().error("statechart_send_failed", key=key, kind=entry.kind, error="cancelled")
             return
         exc = fut.exception()
         if exc is None:
@@ -216,7 +222,7 @@ class Gateway:
             self._overloaded(key, entry, count=False)
             return
         entry.metrics.record_send_refused(REASON_SEND_FAILED)
-        logger.error("statechart_send_failed", key=key, kind=entry.kind, error=type(exc).__name__)
+        logger().error("statechart_send_failed", key=key, kind=entry.kind, error=type(exc).__name__)
 
 
 __all__ = [
