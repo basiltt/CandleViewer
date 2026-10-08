@@ -205,6 +205,8 @@ Snapshots carry every level within the subscribed depth, bid side descending the
 
 **body_kind 6 — heatmap column.** One time-bucket column: `u32 ts_offset_ms`, `i64 price_min`, `i64 price_step`, `u32 row_count`, then `row_count` × 16 bytes: `u64 bid_size`, `u64 ask_size`. The renderer uploads this straight into a texture row.
 
+**Reserved record bytes.** Bars (85 B) and footprint cells (33 B) records end in 4 reserved zero bytes after `flags` (the listed fields total 81 B / 29 B); the encoder writes zeros and decoders ignore them. The byte layout of every kind is declared once in `packages/protocol/cvwb-layout.json` (E17-T02).
+
 **Client obligations.** A client MUST validate `magic` and `format_version` (and MUST reject, as `frame_malformed`, a `(body_kind, format_version)` pair it does not know — e.g. a v1 decoder receiving v2 bars; the code is `frame_malformed` on the wire and decoders MAY surface the more specific diagnostic `unsupported_format_version` locally, which maps to `frame_malformed` in §10), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync. For fixed-stride bodies (body_kind 4, bars) the rule is exact: body length MUST equal `24 + record_count × record_size`; both a short body and trailing bytes are `frame_malformed`. Forward compatibility is carried by `format_version`, not by trailing bytes. Variable-layout body kinds continue to ignore trailing bytes after the last declared record.
 
 ### 3.5 Compression
