@@ -696,6 +696,7 @@ def create_app(
             ctx,
             inner_sink=bars_sink,
             sink_stop=bars_sink.stop if bars_sink is not None else None,
+            sink_degraded=(lambda: bars_sink.pgwire.degraded) if bars_sink is not None else None,
             now_us=bars_now_us or (lambda: time.time_ns() // 1000),
             tick_size=lambda sym: _catalogue_tick_size(ctx, sym),
         )

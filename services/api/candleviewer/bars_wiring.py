@@ -137,10 +137,12 @@ class BarsRuntime:
         writer: BarWriter,
         state_root: Path,
         sink_stop: Callable[[], Awaitable[None]] | None = None,
+        sink_degraded: Callable[[], bool] | None = None,
     ) -> None:
         self.builder_set = builder_set
         self.writer = writer
         self._sink_stop = sink_stop
+        self._sink_degraded = sink_degraded
         self._root = state_root
 
     async def start(self) -> None:
@@ -153,7 +155,11 @@ class BarsRuntime:
         await self.builder_set.start()
 
     def writer_state(self) -> tuple[bool, str]:
-        degraded = self.writer.degraded or not self.writer.healthy
+        degraded = (
+            self.writer.degraded
+            or not self.writer.healthy
+            or (self._sink_degraded is not None and self._sink_degraded())
+        )
         return degraded, "bars_writer_degraded" if degraded else ""
 
     async def stop(self) -> None:
@@ -175,6 +181,7 @@ def wire_bars(
     now_us: Callable[[], int],
     inner_sink: RowSink | None = None,
     sink_stop: Callable[[], Awaitable[None]] | None = None,
+    sink_degraded: Callable[[], bool] | None = None,
     tick_size: Callable[[str], Decimal | None] = lambda _s: None,
 ) -> BarsRuntime:
     """Build the set + writer, attach the set to `ctx.bars`, return the lifecycle owner."""
@@ -194,4 +201,4 @@ def wire_bars(
         now_us=now_us,
     )
     ctx.bars.attach(builder_set)
-    return BarsRuntime(builder_set, writer, root, sink_stop)
+    return BarsRuntime(builder_set, writer, root, sink_stop, sink_degraded)

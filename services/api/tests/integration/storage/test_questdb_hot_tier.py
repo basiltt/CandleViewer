@@ -250,3 +250,35 @@ async def test_schema_drift_detected_when_live_columns_differ(
             await assert_no_schema_drift(executor, DDL_DIR)
     finally:
         await conn.close()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_bars_sink_writes_row_readable_over_pgwire(
+    questdb_container: tuple[str, int, int],
+) -> None:
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    host, pg_port, ilp_port = questdb_container
+    conn = await _connect(host, pg_port)
+    sink = QuestDbRowSink(f"{host}:{ilp_port}", f"{host}:{pg_port}", _PGWIRE_USER, _PGWIRE_PASSWORD)
+    try:
+        await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
+        row: dict[str, object] = {
+            "symbol": "BTCUSDT",
+            "bar_param": "60000",
+            "ts": 1_700_000_000_000_000,
+        }
+        row |= {
+            "open": 1.0,
+            "high": 2.0,
+            "low": 0.5,
+            "close": 1.5,
+            "volume": 3.0,
+            "is_closed": True,
+        }
+        await sink.write_rows("bars_time", [row], "ts")
+        await sink.stop()
+        await wait_for_row_count(conn, "bars_time", 1)
+    finally:
+        await conn.close()

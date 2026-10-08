@@ -11,6 +11,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import random
+import time
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import asyncpg
@@ -23,6 +26,9 @@ from candleviewer.storage.questdb.reader import (
     pgwire_readiness_probe,
 )
 from candleviewer.storage.questdb.schemas import ALL_SCHEMAS
+
+#: Bound on the sink's final ILP drain at shutdown (the default 30 s is too long for bars).
+STOP_TIMEOUT_S = 10.0
 
 
 def build_hot_tier_writer(
@@ -73,13 +79,16 @@ async def run_reconcile_loop(
 class TcpIlpTransport:
     """ILP-over-TCP `IlpTransport` (QuestDB line-protocol port)."""
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, *, connect_timeout_s: float = 5.0) -> None:
         self._host = host
         self._port = port
+        self._connect_timeout_s = connect_timeout_s
         self._writer: asyncio.StreamWriter | None = None
 
     async def connect(self) -> None:
-        _, self._writer = await asyncio.open_connection(self._host, self._port)
+        await self.close()  # never orphan a previous socket on reconnect
+        async with asyncio.timeout(self._connect_timeout_s):
+            _, self._writer = await asyncio.open_connection(self._host, self._port)
 
     async def write(self, data: bytes) -> None:
         if self._writer is None:
@@ -96,10 +105,33 @@ class TcpIlpTransport:
 
 
 class LazyPgWire:
-    """`PgWireConnection` that opens one asyncpg connection on first use and reopens it after a
-    failure, so the app boots (and the ILP writer retries) while QuestDB is down."""
+    """`PgWireConnection` over one lazily opened asyncpg connection (C-2.18).
 
-    def __init__(self, host: str, port: int, user: str, password: str) -> None:
+    One `asyncio.Lock` serialises connect, reconnect and every query (an asyncpg connection is
+    not concurrency-safe), so at most one connection ever exists. Connect and each query run
+    under `asyncio.timeout`. A failed connect starts a capped exponential backoff with jitter
+    (`backoff_*`): calls inside the window fail fast instead of hammering a dead DB. After
+    `degraded_after` consecutive failures `degraded` is True (surfaced by the bars writer
+    probe); one success clears it. Any exception - including cancellation - during a query
+    discards the connection so the next caller never reuses a half-used one."""
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        *,
+        connect: Callable[..., Awaitable[Any]] = asyncpg.connect,
+        clock: Callable[[], float] = time.monotonic,
+        rng: random.Random | None = None,
+        connect_timeout_s: float = 5.0,
+        query_timeout_s: float = 10.0,
+        close_timeout_s: float = 5.0,
+        backoff_base_s: float = 0.5,
+        backoff_max_s: float = 30.0,
+        degraded_after: int = 3,
+    ) -> None:
         self._args: dict[str, Any] = {
             "host": host,
             "port": port,
@@ -107,23 +139,66 @@ class LazyPgWire:
             "password": password,
             "database": "qdb",
         }
+        self._connect = connect
+        self._clock = clock
+        self._rng = rng or random.Random()  # noqa: S311 - jitter, not crypto
+        self._connect_timeout_s = connect_timeout_s
+        self._query_timeout_s = query_timeout_s
+        self._close_timeout_s = close_timeout_s
+        self._base_s = backoff_base_s
+        self._max_s = backoff_max_s
+        self._degraded_after = degraded_after
+        self._lock = asyncio.Lock()
         self._conn: Any = None
+        self._failures = 0
+        self._retry_at = 0.0
+
+    @property
+    def degraded(self) -> bool:
+        return self._failures >= self._degraded_after
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
-        try:
+        async with self._lock:
             if self._conn is None:
-                self._conn = await asyncpg.connect(**self._args, timeout=5.0)
-            rows = await self._conn.fetch(sql, *params)
+                await self._open()
+            try:
+                async with asyncio.timeout(self._query_timeout_s):
+                    rows = await self._conn.fetch(sql, *params)
+            except BaseException:  # incl. CancelledError: never reuse a half-used connection
+                await self._discard()
+                raise
+            return [dict(r) for r in rows]
+
+    async def _open(self) -> None:
+        now = self._clock()
+        if now < self._retry_at:
+            raise ConnectionError("questdb pg-wire in reconnect backoff")
+        try:
+            async with asyncio.timeout(self._connect_timeout_s):
+                self._conn = await self._connect(**self._args)
         except Exception:
-            await self.close()
+            self._failures += 1
+            delay = min(self._max_s, self._base_s * 2 ** (self._failures - 1))
+            self._retry_at = now + delay * self._rng.uniform(0.5, 1.5)
             raise
-        return [dict(r) for r in rows]
+        self._failures = 0
+        self._retry_at = 0.0
+
+    async def _discard(self) -> None:
+        conn, self._conn = self._conn, None
+        if conn is None:
+            return
+        try:
+            async with asyncio.timeout(self._close_timeout_s):
+                await asyncio.shield(conn.close())
+        except BaseException:
+            with contextlib.suppress(Exception):
+                conn.terminate()
 
     async def close(self) -> None:
-        conn, self._conn = self._conn, None
-        if conn is not None:
-            with contextlib.suppress(Exception):
-                await conn.close()
+        """Bounded: a hung `close()` is abandoned via `terminate()` after `close_timeout_s`."""
+        async with self._lock:
+            await self._discard()
 
 
 class QuestDbRowSink:
@@ -155,6 +230,8 @@ class QuestDbRowSink:
 
     async def stop(self) -> None:
         try:
-            await self.writer.stop()  # drains, then closes the ILP transport
+            # Drain then close the ILP transport, bounded so a dead QuestDB cannot stall shutdown.
+            async with asyncio.timeout(STOP_TIMEOUT_S + 5.0):
+                await self.writer.stop(timeout_s=STOP_TIMEOUT_S)
         finally:
             await self.pgwire.close()

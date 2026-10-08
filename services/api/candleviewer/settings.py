@@ -24,6 +24,7 @@ from typing import Literal
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_QUESTDB_DEV_PASSWORD = "quest"  # noqa: S105 - the QuestDB OSS default, refused on live
 _REDACT_NAME_RE = re.compile(r"(key|secret|token|password|dsn)", re.IGNORECASE)
 
 
@@ -230,6 +231,20 @@ class Settings(BaseSettings):
         return frozenset(
             o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()
         )
+
+    @model_validator(mode="after")
+    def _refuse_dev_questdb_password_on_live(self) -> Settings:
+        """#2037 S1: live on the real backend must not use the QuestDB dev default password."""
+        if (
+            self.environment is Environment.LIVE
+            and self.storage_backend == "real"
+            and self.questdb_pg_password.get_secret_value() == _QUESTDB_DEV_PASSWORD
+        ):
+            raise ValueError(
+                "CV_QUESTDB_PG_PASSWORD must be set to a non-default value "
+                "(environment=live, storage_backend=real)"
+            )
+        return self
 
     @model_validator(mode="after")
     def _anchor_bars_state_root(self) -> Settings:
