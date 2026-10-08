@@ -169,3 +169,84 @@ async def test_tape_narrows_window_when_a_read_returns_too_many_rows() -> None:
     got = [t async for t in tape.since(SYM, T0)]
     assert widths[0] == 300_000_000 and widths[1] == 150_000_000
     assert got and len(got) < MAX_WINDOW_ROWS
+
+
+class _FakeTransport:
+    def __init__(self, order: list[str]) -> None:
+        self.order = order
+        self.payloads: list[bytes] = []
+
+    async def connect(self) -> None:
+        self.order.append("ilp:connect")
+
+    async def write(self, data: bytes) -> None:
+        self.order.append("ilp:write")
+        self.payloads.append(data)
+
+    async def close(self) -> None:
+        self.order.append("ilp:close")
+
+
+class _FakePgWire:
+    def __init__(self, order: list[str]) -> None:
+        self.order = order
+
+    async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+        return [{"n": 0}]
+
+    async def close(self) -> None:
+        self.order.append("pg:close")
+
+
+def test_sink_built_only_on_real_backend(tmp_path: Path) -> None:
+    from candleviewer.app import _build_bars_sink
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    assert _build_bars_sink(_settings(tmp_path, enabled=True)) is None  # fake backend: stub
+    real = _settings(tmp_path, enabled=True).model_copy(update={"storage_backend": "real"})
+    assert isinstance(_build_bars_sink(real), QuestDbRowSink)  # lazy: no I/O at build
+
+
+def test_fake_backend_keeps_guarded_stub_and_warning(tmp_path: Path) -> None:
+    from structlog.testing import capture_logs
+
+    with capture_logs() as logs:
+        app = create_app(_settings(tmp_path, enabled=True))
+    assert isinstance(app.state.bars_runtime, BarsRuntime)
+    assert any(e["event"] == "bars_rows_not_persisted" for e in logs)
+
+
+async def test_rows_flow_set_writer_ilp_and_shutdown_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    order: list[str] = []
+    transport = _FakeTransport(order)
+    sink = QuestDbRowSink(
+        "h:1",
+        "h:2",
+        "u",
+        "p",
+        transport=transport,
+        pgwire=_FakePgWire(order),  # type: ignore[arg-type]  # structural fake
+    )
+    ctx = build_app_context(_settings(tmp_path, enabled=False))
+    app = FastAPI()
+    app.state.app_context = ctx
+    now = [T0]
+    runtime = wire_bars(ctx, now_us=lambda: now[0], inner_sink=sink, sink_stop=sink.stop)
+    app.state.bars_runtime = runtime
+    _trace_stop(monkeypatch, runtime.builder_set, "set", order)
+    _trace_stop(monkeypatch, runtime.writer, "writer", order)
+    async with _lifespan(app):
+        await runtime.builder_set.register(M1, SYM, "c1", user="user-1")
+        topic = Topic(env="demo", domain="md", symbol=SYM, detail="trade")
+        await ctx.bus.bus.publish(topic, trade(T0, seq=1))
+        now[0] = T0 + 120_000_000
+        await ctx.bus.bus.publish(topic, trade(T0 + 120_000_000, seq=2))
+    assert any(b"bars_time" in p for p in transport.payloads)
+    marks = [o for o in order if o.startswith(("stop:", "ilp:write", "ilp:close", "pg:close"))]
+    # set -> writer drain -> ILP flush -> transport close -> PG-wire close (the trailing
+    # `stop:set` is the AppContext's own idempotent bars stop, after the runtime).
+    assert marks[:5] == ["stop:set", "stop:writer", "ilp:write", "ilp:close", "pg:close"]

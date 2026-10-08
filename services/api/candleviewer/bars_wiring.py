@@ -9,9 +9,10 @@ Only the composition root sees the bus, the storage tier and the bars module tog
   queue is bounded (`BarWriter(max_buffered)`, lane `maxsize`).
 * Shutdown order: **set first, then writer** - the set's final closes/blobs are submitted to the
   writer, which is then drained.
-* `GuardedRowSink` fails closed with `StorageTierUnavailable` until a QuestDB ILP writer is
-  composed into the app (none is yet; `build_hot_tier_writer` has no caller). The writer buffers
-  and refuses new specs at its watermark meanwhile, so nothing is silently lost.
+* `GuardedRowSink` fails closed with `StorageTierUnavailable` when no QuestDB ILP sink is
+  composed (fake storage backend). With `storage_backend="real"` the composition root passes a
+  `QuestDbRowSink` (#2037) as `inner_sink`. Shutdown: set -> writer -> sink (ILP drain,
+  transport, PG-wire).
 * `StorageTape` reads the trades table through `MarketDataRepository.read_trades` (no SQL here).
 """
 
@@ -19,7 +20,7 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -56,11 +57,8 @@ def _permanent(exc: Exception) -> bool:
 
 
 class GuardedRowSink:
-    """`RowSink` that fails closed until a hot-tier ILP writer is injected.
-
-    STUB: the real sink (IlpWriter via `build_hot_tier_writer`, transport + PG-wire) is not
-    composed into the app yet - follow-up #2037. Until then, with `bars_enabled` on, every
-    batch fails after the retry limit and is DROPPED (bounded loss, surfaced by the
+    """`RowSink` that fails closed when no hot-tier ILP sink is injected (fake storage backend):
+    every batch fails after the retry limit and is DROPPED (bounded loss, surfaced by the
     `bars_writer` health probe, `bars_write_*` logs and metrics)."""
 
     def __init__(self, ctx: AppContext, inner: RowSink | None) -> None:
@@ -68,8 +66,8 @@ class GuardedRowSink:
         self._inner = inner
 
     async def write_rows(self, table: str, rows: list[dict[str, object]], ts_us_key: str) -> None:
-        _ = self._ctx.storage.market_data  # raises StorageTierUnavailable until started
         if self._inner is None:
+            _ = self._ctx.storage.market_data  # raises StorageTierUnavailable until started
             raise StorageTierUnavailable("no hot-tier ILP writer is wired for bars")
         await self._inner.write_rows(table, rows, ts_us_key)
 
@@ -133,9 +131,16 @@ class StorageTape:
 class BarsRuntime:
     """Lifecycle of the set and its writer; started/stopped by the ASGI lifespan."""
 
-    def __init__(self, builder_set: BarBuilderSet, writer: BarWriter, state_root: Path) -> None:
+    def __init__(
+        self,
+        builder_set: BarBuilderSet,
+        writer: BarWriter,
+        state_root: Path,
+        sink_stop: Callable[[], Awaitable[None]] | None = None,
+    ) -> None:
         self.builder_set = builder_set
         self.writer = writer
+        self._sink_stop = sink_stop
         self._root = state_root
 
     async def start(self) -> None:
@@ -157,6 +162,11 @@ class BarsRuntime:
         remaining = await self.writer.stop()
         if remaining:
             logger.error("bars_writer_rows_unwritten_at_shutdown", remaining=remaining)
+        if self._sink_stop is not None:
+            try:
+                await self._sink_stop()
+            except Exception:
+                logger.exception("bars_sink_stop_failed")
 
 
 def wire_bars(
@@ -164,13 +174,14 @@ def wire_bars(
     *,
     now_us: Callable[[], int],
     inner_sink: RowSink | None = None,
+    sink_stop: Callable[[], Awaitable[None]] | None = None,
     tick_size: Callable[[str], Decimal | None] = lambda _s: None,
 ) -> BarsRuntime:
     """Build the set + writer, attach the set to `ctx.bars`, return the lifecycle owner."""
     if inner_sink is None:
         logger.warning(
             "bars_rows_not_persisted",
-            reason="no hot-tier row sink composed; bar rows will be dropped (follow-up #2037)",
+            reason="no hot-tier row sink composed (non-QuestDB storage backend); bar rows dropped",
         )
     writer = BarWriter(GuardedRowSink(ctx, inner_sink), is_permanent=_permanent)
     root = Path(ctx.settings.bars_state_root)
@@ -183,4 +194,4 @@ def wire_bars(
         now_us=now_us,
     )
     ctx.bars.attach(builder_set)
-    return BarsRuntime(builder_set, writer, root)
+    return BarsRuntime(builder_set, writer, root, sink_stop)

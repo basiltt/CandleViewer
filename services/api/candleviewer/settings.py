@@ -121,6 +121,9 @@ class Settings(BaseSettings):
     pg_owner_dsn: SecretStr | None = None
     questdb_ilp: str = "questdb:9009"
     questdb_pg: str = "questdb:8812"
+    # PG-wire credentials for the bars ILP sink probes (#2037).
+    questdb_pg_user: str = "admin"
+    questdb_pg_password: SecretStr = SecretStr("quest")
     parquet_root: str = "/data/parquet"
 
     # E07-T01: selects the M10 `storage` tier client implementations.
