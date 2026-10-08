@@ -8,7 +8,11 @@ from typing import Any, Literal, Protocol
 
 import structlog
 
-logger = structlog.get_logger("candleviewer.statechart.plugins")
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger("candleviewer.statechart.plugins")
+
 
 Severity = Literal["page", "alert"]
 
@@ -27,7 +31,7 @@ class LogPager:
     log-based alert rules key on (`cv_page=true`)."""
 
     def raise_alert(self, severity: Severity, summary: str, *, machine_kind: str) -> None:
-        log = logger.critical if severity == "page" else logger.error
+        log = logger().critical if severity == "page" else logger().error
         log("statechart_alert", cv_page=severity == "page", summary=summary, kind=machine_kind)
 
 
@@ -51,7 +55,7 @@ def contained[**P, R](fn: Callable[P, R | None]) -> Callable[P, R | None]:
             self_obj: Any = args[0] if args else None
             if isinstance(self_obj, HookFailureCounter):
                 self_obj.hook_errors += 1
-            logger.error(
+            logger().error(
                 "statechart_plugin_hook_failed", hook=fn.__name__, error=type(exc).__name__
             )
             return None

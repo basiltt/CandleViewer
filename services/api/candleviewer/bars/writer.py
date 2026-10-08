@@ -20,7 +20,7 @@ import asyncio
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
@@ -38,7 +38,11 @@ from candleviewer.bars.rows import (
 from candleviewer.observability.context import spawn
 from candleviewer.observability.metrics import Counter, Gauge, Histogram
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 bars_rows_written_total = Counter(
     "bars_rows_written_total", "Bar rows handed to QuestDB.", ["kind"]
@@ -147,7 +151,7 @@ class BarWriter:
         params = self._params.setdefault(table, set())
         param = bar_param_for(spec)
         if param not in params and len(params) >= BAR_PARAM_CAPACITY:
-            _log.error("bar_param_capacity_exceeded", table=table, capacity=BAR_PARAM_CAPACITY)
+            _log().error("bar_param_capacity_exceeded", table=table, capacity=BAR_PARAM_CAPACITY)
             raise BarParamCapacityExceeded(
                 f"{table} already holds {BAR_PARAM_CAPACITY} bar_params."
             )
@@ -164,7 +168,9 @@ class BarWriter:
             )
             if prior is not None and SOURCE_RANK[source] < SOURCE_RANK[prior]:
                 bars_source_overwrite_refused_total.labels(source, prior).inc()
-                _log.warning("bars_source_overwrite_refused", table=table, spec_hash=spec.spec_hash)
+                _log().warning(
+                    "bars_source_overwrite_refused", table=table, spec_hash=spec.spec_hash
+                )
                 raise SourceOverwriteRefused(
                     f"A '{source}' bar may not overwrite an existing '{prior}' bar."
                 )
@@ -201,7 +207,7 @@ class BarWriter:
         for row in rows:
             if self._queue.full():
                 bars_write_saturation_total.inc()
-                _log.warning("bars_write_saturated", depth=self._queue.qsize(), table=table)
+                _log().warning("bars_write_saturated", depth=self._queue.qsize(), table=table)
             await self._queue.put((table, row))  # awaits space - never discards
         bars_write_queue_depth.set(self._queue.qsize())
 
@@ -235,14 +241,14 @@ class BarWriter:
                         len(rows)
                     )  # rows lost, never silent
                     self.degraded = True
-                    _log.error(
+                    _log().error(
                         "bars_write_permanent_failure", table=table, error=type(exc).__name__
                     )
                     return
                 if attempt == MAX_ATTEMPTS:
                     bars_write_failed_total.labels("transient_exhausted").inc(len(rows))
                     self.degraded = True
-                    _log.error("bars_write_exhausted", table=table, rows=len(rows))
+                    _log().error("bars_write_exhausted", table=table, rows=len(rows))
                     return
                 await self._sleep(min(BACKOFF_MAX_S, BACKOFF_BASE_S * 2 ** (attempt - 1)))
                 continue
@@ -258,7 +264,7 @@ class BarWriter:
             async with asyncio.timeout(timeout_s):
                 await self._queue.join()
         except TimeoutError:
-            _log.error("bars_writer_stop_timeout", remaining=self._queue.qsize())
+            _log().error("bars_writer_stop_timeout", remaining=self._queue.qsize())
         remaining = self._queue.qsize() + self._inflight_rows
         if self._task is not None:
             self._task.cancel()

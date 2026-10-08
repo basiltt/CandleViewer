@@ -43,7 +43,11 @@ import structlog
 
 from candleviewer.audit.errors import AuditError
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 _MAX_LEN_DIGITS = 10
 _CRC_FIELD = 9  # 8 hex digits + "\n"
@@ -148,7 +152,7 @@ class AuditWal:
         if size <= self._end:
             return
         self.torn_tail_truncations += 1
-        logger.critical(
+        logger().critical(
             "audit WAL %s: truncating %d-byte torn tail at offset %d",
             self._path,
             size - self._end,
@@ -195,7 +199,7 @@ class AuditWal:
         data = self._path.read_bytes()
         frames, good_end = _scan(data, self.committed_offset())
         if good_end < len(data):
-            logger.critical("audit WAL %s: skipping torn tail at offset %d", self._path, good_end)
+            logger().critical("audit WAL %s: skipping torn tail at offset %d", self._path, good_end)
         yield from frames
 
     def read_pending(self, max_records: int) -> list[tuple[int, dict[str, Any]]]:

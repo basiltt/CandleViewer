@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import types
 from decimal import Decimal
 from itertools import pairwise
 
@@ -122,7 +123,8 @@ def test_guard_symbol_and_kind() -> None:
 
 def test_high_emit_rate_warns_once(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
-    monkeypatch.setattr(tb._log, "warning", lambda ev, **kw: calls.append(ev))
+    stub = types.SimpleNamespace(warning=lambda ev, **kw: calls.append(ev))
+    monkeypatch.setattr(tb, "_log", lambda: stub)
     b = _delta("1")
     _feed(b, [trade(i, seq=i) for i in range(1_100)])
     assert calls == ["bars_emit_rate_high"]

@@ -28,7 +28,7 @@ import uuid
 from collections import deque
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 import structlog
 
@@ -48,7 +48,12 @@ from candleviewer.orderflow.bigtrade_models import (
 )
 from candleviewer.orderflow.quantile import WindowedQuantiles
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 _Q8, _Q6 = Decimal("1e-8"), Decimal("1e-6")
 _ENVELOPE_SKIP = frozenset({"event_id", "ts_ingest", "source"})
 
@@ -295,7 +300,7 @@ class BigTradeEngine:
         if expected is None or _semantic(expected) != _semantic(ev):
             self.replay_mismatches += 1
             M.bigtrade_replay_mismatch_total.labels(self._label).inc()
-            _log.warning("bigtrade.replay_mismatch", symbol=self.symbol, kind=type(ev).__name__)
+            _log().warning("bigtrade.replay_mismatch", symbol=self.symbol, kind=type(ev).__name__)
         return []
 
 

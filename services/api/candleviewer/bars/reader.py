@@ -12,7 +12,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final, Protocol
+from typing import Any, Final, Protocol
 
 import structlog
 
@@ -20,7 +20,12 @@ from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum
 from candleviewer.observability.metrics import Counter
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 MAX_LIMIT: Final = 50_000
 _FAMILIES: Final = frozenset(BUILD_VERSIONS)
 
@@ -151,7 +156,7 @@ class RebuildRegistry:
         except Exception:
             entry.attempts += 1
             entry.next_try = now + BACKOFF_BASE_S * 2 ** (entry.attempts - 1)
-            _log.warning(
+            _log().warning(
                 "bars_rebuild_schedule_failed", spec_hash=spec_hash, attempts=entry.attempts
             )
             return False
@@ -197,7 +202,7 @@ class BarReader:
                 continue
             dropped += 1
             bars_checksum_mismatch_total.labels(table, reason).inc()
-            _log.warning(
+            _log().warning(
                 "bars_row_integrity_event", table=table, reason=reason,
                 spec_hash=spec.spec_hash, ts=r.get("ts"),
             )  # fmt: skip

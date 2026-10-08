@@ -17,7 +17,12 @@ from fastapi.responses import JSONResponse
 
 from candleviewer.observability.redaction import redact_structure, redact_text
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 _PROBLEM = "application/problem+json"
 _BASE = "https://candleviewer.local/errors/"
 
@@ -57,7 +62,7 @@ async def validation_error_handler(request: Request, exc: Exception) -> JSONResp
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
     # Never echo str(exc) to the client. The traceback is logged through the
     # RedactionFilter-wired logger so 500s stay visible without leaking.
-    _log.error("unhandled_exception", exc_info=exc)
+    _log().error("unhandled_exception", exc_info=exc)
     return _problem(500, "internal_error", "Internal server error")
 
 

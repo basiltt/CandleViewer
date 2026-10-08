@@ -17,7 +17,11 @@ import structlog
 from candleviewer.statechart.bindings import register_binding_module
 from candleviewer.statechart.config import register_event_schemas
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 #: Injected by `alerts.lifecycle` (bindings never import `alerts`/`audit`; same pattern as
 #: B16's `set_audit_sink`). Called as `hook(name, context)`; must not raise.
@@ -46,7 +50,7 @@ def _payload(event: Any) -> dict[str, Any]:
 
 
 def _guard_error(name: str, exc: Exception) -> bool:
-    logger.error("b10_guard_error", guard=name, error=type(exc).__name__)
+    logger().error("b10_guard_error", guard=name, error=type(exc).__name__)
     return False
 
 

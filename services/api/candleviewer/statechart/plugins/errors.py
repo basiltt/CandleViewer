@@ -46,7 +46,7 @@ class CvErrorHooks(HookFailureCounter):
     def on_transition_failed(self, interpreter: Any, transition: Any, failed_actions: Any) -> None:
         self.transition_failures += 1
         names = [str(getattr(a, "type", a)) for a, _exc in (failed_actions or ())]
-        logger.error(
+        logger().error(
             "statechart_transition_failed",
             kind=self.machine_kind,
             ev=str(getattr(transition, "event", "")),
@@ -58,14 +58,14 @@ class CvErrorHooks(HookFailureCounter):
     @contained
     def on_invalid_event(self, interpreter: Any, error: BaseException, raw_event: Any) -> None:
         self.invalid_events += 1
-        logger.warning(
+        logger().warning(
             "statechart_invalid_event", kind=self.machine_kind, error=type(error).__name__
         )
 
     @contained
     def on_event_dropped(self, interpreter: Any, event: Any, reason: str) -> None:
         self.dropped_events += 1
-        logger.warning(
+        logger().warning(
             "statechart_event_dropped", kind=self.machine_kind, ev=event_type(event), reason=reason
         )
         if self.lane == "order":
@@ -74,7 +74,7 @@ class CvErrorHooks(HookFailureCounter):
     @contained
     def on_chain_budget_exceeded(self, interpreter: Any, error: BaseException, event: Any) -> None:
         self.chain_trips += 1
-        logger.critical(
+        logger().critical(
             "statechart_chain_trip",
             kind=self.machine_kind,
             ev=event_type(event),
@@ -87,7 +87,7 @@ class CvErrorHooks(HookFailureCounter):
         self, interpreter: Any, state_id: str, invoke_id: str, error: BaseException
     ) -> None:
         self.stranded_invocations += 1
-        logger.critical(
+        logger().critical(
             "statechart_invocation_stranded",
             kind=self.machine_kind,
             state=state_id,
@@ -100,7 +100,7 @@ class CvErrorHooks(HookFailureCounter):
         # Finaliser-safe (CV-C69): runs from `__del__`, so only counter
         # bumps and a synchronous alert call — no awaits, no allocation-heavy work.
         self.dropped_receipts += 1
-        logger.error("statechart_receipt_dropped", kind=self.machine_kind, ev=event_type)
+        logger().error("statechart_receipt_dropped", kind=self.machine_kind, ev=event_type)
         self.pager.raise_alert(
             "alert",
             f"send(wait=True) receipt dropped: {event_type}",
@@ -112,7 +112,7 @@ class CvErrorHooks(HookFailureCounter):
         self, interpreter: Any, event: Any, active_state_ids: Any, disposition: str
     ) -> None:
         self.unhandled_events += 1
-        logger.warning(
+        logger().warning(
             "statechart_unhandled_event",
             kind=self.machine_kind,
             ev=event_type(event),
@@ -133,6 +133,6 @@ class CvErrorHooks(HookFailureCounter):
 
     @contained
     def on_guard_error(self, interpreter: Any, *args: Any) -> None:
-        logger.error("statechart_guard_error", kind=self.machine_kind)
+        logger().error("statechart_guard_error", kind=self.machine_kind)
         if self.lane in ("order", "control"):
             self._page(f"guard raised: {self.machine_kind}")

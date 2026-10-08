@@ -14,7 +14,7 @@ enumeration is a syscall, not a coroutine.
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -27,7 +27,11 @@ if TYPE_CHECKING:
 
     from .read_only_gate import ReadOnlyGate
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 _SELF_CHECK_TIMEOUT_S = 2.0
 
@@ -88,7 +92,7 @@ class MeshSelfCheckScheduler:
             async with asyncio.timeout(_SELF_CHECK_TIMEOUT_S):
                 result = await asyncio.to_thread(self._check.run)
         except TimeoutError:
-            logger.error(
+            logger().error(
                 "mesh guard self-check timed out after %.1fs; treating as unsafe "
                 "(fail-closed) and tripping the read-only gate",
                 _SELF_CHECK_TIMEOUT_S,

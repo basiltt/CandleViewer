@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import structlog
@@ -36,7 +36,10 @@ from candleviewer.rules.runner import (
 from candleviewer.rules.scope import ActionRequest, ScopeInstanceRef
 from candleviewer.rules.vocabulary import MetricRegistry, default_registry
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
 
 
 def _owner_uuid(rule: Rule) -> UUID | None:
@@ -139,7 +142,7 @@ class RulesService:
             try:
                 await self.scope_state.refresh(owner)
             except Exception:
-                _log.exception("scope refresh failed; failing closed for owner")
+                _log().exception("scope refresh failed; failing closed for owner")
                 self.scope_state.invalidate(owner)
 
     def build_evaluator(
@@ -244,7 +247,7 @@ class RulesService:
             return rules
 
         def _on_error(exc: Exception) -> None:
-            _log.error("rule evaluator tick failed", exc_info=exc)
+            _log().error("rule evaluator tick failed", exc_info=exc)
 
         self.runner = RuleEvaluationRunner(
             _evaluable, SnapshotBuilder(self.metric_source), _factory,

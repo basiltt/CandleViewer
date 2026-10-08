@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 import structlog
 from fastapi import FastAPI
@@ -37,7 +38,10 @@ configure_logging(
     fmt=_settings.log_format,
 )
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
 
 
 @asynccontextmanager
@@ -51,13 +55,13 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     # and the read-only gate reflect reality from the very first request.
     await ctx.mesh_self_check.run_once()
     if ctx.oms_read_only_gate.is_read_only:
-        logger.error(
+        logger().error(
             "boot binding self-check failed (%s): %s — starting in read-only mode",
             ctx.oms_read_only_gate.reason_code,
             ctx.oms_read_only_gate.reason_text,
         )
     else:
-        logger.info("boot binding self-check passed; all listening sockets are mesh-only")
+        logger().info("boot binding self-check passed; all listening sockets are mesh-only")
 
     # Hourly re-check (AC5 "drift after resume is caught").
     ctx.mesh_self_check.start()

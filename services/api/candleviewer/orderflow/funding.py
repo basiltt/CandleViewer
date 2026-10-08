@@ -23,7 +23,7 @@ import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Final, Protocol
+from typing import Any, Final, Protocol
 
 import structlog
 
@@ -47,7 +47,11 @@ from candleviewer.orderflow.funding_metrics import (
     symbol_label,
 )
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 #: Page size of the upstream history call (exchange maximum).
 PAGE_LIMIT: Final = 200
@@ -175,7 +179,7 @@ class FundingService:
         """THE accessor. Raises `FundingIntervalUnknown`; also publishes the gauge."""
         instrument = self._instruments(symbol)
         if instrument is None:
-            logger.warning("funding_interval_missing", symbol=symbol_label(symbol))
+            logger().warning("funding_interval_missing", symbol=symbol_label(symbol))
         interval = resolve_funding_interval_minutes(instrument)
         deriv_funding_interval_minutes.labels(symbol=symbol_label(symbol)).set(interval)
         return interval
@@ -216,7 +220,7 @@ class FundingService:
                 deriv_upstream_schema_rejected_total.labels(
                     topic="funding_history", reason=exc.reason
                 ).inc()
-                logger.warning("funding_page_rejected", symbol=label, reason=exc.reason)
+                logger().warning("funding_page_rejected", symbol=label, reason=exc.reason)
             deriv_funding_refresh_total.labels(symbol=label, result="error").inc()
             raise
         deriv_funding_refresh_total.labels(symbol=label, result="ok").inc()
@@ -231,7 +235,7 @@ class FundingService:
                 topic="funding_history", reason=reason
             ).inc()
         if reasons:
-            logger.warning(
+            logger().warning(
                 "funding_rows_rejected", symbol=label, count=len(reasons), reason=reasons[0]
             )
 

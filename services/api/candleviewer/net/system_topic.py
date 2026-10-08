@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
@@ -37,7 +37,11 @@ from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import Topic
 from candleviewer.observability.context import spawn
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 SYSTEM_TOPIC_DOMAIN = "system"
 
@@ -77,7 +81,7 @@ class SystemTopicPublisher:
             # gate directly outside asyncio) — nothing to schedule; the gate
             # state itself is still correct and is what OMS/the health
             # payload consult, so this is not fail-open for order placement.
-            logger.debug(
+            logger().debug(
                 "net.system_topic: no running event loop; skipping system-topic publish "
                 "for reason_code=%s",
                 reason_code,
@@ -99,7 +103,7 @@ class SystemTopicPublisher:
             # already isolating a misbehaving listener) — the gate's own
             # state is authoritative regardless of whether the banner made
             # it onto the bus this time.
-            logger.exception(
+            logger().exception(
                 "net.system_topic: failed to publish read-only gate transition to %s",
                 self._topic.key,
             )

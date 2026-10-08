@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Final
+from typing import Any, Final
 
 import structlog
 
@@ -22,7 +22,10 @@ FALLBACK_SNAPSHOT_INTERVAL_S: Final = 300.0
 
 Sleep = Callable[[float], Awaitable[None]]
 
-_log = structlog.get_logger("candleviewer.observability.metrics")
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger("candleviewer.observability.metrics")
 
 
 async def run_loop_lag_sampler(
@@ -56,14 +59,14 @@ async def run_cardinality_check(
         await sleep(interval)
         breached = metrics.check_cardinality()
         if breached:
-            _log.error("metric_cardinality_at_bound", metrics=breached)
+            _log().error("metric_cardinality_at_bound", metrics=breached)
         n += 1
 
 
 def write_fallback_snapshot(metrics: Metrics) -> dict[str, float]:
     """Write one compact snapshot of the key gauges to the structured log."""
     snap = metrics.snapshot(SNAPSHOT_KEYS)
-    _log.info("metrics_fallback_snapshot", env=metrics.env, metrics=snap)
+    _log().info("metrics_fallback_snapshot", env=metrics.env, metrics=snap)
     return snap
 
 

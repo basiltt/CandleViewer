@@ -36,7 +36,11 @@ storage_router_dedup_conflicts_total = Counter(
     "Straddle-merge natural-key collisions whose non-key fields differ.",
 )
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 _US_PER_DAY = 86_400_000_000
 
@@ -86,7 +90,7 @@ def dedup_merge(
             diff = _differing_fields(prior, row, key)
             if diff:  # hot wins, but never silently (field names only, no values)
                 storage_router_dedup_conflicts_total.inc()
-                logger.warning("storage_router_dedup_conflict", key=list(key), fields=diff)
+                logger().warning("storage_router_dedup_conflict", key=list(key), fields=diff)
         merged[k] = row
     return sorted(merged.values(), key=lambda r: _field(r, "ts"))
 

@@ -44,7 +44,11 @@ from candleviewer.exchange.bybit.metrics import (
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
 from candleviewer.exchange.bybit.signer import BybitSigner
 
-logger = structlog.get_logger(__name__)
+
+def logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 #: Header/field name fragments that must never reach a log line, verbatim or
 #: via a nested dict repr (ticket scenario "Secrets never reach a log or a
@@ -352,7 +356,7 @@ class BybitRestClient:
             if method.upper() in ("POST", "PUT"):
                 headers["Content-Type"] = "application/json"
 
-            logger.debug(
+            logger().debug(
                 "bybit_rest_request",
                 method=method,
                 path=path,
@@ -387,7 +391,7 @@ class BybitRestClient:
 
             if raw is None:
                 bybit_rest_requests_total.labels(endpoint=path, result="oversized").inc()
-                logger.warning(
+                logger().warning(
                     "bybit_rest_body_too_large",
                     path=path,
                     endpoint_class=str(endpoint_class),
@@ -452,7 +456,7 @@ class BybitRestClient:
                         async with asyncio.timeout(_SIGNATURE_RESYNC_TIMEOUT_S):
                             await self._on_signature_failure()
                     except Exception as exc:  # re-measure failure must not mask the 10002
-                        logger.warning("bybit_clock_resync_failed", error=type(exc).__name__)
+                        logger().warning("bybit_clock_resync_failed", error=type(exc).__name__)
                 continue
 
             if isinstance(error, RateLimitError):
@@ -463,7 +467,7 @@ class BybitRestClient:
                 if ret_code == _IP_RATE_LIMIT_CODE:
                     hold_s = min(max(_IP_HOLD_S, reset_wait_s), _MAX_RESET_WAIT_S)
                     self._governor.hold_ip(hold_s)
-                    logger.warning("rest_ip_hold_started", hold_s=hold_s, code=ret_code)
+                    logger().warning("rest_ip_hold_started", hold_s=hold_s, code=ret_code)
                 if error.retryable and attempt <= self._config.max_retries:
                     default = error.retry_after_s or self._retry_after_default(attempt)
                     retry_after = max(reset_wait_s, default)

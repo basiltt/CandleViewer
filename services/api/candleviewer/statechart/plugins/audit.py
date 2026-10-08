@@ -153,7 +153,7 @@ class CvAuditPlugin(HookFailureCounter):
             self.sink.append(row)
         except Exception as exc:
             self.sink_failures += 1
-            logger.critical(
+            logger().critical(
                 "statechart_audit_sink_failed", kind=self.machine_kind, error=type(exc).__name__
             )
             raise

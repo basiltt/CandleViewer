@@ -14,11 +14,15 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
-_logger = structlog.get_logger(__name__)
+
+def _logger() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
 
 if TYPE_CHECKING:
     from .binding_check import BindingCheckResult
@@ -71,7 +75,7 @@ class ReadOnlyGate:
                 # the other listeners from being notified. The gate's own
                 # state was already updated above, so this stays fail-closed
                 # regardless of listener behaviour.
-                _logger.exception(
+                _logger().exception(
                     "net.read_only_gate: listener raised while handling tripped=%s reason_code=%s",
                     tripped,
                     reason_code,

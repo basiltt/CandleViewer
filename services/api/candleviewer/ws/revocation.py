@@ -17,7 +17,12 @@ import structlog
 
 from candleviewer.observability.metrics import Counter, Histogram
 
-_log = structlog.get_logger(__name__)
+
+def _log() -> Any:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return structlog.get_logger(__name__)
+
+
 CLOSE_TOKEN_EXPIRED = 4401
 
 auth_revocation_latency_seconds = Histogram(
@@ -68,7 +73,7 @@ class RevocationHub:
                 await closer(bye_frame(reason), CLOSE_TOKEN_EXPIRED)
             except Exception:
                 ws_revocation_close_failures_total.inc()
-                _log.error(
+                _log().error(
                     "ws revocation close failed; revoked socket may remain open",
                     session_id=session_id,
                     exc_info=True,
