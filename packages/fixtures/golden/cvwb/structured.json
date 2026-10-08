@@ -1,0 +1,187 @@
+[
+  {
+    "name": "book_snapshot",
+    "body_kind": 1,
+    "structured": {
+      "price_scale": 2,
+      "qty_scale": 3,
+      "bids": [
+        [
+          "65000.00",
+          "1.500"
+        ],
+        [
+          "64999.50",
+          "0.000"
+        ]
+      ],
+      "asks": [
+        [
+          "65000.50",
+          "2.000"
+        ]
+      ],
+      "coalesced": false,
+      "xu": 123456
+    }
+  },
+  {
+    "name": "book_snapshot_empty",
+    "body_kind": 1,
+    "structured": {
+      "price_scale": 2,
+      "qty_scale": 3,
+      "bids": [],
+      "asks": [],
+      "coalesced": false,
+      "xu": 0,
+      "xseq": 0
+    }
+  },
+  {
+    "name": "book_delta_extremes",
+    "body_kind": 2,
+    "structured": {
+      "price_scale": 8,
+      "qty_scale": 8,
+      "bids": [
+        [
+          "92233720368.54775807",
+          "0.00000000"
+        ]
+      ],
+      "asks": [
+        [
+          "-92233720368.54775808",
+          "184467440737.09551615"
+        ]
+      ],
+      "coalesced": true
+    }
+  },
+  {
+    "name": "trades",
+    "body_kind": 3,
+    "structured": {
+      "trades": [
+        {
+          "ts_ms": 1789132262000,
+          "price": "650000.0",
+          "size": "0.0010",
+          "side": "buy",
+          "is_block_trade": true,
+          "is_liquidation": false
+        },
+        {
+          "ts_ms": 1793427229295,
+          "price": "-0.1",
+          "size": "0.0000",
+          "side": "sell",
+          "is_block_trade": true,
+          "is_liquidation": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "bars_v2",
+    "body_kind": 4,
+    "structured": {
+      "bars": [
+        {
+          "generation": 7,
+          "index": 42,
+          "t_ms": 1789132260000,
+          "o": "65000.12",
+          "h": "65100.00",
+          "l": "64900.00",
+          "c": "65050.50",
+          "v": "1234.567",
+          "turnover": "9000000000.000",
+          "trades": 321,
+          "delta": "-4.567",
+          "confirm": true
+        },
+        {
+          "generation": 7,
+          "index": 43,
+          "t_ms": 1789132320000,
+          "o": "0.01",
+          "h": "0.02",
+          "l": "0.00",
+          "c": "-0.01",
+          "v": "0.000",
+          "turnover": "0.000",
+          "trades": 0,
+          "delta": "-9223372036854775.808",
+          "confirm": false
+        }
+      ],
+      "coalesced": false
+    }
+  },
+  {
+    "name": "bars_empty",
+    "body_kind": 4,
+    "structured": {
+      "bars": [],
+      "coalesced": false
+    }
+  },
+  {
+    "name": "footprint",
+    "body_kind": 5,
+    "structured": {
+      "bars": [
+        {
+          "t_ms": 1789132200000,
+          "cells": [
+            {
+              "price": "650000.0",
+              "bid_volume": "0.010",
+              "ask_volume": "0.020",
+              "trades": 3,
+              "is_poc": true
+            },
+            {
+              "price": "650000.5",
+              "bid_volume": "0.000",
+              "ask_volume": "18446744073709551.615",
+              "trades": 4294967295,
+              "is_poc": false
+            }
+          ]
+        },
+        {
+          "t_ms": 1789132260000,
+          "cells": []
+        }
+      ],
+      "coalesced": false
+    }
+  },
+  {
+    "name": "heatmap_column",
+    "body_kind": 6,
+    "structured": {
+      "columns": [
+        {
+          "t_ms": 1789132262200,
+          "price_min": "64990.00",
+          "price_step": "0.05",
+          "bids": [
+            0.001,
+            0.0,
+            1.844674407370955e+16
+          ],
+          "asks": [
+            0.002,
+            0.0,
+            0.007
+          ]
+        }
+      ],
+      "estimated": false
+    }
+  }
+]

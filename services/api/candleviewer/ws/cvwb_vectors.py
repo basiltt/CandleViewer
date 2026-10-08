@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import struct
+from typing import Any
 
 from candleviewer.ws.binary import (
     BARS,
@@ -22,6 +23,7 @@ from candleviewer.ws.binary import (
     encode,
 )
 
+_MAX_SAFE = 2**53 - 1
 _I64_MIN = -(2**63)
 _U64_MAX = 2**64 - 1
 _U32_MAX = 2**32 - 1
@@ -270,3 +272,111 @@ def corpus_seeds() -> list[tuple[str, str, bytes]]:
 def render_corpus() -> str:
     seeds = [{"name": n, "expect": e, "hex": b.hex()} for n, e, b in corpus_seeds()]
     return json.dumps(seeds, indent=2) + "\n"
+
+
+# --- section 14 structured twin ---------------------------------------------------------
+# The same payload as the section 14 item shape. Prices/sizes are decimal strings
+# (common.schema `decimal`); every integer (epoch-ms, generation, index, xu, xseq) is a
+# JSON number, matching the generated types (`number`); values above 2**53 would be
+# rejected by the TS converter, and no committed vector carries one.
+# Heatmap `bids`/`asks` are JSON numbers (14.5 says `number`).
+
+
+def _unscale(value: int, scale: int) -> str:
+    sign = "-" if value < 0 else ""
+    whole, frac = divmod(abs(value), 10**scale)
+    return f"{sign}{whole}" if scale == 0 else f"{sign}{whole}.{frac:0{scale}d}"
+
+
+def structured(f: Frame) -> dict[str, Any]:
+    """Section 14 item form of ``f`` (one payload; topic fields like symbol are not on the wire)."""
+    ps, qs, base = f.price_scale, f.qty_scale, f.ts_base_ms
+
+    def p(v: int) -> str:
+        return _unscale(v, ps)
+
+    def q(v: int) -> str:
+        return _unscale(v, qs)
+
+    out: dict[str, Any] = {}
+    if f.body_kind in (BOOK_SNAPSHOT, BOOK_DELTA):
+        out["price_scale"], out["qty_scale"] = ps, qs
+        out["bids"] = [[p(r[1]), q(r[2])] for r in f.records if r[0] == 0]
+        out["asks"] = [[p(r[1]), q(r[2])] for r in f.records if r[0] == 1]
+        out["coalesced"] = bool(f.flags & 0b10)
+        if f.trailer is not None:
+            # Generated type is `number`: upstream ids above 2**53 are diagnostics-only, omitted.
+            for key, val in zip(("xu", "xseq"), f.trailer, strict=True):
+                if val <= _MAX_SAFE:
+                    out[key] = val
+    elif f.body_kind == TRADES:
+        out["trades"] = [
+            {
+                "ts_ms": (base + r[0]),
+                "price": p(r[1]),
+                "size": q(r[2]),
+                "side": "buy" if r[3] == 0 else "sell",
+                "is_block_trade": bool(r[4] & 1),
+                "is_liquidation": bool(r[4] & 2),
+            }
+            for r in f.records
+        ]
+    elif f.body_kind == BARS:
+        out["bars"] = [
+            {
+                "generation": (r[0]),
+                "index": (r[1]),
+                "t_ms": (base + r[2]),
+                "o": p(r[3]),
+                "h": p(r[4]),
+                "l": p(r[5]),
+                "c": p(r[6]),
+                "v": q(r[7]),
+                "turnover": q(r[8]),
+                "trades": r[9],
+                "delta": q(r[10]),
+                "confirm": bool(r[11] & 1),
+            }
+            for r in f.records
+        ]
+        out["coalesced"] = bool(f.flags & 0b10)
+    elif f.body_kind == FOOTPRINT:
+        out["bars"] = [
+            {
+                "t_ms": (base + ts),
+                "cells": [
+                    {
+                        "price": p(c[0]),
+                        "bid_volume": q(c[1]),
+                        "ask_volume": q(c[2]),
+                        "trades": c[3],
+                        "is_poc": bool(c[4] & 0b1000),
+                    }
+                    for c in cells
+                ],
+            }
+            for ts, cells in (f.groups or ())
+        ]
+        out["coalesced"] = bool(f.flags & 0b10)
+    else:
+        if f.prefix is None:
+            raise ValueError("heatmap frame needs a prefix")
+        out["columns"] = [
+            {
+                "t_ms": (base + f.prefix[0]),
+                "price_min": p(f.prefix[1]),
+                "price_step": p(f.prefix[2]),
+                "bids": [float(q(r[0])) for r in f.records],
+                "asks": [float(q(r[1])) for r in f.records],
+            }
+        ]
+        out["estimated"] = bool(f.flags & 1)
+    return out
+
+
+def render_structured() -> str:
+    rows = [
+        {"name": n, "body_kind": f.body_kind, "structured": structured(f)}
+        for n, f in vector_frames()
+    ]
+    return json.dumps(rows, indent=2) + "\n"

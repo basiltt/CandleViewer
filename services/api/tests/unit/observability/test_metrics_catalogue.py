@@ -31,7 +31,7 @@ _UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|m
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "f7337dad77a0a41ba6fc02743b3970d07e0d142b43815d90cac4c221e70d639e"
+GOLDEN_CATALOGUE_SHA256 = "05ab6cae1865e0f944b10b9211ec388c3a885c2636caeab440faca0c84da0fb0"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -171,8 +171,9 @@ def test_exported_bars_metrics_served_on_app_registry_with_env() -> None:
     import candleviewer.bars.builder_set  # noqa: F401 - owns metric families (via its imports)
     from candleviewer.bars.metrics import EXPORTED_NAMES, export_bars_metrics
     from candleviewer.bars.time_builder import bars_built_total
+    from candleviewer.ws.metrics import EXPORTED_NAMES as CVWB_NAMES
 
-    exported = {s.name for s in live_specs() if s.exported}
+    exported = {s.name for s in live_specs() if s.exported} - CVWB_NAMES
     assert exported == EXPORTED_NAMES
     m = Metrics("demo")
     register_r0(m)
@@ -187,5 +188,22 @@ def test_exported_bars_metrics_served_on_app_registry_with_env() -> None:
         assert missing == []
         for name in EXPORTED_NAMES:
             assert f"# HELP {name} " in text, name
+    finally:
+        collector.close()
+
+
+def test_cvwb_encode_metrics_served_with_bounded_body_kind() -> None:
+    from candleviewer.ws.binary import Frame, encode
+    from candleviewer.ws.metrics import EXPORTED_NAMES, export_cvwb_metrics
+
+    assert EXPORTED_NAMES <= {s.name for s in live_specs() if s.exported}
+    m = Metrics("demo")
+    register_r0(m)
+    collector = export_cvwb_metrics(m.registry, env="demo")
+    try:
+        encode(Frame(4))
+        text = generate_latest(m.registry).decode()
+        assert 'cvwb_frames_encoded_total{env="demo",kind="bars"}' in text
+        assert 'cvwb_bytes_encoded_total{env="demo",kind="bars"}' in text
     finally:
         collector.close()

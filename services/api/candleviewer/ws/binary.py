@@ -22,6 +22,7 @@ from typing import Final
 
 from candleviewer.ws._generated.cvwb_layout import HEADER, KINDS, MAGIC, Kind, Part
 from candleviewer.ws.errors import WsError
+from candleviewer.ws.metrics import ENCODED
 
 BOOK_SNAPSHOT: Final = 1
 BOOK_DELTA: Final = 2
@@ -170,6 +171,9 @@ def encode(frame: Frame) -> bytes:
             _st(kind.trailer).pack_into(out, off, *frame.trailer)
     except struct.error as exc:
         raise FrameEncodeError(f"{kind.name}: value out of range for section 3.4: {exc}") from exc
+    frames, nbytes = ENCODED[kind.id]  # O(1) per frame; success path only
+    frames.inc()
+    nbytes.inc(len(out))
     return bytes(out)
 
 

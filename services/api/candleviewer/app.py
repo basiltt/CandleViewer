@@ -206,6 +206,7 @@ from candleviewer.storage.retention.rule_prune import RulePruneTask
 from candleviewer.storage.retention.schedule import RetentionSchedule
 from candleviewer.storage.service import StorageService
 from candleviewer.ws.gateway import Authenticate, make_ws_router
+from candleviewer.ws.metrics import export_cvwb_metrics
 from candleviewer.ws.permissions import ConnectionRegistry
 from candleviewer.ws.revocation import RevocationHub
 from candleviewer.ws.service import WsService
@@ -859,6 +860,8 @@ def create_app(
     )
     # E12-T03: bars series (builders + BarBuilderSet) on the scraped registry.
     app.state.bars_metrics = export_bars_metrics(ctx.metrics, env=resolved.environment.value)
+    # E17-T02: CVWB encode frames/bytes per body_kind.
+    app.state.cvwb_metrics = export_cvwb_metrics(ctx.metrics, env=resolved.environment.value)
     # E40-T01: alert_deliveries retention purge + alert gauges (lifespan-started).
     _alert_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "alerts")
     _retention = RetentionSchedule.from_settings(resolved)

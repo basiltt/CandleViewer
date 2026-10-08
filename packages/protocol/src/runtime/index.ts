@@ -3,6 +3,7 @@
 // *untrusted* input from the network — flagged as a fuzz target for E03's
 // Schemathesis/contract job (E02-T09).
 
+import type * as generated from "../generated/index.js";
 import { CVWB_HEADER, CVWB_KINDS, CVWB_MAGIC } from "../generated/cvwb/index.js";
 
 /** Result of a sequence-gap check against the last-seen frame sequence number. */
@@ -575,4 +576,163 @@ export function decodeHeatmapColumn(buf: ArrayBufferView): DecodedHeatmapColumn 
     priceStep: unscale(priceStep, header.priceScale),
     rows,
   };
+}
+
+/** A decoded value does not fit the generated §14 type (a JS `number`). */
+export class StructuredRangeError extends Error {
+  constructor(
+    readonly field: string,
+    readonly value: bigint | number,
+  ) {
+    super(
+      `${field}=${String(value)} exceeds Number.MAX_SAFE_INTEGER; not representable as §14 number`,
+    );
+    this.name = "StructuredRangeError";
+  }
+}
+
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+
+function safeInt(field: string, v: bigint): number {
+  if (v > MAX_SAFE) throw new StructuredRangeError(field, v);
+  return Number(v);
+}
+
+/** Heatmap row sizes are `number[]` in §14; refuse magnitudes a double cannot hold exactly. */
+function safeSize(field: string, decimal: string): number {
+  const n = Number(decimal);
+  if (!Number.isFinite(n) || Math.abs(n) > Number.MAX_SAFE_INTEGER) {
+    throw new StructuredRangeError(field, n);
+  }
+  return n;
+}
+
+type Gen<T, K extends keyof T> = Pick<T, K>;
+type Item<T, K extends keyof T> = T[K] extends readonly (infer U)[] ? U : never;
+
+export type StructuredBook = Gen<
+  generated.ws.BookSymbolDepth,
+  "bids" | "asks" | "coalesced" | "price_scale" | "qty_scale" | "xu" | "xseq"
+>;
+export type StructuredTrades = Gen<generated.ws.TradesSymbol, "trades">;
+export type StructuredBars = Gen<generated.ws.BarsSymbolBarTypeParam, "bars" | "coalesced">;
+export type StructuredFootprint = Gen<generated.ws.FootprintSymbolBarTypeParam, "bars"> & {
+  coalesced: boolean;
+};
+export type StructuredHeatmap = Gen<generated.ws.HeatmapSymbol, "columns" | "estimated">;
+/** Generated item types, for consumers that want a single record. */
+export type StructuredBar = Item<generated.ws.BarsSymbolBarTypeParam, "bars">;
+
+const bookSide = (levels: BookLevel[], side: "bid" | "ask"): [string, string][] =>
+  levels.filter((l) => l.side === side).map((l): [string, string] => [l.price, l.size]);
+
+function bookStructured(
+  d: DecodedBookSnapshot | DecodedBookDelta,
+  trailer: BookSnapshotTrailer | undefined,
+): StructuredBook {
+  const h = d.header;
+  const out: StructuredBook = {
+    price_scale: h.priceScale,
+    qty_scale: h.qtyScale,
+    bids: bookSide(d.levels, "bid"),
+    asks: bookSide(d.levels, "ask"),
+    coalesced: h.flags.coalesced,
+  };
+  // xu/xseq are diagnostics-only (§14.1); a u64 above 2**53 is omitted rather than rounded.
+  if (trailer !== undefined) {
+    if (trailer.xu <= MAX_SAFE) out.xu = Number(trailer.xu);
+    if (trailer.xseq <= MAX_SAFE) out.xseq = Number(trailer.xseq);
+  }
+  return out;
+}
+
+/**
+ * Maps a decoded CVWB frame onto the GENERATED §14 item types (topic fields such as `symbol`
+ * are not on the wire, hence `Pick`). Prices/sizes are decimal strings; epoch-ms, generation
+ * and index are converted to `number` and throw {@link StructuredRangeError} above 2**53-1.
+ *
+ * This is an equivalence / debug utility proving binary == §14 JSON. It is NOT the render hot
+ * path: it allocates per record, against the ADR-0005 zero-copy intent. Struct-of-arrays
+ * consumption stays an open question in #2042.
+ */
+export function toStructured(d: DecodedBookSnapshot): StructuredBook;
+export function toStructured(d: DecodedBookDelta): StructuredBook;
+export function toStructured(d: DecodedTrades): StructuredTrades;
+export function toStructured(d: DecodedBars): StructuredBars;
+export function toStructured(d: DecodedFootprint): StructuredFootprint;
+export function toStructured(d: DecodedHeatmapColumn): StructuredHeatmap;
+export function toStructured(
+  d:
+    | DecodedBookSnapshot
+    | DecodedBookDelta
+    | DecodedTrades
+    | DecodedBars
+    | DecodedFootprint
+    | DecodedHeatmapColumn,
+): StructuredBook | StructuredTrades | StructuredBars | StructuredFootprint | StructuredHeatmap {
+  const h = d.header;
+  switch (h.bodyKind) {
+    case BODY_KIND.BOOK_SNAPSHOT:
+      return bookStructured(d as DecodedBookSnapshot, (d as DecodedBookSnapshot).trailer);
+    case BODY_KIND.BOOK_DELTA:
+      return bookStructured(d as DecodedBookDelta, undefined);
+    case BODY_KIND.TRADES:
+      return {
+        trades: (d as DecodedTrades).trades.map((t) => ({
+          ts_ms: safeInt("ts_ms", t.tsMs),
+          price: t.price,
+          size: t.size,
+          side: t.side,
+          is_block_trade: t.flags.blockTrade,
+          is_liquidation: t.flags.liquidationOrigin,
+        })),
+      };
+    case BODY_KIND.BARS:
+      return {
+        bars: (d as DecodedBars).bars.map((b) => ({
+          generation: safeInt("generation", b.generation),
+          index: safeInt("index", b.index),
+          t_ms: safeInt("t_ms", b.tsMs),
+          o: b.open,
+          h: b.high,
+          l: b.low,
+          c: b.close,
+          v: b.volume,
+          turnover: b.turnover,
+          trades: b.trades,
+          delta: b.delta,
+          confirm: b.confirmed,
+        })),
+        coalesced: h.flags.coalesced,
+      };
+    case BODY_KIND.FOOTPRINT:
+      return {
+        bars: (d as DecodedFootprint).groups.map((g) => ({
+          t_ms: safeInt("t_ms", g.tsMs),
+          cells: g.cells.map((c) => ({
+            price: c.price,
+            bid_volume: c.bidVolume,
+            ask_volume: c.askVolume,
+            trades: c.trades,
+            is_poc: c.flags.poc,
+          })),
+        })),
+        coalesced: h.flags.coalesced,
+      };
+    default: {
+      const c = d as DecodedHeatmapColumn;
+      return {
+        columns: [
+          {
+            t_ms: safeInt("t_ms", c.tsMs),
+            price_min: c.priceMin,
+            price_step: c.priceStep,
+            bids: c.rows.map((r) => safeSize("bids", r.bidSize)),
+            asks: c.rows.map((r) => safeSize("asks", r.askSize)),
+          },
+        ],
+        estimated: h.flags.estimated,
+      };
+    }
+  }
 }
