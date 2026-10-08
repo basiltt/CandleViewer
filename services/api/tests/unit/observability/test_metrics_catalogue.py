@@ -31,7 +31,7 @@ _UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|m
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "586a332ca48a327dfbd3b12b476fab22600666ccc970f56aaf04087e15eda1d1"
+GOLDEN_CATALOGUE_SHA256 = "05ab6cae1865e0f944b10b9211ec388c3a885c2636caeab440faca0c84da0fb0"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -203,7 +203,7 @@ def test_cvwb_encode_metrics_served_with_bounded_body_kind() -> None:
     try:
         encode(Frame(4))
         text = generate_latest(m.registry).decode()
-        assert 'cvwb_frames_encoded_total{body_kind="4",env="demo"}' in text
-        assert 'cvwb_bytes_encoded_total{body_kind="4",env="demo"}' in text
+        assert 'cvwb_frames_encoded_total{env="demo",kind="bars"}' in text
+        assert 'cvwb_bytes_encoded_total{env="demo",kind="bars"}' in text
     finally:
         collector.close()
