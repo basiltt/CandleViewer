@@ -1,0 +1,13 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "generate": {
+      "inputs": ["**/*.{yaml,json}", "scripts/**", "!**/*.md"],
+      "outputs": [
+        "src/generated/**",
+        "$TURBO_ROOT$/services/api/candleviewer/ws/_generated/cvwb_layout.py"
+      ]
+    }
+  }
+}

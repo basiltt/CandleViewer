@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -38,7 +39,20 @@ GENERATED_ROOT = Path("packages/protocol")
 # unrelated protocol package churn (README edits, etc.) doesn't get pulled
 # into the hash unnecessarily — though a diff there would also legitimately
 # fail freshness, since it's still under packages/protocol.
-GENERATE_CMD = ["pnpm", "generate"]
+# Generated outputs living OUTSIDE packages/protocol but produced by (or pinned
+# alongside) `pnpm generate` (E17-T02): the Python twin of the CVWB layout,
+# emitted by packages/protocol/scripts/generate-cvwb-layout.mjs, plus the
+# committed CVWB vectors / SR-155 corpus (rendered by
+# services/api/scripts/generate_cvwb_vectors.py and byte-checked by
+# tests/unit/ws/test_cvwb_binary.py; included here so any stray churn fails).
+EXTRA_GENERATED: tuple[Path, ...] = (
+    Path("services/api/candleviewer/ws/_generated/cvwb_layout.py"),
+    Path("packages/fixtures/golden/cvwb"),
+    Path("tests/fuzz/ws-frames"),
+)
+GENERATED_PATHS: tuple[Path, ...] = (GENERATED_ROOT, *EXTRA_GENERATED)
+# shutil.which resolves pnpm.cmd on Windows (a bare "pnpm" is not executable there).
+GENERATE_CMD = [shutil.which("pnpm") or "pnpm", "generate"]
 
 
 class GenGateError(Exception):
@@ -60,7 +74,7 @@ def _run(
     )
 
 
-def _hash_generated_tree(root: Path) -> str:
+def _hash_generated_tree(roots: tuple[Path, ...]) -> str:
     """Deterministic content hash of every tracked file under ``root``.
 
     Uses ``git ls-files`` (not ``os.walk``) so `.gitignore`d build scratch
@@ -68,7 +82,7 @@ def _hash_generated_tree(root: Path) -> str:
     git would actually track/diff are included, matching what the freshness
     check below inspects.
     """
-    listed = _run(["git", "ls-files", "-z", "--", str(root)])
+    listed = _run(["git", "ls-files", "-z", "--", *map(str, roots)])
     if listed.returncode != 0:
         raise GenGateError(
             "CI-GEN-004", f"git ls-files failed: {listed.stderr.strip()}"
@@ -98,9 +112,9 @@ def run_generator() -> None:
 
 def check_determinism() -> None:
     run_generator()
-    first_hash = _hash_generated_tree(GENERATED_ROOT)
+    first_hash = _hash_generated_tree(GENERATED_PATHS)
     run_generator()
-    second_hash = _hash_generated_tree(GENERATED_ROOT)
+    second_hash = _hash_generated_tree(GENERATED_PATHS)
     if first_hash != second_hash:
         raise GenGateError(
             "CI-GEN-003",
@@ -113,11 +127,11 @@ def check_determinism() -> None:
 
 def check_freshness() -> None:
     """CI-GEN-001: the working tree must match `make gen`'s tracked output."""
-    diff = _run(["git", "diff", "--exit-code", "--", str(GENERATED_ROOT)])
+    diff = _run(["git", "diff", "--exit-code", "--", *map(str, GENERATED_PATHS)])
     if diff.returncode != 0:
         raise GenGateError(
             "CI-GEN-001",
-            "packages/protocol is stale — `make gen` produced a diff "
+            "generated output is stale — `make gen` produced a diff "
             "against docs/plan/22-api-openapi.yaml / docs/plan/23-ws-protocol.md.\n"
             "Reproduce locally with `make gen`, review, and commit the result.\n\n"
             f"{diff.stdout}",
@@ -126,7 +140,7 @@ def check_freshness() -> None:
 
 def check_untracked() -> None:
     """CI-GEN-002: catch new generated files `git diff` cannot see."""
-    status = _run(["git", "status", "--porcelain", "--", str(GENERATED_ROOT)])
+    status = _run(["git", "status", "--porcelain", "--", *map(str, GENERATED_PATHS)])
     if status.returncode != 0:
         raise GenGateError("CI-GEN-004", f"git status failed: {status.stderr.strip()}")
     untracked = [line for line in status.stdout.splitlines() if line.startswith("??")]

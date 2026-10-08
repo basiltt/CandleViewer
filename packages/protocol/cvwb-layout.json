@@ -1,5 +1,5 @@
 {
-  "$comment": "E17-T02: the ONE layout declaration for the CVWB binary frame (docs/plan/23-ws-protocol.md §3.4). Generators: packages/protocol/scripts/generate-cvwb-layout.mjs (TS) and tools/contracts/gen_cvwb_layout.py (Python). Strides are declared AND recomputed from the fields by both generators; a mismatch fails generation. Bars and footprint records end in 4 reserved zero bytes (the §3.4 strides 85/33 exceed their listed fields by 4; matches the pre-existing decoder offsets).",
+  "$comment": "E17-T02: the ONE layout declaration for the CVWB binary frame (docs/plan/23-ws-protocol.md §3.4). Generator: packages/protocol/scripts/generate-cvwb-layout.mjs (run by `pnpm generate`), which emits both src/generated/cvwb/index.ts (TS) and services/api/candleviewer/ws/_generated/cvwb_layout.py (Python). Strides are declared AND recomputed from the fields; a mismatch fails generation. Bars and footprint records end in 4 reserved zero bytes (the §3.4 strides 85/33 exceed their listed fields by 4).",
   "magic": 1129731906,
   "endianness": "little",
   "header_bytes": 24,

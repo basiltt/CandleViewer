@@ -217,6 +217,52 @@ def corpus_seeds() -> list[tuple[str, str, bytes]]:
             _h(HEATMAP_COLUMN, 1) + struct.pack("<IqqI", 0, 0, 1, 0) + bytes(5),
         ),
     ]
+    trade = struct.pack("<IqQBB", 0, 1, 1, 0, 0)
+    cell = struct.pack("<qQQIB4x", 1, 1, 1, 1, 0)
+    hm = struct.pack("<IqqI", 0, 0, 1, 2)
+    trl = bytes(16)
+    s += [
+        # count=1 and +/-1 byte bodies (security review of #2041):
+        ("delta-one-exact", "ok", _h(BOOK_DELTA, 1) + book_rec),
+        ("delta-one-minus-1", "malformed", _h(BOOK_DELTA, 1) + book_rec[:-1]),
+        ("delta-one-plus-1", "ok", _h(BOOK_DELTA, 1) + book_rec + bytes(1)),
+        ("snapshot-one-exact", "ok", _h(BOOK_SNAPSHOT, 1) + book_rec + trl),
+        ("snapshot-one-minus-1", "malformed", _h(BOOK_SNAPSHOT, 1) + book_rec + trl[:-1]),
+        ("snapshot-one-plus-1", "ok", _h(BOOK_SNAPSHOT, 1) + book_rec + trl + bytes(1)),
+        ("snapshot-empty-trailer-minus-1", "malformed", _h(BOOK_SNAPSHOT, 0) + trl[:-1]),
+        ("trades-count-0", "ok", _h(TRADES, 0)),
+        ("trades-one-exact", "ok", _h(TRADES, 1) + trade),
+        ("trades-one-minus-1", "malformed", _h(TRADES, 1) + trade[:-1]),
+        ("trades-one-plus-1", "ok", _h(TRADES, 1) + trade + bytes(1)),
+        ("heatmap-rows-exact", "ok", _h(HEATMAP_COLUMN, 1) + hm + bytes(32)),
+        ("heatmap-rows-minus-1-byte", "malformed", _h(HEATMAP_COLUMN, 1) + hm + bytes(31)),
+        ("heatmap-rows-plus-1-byte", "ok", _h(HEATMAP_COLUMN, 1) + hm + bytes(33)),
+        (
+            "footprint-cell-count-body-plus-1",
+            "malformed",
+            _h(FOOTPRINT, 1) + struct.pack("<II", 0, 2) + cell,
+        ),
+        (
+            "footprint-second-group-overflow",
+            "malformed",
+            _h(FOOTPRINT, 2) + struct.pack("<II", 0, 1) + cell + struct.pack("<II", 1, 9) + cell,
+        ),
+        # Pinned ACCEPT behaviour: section 3.4 does not yet say whether non-zero reserved
+        # header bytes, unknown flag bits or non-zero record pad bytes must be rejected.
+        # Decision tracked in #2042; flip these to "malformed" if it says reject.
+        (
+            "reserved-header-bytes-nonzero",
+            "ok",
+            _h(BOOK_DELTA, 0)[:9] + bytes([0xFF]) * 3 + _h(BOOK_DELTA, 0)[12:],
+        ),
+        ("unknown-flag-bits-0xf0", "ok", _h(BOOK_DELTA, 0, flags=0xF0)),
+        ("bars-pad-nonzero", "ok", _h(BARS, 1) + one_bar[:81] + bytes([0xFF]) * 4),
+        (
+            "footprint-cell-pad-nonzero",
+            "ok",
+            _h(FOOTPRINT, 1) + struct.pack("<II", 0, 1) + cell[:29] + bytes([0xFF]) * 4,
+        ),
+    ]
     s.extend((f"valid-{n}", "ok", encode(f)) for n, f in vector_frames())
     return s
 
