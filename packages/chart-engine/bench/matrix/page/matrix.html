@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; worker-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>CandleViewer E06-T01 matrix page</title>
+  </head>
+  <body style="margin: 0; background: #0b0d11; color: #ccd">
+    <canvas id="c" width="1600" height="900" style="width: 1600px; height: 900px"></canvas>
+    <canvas id="w" width="320" height="180"></canvas>
+    <ul id="mirror" aria-hidden="true" style="position: absolute; left: -9999px"></ul>
+    <pre id="status">starting</pre>
+    <script type="module" src="./page-main.mjs"></script>
+  </body>
+</html>

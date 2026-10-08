@@ -97,6 +97,19 @@ export default tseslint.config(
     },
   },
   {
+    // E06-T01 cross-runtime matrix (spike-only harness): the runner/compare/manifest code
+    // is Node; page/ and scenes/ run inside Chromium/Electron/WebView2 (browser + worker);
+    // the Electron shell files are CommonJS by necessity (sandboxed preload).
+    files: ["bench/machine.mjs", "bench/matrix/**/*.mjs", "bench/matrix/**/*.cjs"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser, ...globals.worker },
+    },
+  },
+  {
+    files: ["bench/matrix/**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
+  {
     files: ["src/worker/**/*.ts"],
     rules: {
       // The worker glue is the one place OffscreenCanvas/postMessage globals

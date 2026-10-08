@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Empty on purpose: the harness page needs NO Tauri IPC (parity with the Electron allow-list preload). Remote loopback content gets no capabilities.",
+  "windows": ["main"],
+  "permissions": []
+}

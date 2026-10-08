@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "candleviewer-matrix",
+  "version": "0.0.0",
+  "identifier": "app.candleviewer.matrix.spike",
+  "build": { "frontendDist": "../dist-placeholder" },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'none'; script-src 'self'; worker-src 'self'; connect-src 'self' http://127.0.0.1:*; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": { "active": false }
+}

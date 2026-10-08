@@ -1,0 +1,15 @@
+# E06-T01 spike-only Tauri v2 harness shell. NOT part of any CI target (06-... §7.1).
+# Pin discipline (E06-X02): exact versions below; commit the Cargo.lock that `cargo
+# generate-lockfile` produces on the reference machine and run `cargo audit` before the run.
+# This is deliberately NOT inside the pnpm workspace and is built only by run-matrix.mjs.
+[package]
+name = "candleviewer-matrix"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "=2.0.3", features = [] }
+
+[dependencies]
+tauri = { version = "=2.1.1", features = [] }

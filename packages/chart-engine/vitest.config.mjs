@@ -9,7 +9,18 @@ export default defineConfig({
     coverage: {
       ...vitestPreset.test.coverage,
       include: ["src/**/*.ts", "bench/**/*.ts", "bench/**/*.mjs"],
-      exclude: ["src/**/index.ts", "bench/run-bench.mjs", "bench/scenes/run-scene-*.mjs"],
+      exclude: [
+        "src/**/index.ts",
+        "bench/run-bench.mjs",
+        "bench/scenes/run-scene-*.mjs",
+        // E06-T01: process/browser-only entry points (same rationale as the CLIs above):
+        // exercised by the owner's reference-machine run, not by unit tests.
+        "bench/matrix/run-matrix.mjs",
+        "bench/matrix/page/**",
+        "bench/matrix/electron/main.cjs",
+        "bench/matrix/electron/preload.cjs",
+        "bench/matrix/fixture-digest.mjs",
+      ],
       // Constitution §9 #4: chart-engine coverage floor is >=85%.
       thresholds: {
         lines: 85,
