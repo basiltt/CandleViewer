@@ -16,8 +16,11 @@ jobs:
   a11y:
     name: a11y
     runs-on: ubuntu-latest
-    timeout-minutes: 12
-    # 12 min PR budget (AC); nightly sweep: a11y-nightly.yml (20 min).
+    # Two numbers: the 12 min (720 s) PR budget (AC) is MEASURED by the in-step budget
+    # gate from after install/build. timeout-minutes is only a backstop above it, since
+    # checkout/install/build/browsers also count toward the job clock (#2054).
+    # Nightly sweep: a11y-nightly.yml (20 min).
+    timeout-minutes: 18
     env:
       CV_A11Y_INFRA_WAIVER_UNTIL: ${{ vars.CV_A11Y_INFRA_WAIVER_UNTIL }}
     steps:

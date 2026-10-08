@@ -13,6 +13,8 @@ interface MouseWindow {
   __mouse: number;
 }
 
+// mousemove is deliberately not counted: the browser synthesises it after layout
+// shifts (#2063). Untrusted clicks (e.g. Radix .click()) ARE counted on purpose.
 // Gate 4 collector: keyboard-only traversal. It never dispatches a pointer
 // event; an init-script counter records any mouse event so the gate can prove
 // none occurred. The s8.2 order/symbol/table tasks are added by their screen
@@ -20,7 +22,7 @@ interface MouseWindow {
 test("collect keyboard", async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as MouseWindow).__mouse = 0;
-    for (const t of ["mousedown", "mouseup", "click", "mousemove"]) {
+    for (const t of ["mousedown", "mouseup", "click"]) {
       window.addEventListener(
         t,
         () => {
@@ -32,6 +34,7 @@ test("collect keyboard", async ({ page }) => {
   });
   const steps: Step[] = [];
   let mouseEvents = 0;
+  const perScreen: Record<string, number> = {};
   for (const s of SCREENS) {
     await page.goto(s.path);
     await page.getByRole("main").first().waitFor();
@@ -62,8 +65,10 @@ test("collect keyboard", async ({ page }) => {
     }
     steps.push({ name: `${s.id} tab-traversal-no-trap`, ok: stuck < 3 });
     steps.push({ name: `${s.id} visible-focus-indicator`, ok: focusVisible });
-    mouseEvents += await page.evaluate(() => (window as unknown as MouseWindow).__mouse);
+    const n = await page.evaluate(() => (window as unknown as MouseWindow).__mouse);
+    perScreen[s.id] = n;
+    mouseEvents += n;
   }
   mkdirSync(REPORT_DIR, { recursive: true });
-  writeFileSync(`${REPORT_DIR}/keyboard.json`, JSON.stringify({ mouseEvents, steps }, null, 2));
+  writeFileSync(`${REPORT_DIR}/keyboard.json`, JSON.stringify({ mouseEvents, perScreen, steps }, null, 2));
 });

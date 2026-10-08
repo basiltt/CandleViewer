@@ -13,6 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.a11y import gates
 
+ROOT = Path(__file__).resolve().parents[2]
+
 
 def _report(impact: str = "serious") -> dict:
     return {
@@ -82,6 +84,29 @@ def test_keyboard_trap_and_mouse_events_fail() -> None:
     assert gates.check_keyboard(ok) == []
     bad = {"mouseEvents": 2, "steps": [{"name": "switch symbol", "ok": False}]}
     assert len(gates.check_keyboard(bad)) == 2
+
+
+def test_keyboard_gate_names_screens_with_mouse_events() -> None:
+    steps = [{"name": "SCR-020 tab-traversal-no-trap", "ok": True}]
+    bad = {
+        "mouseEvents": 3,
+        "perScreen": {"SCR-010": 0, "SCR-020": 3},
+        "steps": steps,
+    }
+    msgs = gates.check_keyboard(bad)
+    assert len(msgs) == 1
+    assert "SCR-020" in msgs[0] and "SCR-010" not in msgs[0]
+
+
+def test_keyboard_collector_counts_clicks_not_mousemove() -> None:
+    # A synthetic click (even untrusted, e.g. Radix .click()) must still count; a
+    # browser-synthesised mousemove must not (#2063).
+    src = (ROOT / "apps/web/e2e/a11y/keyboard.collect.ts").read_text(encoding="utf-8")
+    assert '["mousedown", "mouseup", "click"]' in src
+    assert "mousemove" not in src.replace("mousemove is", "").split("addInitScript")[
+        1
+    ].split("const steps")[0].replace("browser-synthesised mousemove", "")
+    assert "isTrusted" not in src
 
 
 def test_tree_snapshot_diff_reports_change(tmp_path: Path) -> None:
@@ -160,7 +185,9 @@ def test_baseline_change_requires_finding_id_in_pr_body() -> None:
 
 
 def test_flash_high_rate_strobe_trips_and_calm_canvas_passes() -> None:
-    strobe = [0.0 if (i // 4) % 2 == 0 else 1.0 for i in range(360)]  # 60 Hz sampling, ~7.5 Hz strobe
+    strobe = [
+        0.0 if (i // 4) % 2 == 0 else 1.0 for i in range(360)
+    ]  # 60 Hz sampling, ~7.5 Hz strobe
     assert gates.check_flash({"fps": 60, "components": {"canvas:strobe": strobe}})
     calm = [0.05 + 0.01 * ((i * 7) % 5) for i in range(360)]
     assert gates.check_flash({"fps": 60, "components": {"canvas:heatmap": calm}}) == []
