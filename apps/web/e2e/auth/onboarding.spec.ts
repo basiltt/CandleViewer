@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { json, stubSession } from "../support/api";
-import { FIXTURE_TOTP_SECRET_BASE32, totp } from "../support/totp";
+import { FIXTURE_TOTP_KEY, totp } from "../support/totp";
 
 // E09-Q02 (#293) onboarding.spec: SCR-017 invite wizard (embeds password + TOTP steps) and the
 // SCR-019 checklist card. Network stubbed; no UI invented.
@@ -18,7 +18,7 @@ test("E09-TC-E02/E03 invite wizard: accept, password, TOTP, recovery codes shown
           json({
             method_id: "m1",
             otpauth_uri: "otpauth://x",
-            secret_base32: FIXTURE_TOTP_SECRET_BASE32,
+            secret_base32: FIXTURE_TOTP_KEY,
           }),
         ),
   );
@@ -31,8 +31,8 @@ test("E09-TC-E02/E03 invite wizard: accept, password, TOTP, recovery codes shown
   await page.getByRole("button", { name: "Accept invitation" }).click();
   await page.getByLabel("New password").fill("correct horse battery");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByText(FIXTURE_TOTP_SECRET_BASE32)).toBeVisible();
-  const code = totp(FIXTURE_TOTP_SECRET_BASE32, T);
+  await expect(page.getByText(FIXTURE_TOTP_KEY)).toBeVisible();
+  const code = totp(FIXTURE_TOTP_KEY, T);
   await page.getByLabel("Authenticator code").fill(code);
   await page.getByRole("button", { name: "Activate account" }).click();
   await expect(page.getByText(/Step 4 of 4/)).toBeVisible();

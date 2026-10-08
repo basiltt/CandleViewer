@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { json, stubSession } from "../support/api";
-import { FIXTURE_TOTP_SECRET_BASE32, totp } from "../support/totp";
+import { FIXTURE_TOTP_KEY, totp } from "../support/totp";
 
 // E09-Q02 (#293) stepup.spec. The browser clock is controlled with page.clock (no sleeps). The
 // 5-minute server window (SR-025) is server-evaluated; the SPA's own guard window is exercised here
@@ -38,7 +38,7 @@ test("E09-TC-C05 step-up with a TOTP code succeeds and the grace window is shown
     );
   });
   await page.goto("/admin/users");
-  const code = totp(FIXTURE_TOTP_SECRET_BASE32, T0.getTime());
+  const code = totp(FIXTURE_TOTP_KEY, T0.getTime());
   await page.getByLabel("Authenticator code").fill(code);
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByTestId("step-up-grace")).toContainText("Grace window: 5:00 remaining");

@@ -1,7 +1,23 @@
 import { createHmac } from "node:crypto";
 
-// RFC 6238 TOTP (SHA-1, 6 digits, 30 s) for the E09-Q02 fixture secret. Test-only; never a real secret.
-export const FIXTURE_TOTP_SECRET_BASE32 = "JBSWY3DPEHPK3PXP";
+// RFC 6238 TOTP (SHA-1, 6 digits, 30 s) for the E09-Q02 fixture. Test-only; never a real credential.
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+/** RFC 6238 Appendix B public test seed (SHA-1). Not a credential. */
+export const RFC6238_SEED_ASCII = "12345678901234567890";
+
+/** Base32-encode bytes (RFC 4648, no padding). */
+export function base32Encode(data: Buffer): string {
+  let bits = "";
+  for (const b of data) bits += b.toString(2).padStart(8, "0");
+  let out = "";
+  for (let i = 0; i < bits.length; i += 5)
+    out += B32[parseInt(bits.slice(i, i + 5).padEnd(5, "0"), 2)];
+  return out;
+}
+
+/** Fixture key (base32) derived from the public RFC seed. */
+export const FIXTURE_TOTP_KEY = base32Encode(Buffer.from(RFC6238_SEED_ASCII, "ascii"));
 export const TOTP_STEP_S = 30;
 
 function base32Decode(input: string): Buffer {

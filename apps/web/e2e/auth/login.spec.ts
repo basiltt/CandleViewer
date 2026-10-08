@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { json } from "../support/api";
-import { FIXTURE_TOTP_SECRET_BASE32, totp } from "../support/totp";
+import { FIXTURE_TOTP_KEY, totp } from "../support/totp";
 
 // E09-Q02 (#293) login.spec. API stubbed at the network layer (C-13.5); SCR-002 UI is not built
 // yet, so the TOTP/recovery cases are deferred (see qa/plans/e09-q02-automation-status.md).
@@ -88,13 +88,10 @@ test("E09-TC-A01 keyboard-only: tab order SCR-001 and Enter submits @electron", 
 
 test("E09-TC-A04/A05 TOTP helper: RFC 6238 vector and ±1 step skew window", () => {
   // RFC 6238 App. B, SHA-1 secret "12345678901234567890", T=59 s -> 94287082 (8 digits).
-  const rfcSecret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
-  expect(totp(rfcSecret, 59_000)).toBe("287082");
+  expect(totp(FIXTURE_TOTP_KEY, 59_000)).toBe("287082");
   const now = Date.UTC(2026, 0, 1, 0, 0, 10);
-  const same = totp(FIXTURE_TOTP_SECRET_BASE32, now);
-  expect(totp(FIXTURE_TOTP_SECRET_BASE32, now, 1)).not.toBe(same);
-  expect(totp(FIXTURE_TOTP_SECRET_BASE32, now + 30_000)).toBe(
-    totp(FIXTURE_TOTP_SECRET_BASE32, now, 1),
-  );
+  const same = totp(FIXTURE_TOTP_KEY, now);
+  expect(totp(FIXTURE_TOTP_KEY, now, 1)).not.toBe(same);
+  expect(totp(FIXTURE_TOTP_KEY, now + 30_000)).toBe(totp(FIXTURE_TOTP_KEY, now, 1));
   expect(same).toMatch(/^\d{6}$/u);
 });
