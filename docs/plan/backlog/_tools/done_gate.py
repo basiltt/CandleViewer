@@ -326,9 +326,16 @@ def map_dod_item(idx: int, text: str, ev: list[tuple[str, str]]) -> str | None:
 
 
 def _latest_security_verdicts(prs: list[dict[str, Any]]) -> list[str]:
-    latest: dict[str, tuple[tuple[str, int], str]] = {}
+    """Latest security verdict per (PR, reviewer).
+
+    Keyed per PR, not per reviewer alone: agent reviewers share one login, and a
+    multi-PR ticket must block if ANY part's latest verdict is REQUEST CHANGES — a later
+    APPROVE on another part must never mask it.
+    """
+    latest: dict[tuple[int, str], tuple[tuple[str, int], str]] = {}
     seq = 0
     for p in prs:
+        pr_no = int(p.get("number") or 0)
         for r in [*p.get("reviews", []), *p.get("comments", [])]:
             seq += 1
             m = SEC_RE.search(r.get("body") or "")
@@ -336,8 +343,9 @@ def _latest_security_verdicts(prs: list[dict[str, Any]]) -> list[str]:
                 continue
             who = (r.get("author") or {}).get("login", "?")
             key = (r.get("submittedAt") or r.get("createdAt") or "", seq)
-            if who not in latest or key >= latest[who][0]:
-                latest[who] = (key, m.group(1).upper())
+            k = (pr_no, who)
+            if k not in latest or key >= latest[k][0]:
+                latest[k] = (key, m.group(1).upper())
     return [v for _, v in latest.values()]
 
 
@@ -471,9 +479,19 @@ def fetch(issue_no: str, gh: GhFn) -> tuple[dict[str, Any], list[dict[str, Any]]
             "number,body,files,reviews,comments,mergedAt",
         ]
     )
-    # ASSUMPTION: the linked PR carries `Closes|Fixes|Resolves #N` in its body (C-4.7); other PRs are ignored.
-    pat = re.compile(rf"(?:closes|fixes|resolves)\s+#{issue_no}\b", re.IGNORECASE)
-    return issue, [p for p in prs or [] if pat.search(p.get("body") or "")]
+    # The linked PR carries `Closes|Fixes|Resolves #N` in its body (C-4.7). Multi-PR tickets
+    # (parts land with `Refs #N` and QA closes the ticket, e.g. E17-T02) also count — but only
+    # PRs that are already MERGED, so an open `Refs` PR can never satisfy the security gate.
+    closing = re.compile(rf"(?:closes|fixes|resolves)\s+#{issue_no}\b", re.IGNORECASE)
+    # `Refs #N` must start a line (footer style); an in-prose mention never links.
+    refs = re.compile(rf"^\s*refs?\s+#{issue_no}\b", re.IGNORECASE | re.MULTILINE)
+    linked = [
+        p
+        for p in prs or []
+        if closing.search(p.get("body") or "")
+        or (refs.search(p.get("body") or "") and p.get("mergedAt"))
+    ]
+    return issue, linked
 
 
 def run_gate(
