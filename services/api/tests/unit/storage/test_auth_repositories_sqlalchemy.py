@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from pydantic import SecretStr
 
 from candleviewer.app import build_auth_service
 from candleviewer.settings import Environment, Settings
@@ -126,7 +127,13 @@ def test_build_auth_service_real_backend_wires_repositories() -> None:
 
 def test_build_auth_service_live_without_keys_refuses() -> None:
     with pytest.raises(ValueError, match="CV_AUTH_TOTP_KEY_HEX"):
-        build_auth_service(Settings(storage_backend="real", environment=Environment.LIVE))
+        build_auth_service(
+            Settings(
+                storage_backend="real",
+                environment=Environment.LIVE,
+                questdb_pg_password=SecretStr("not-the-dev-default"),
+            )
+        )
 
 
 @pytest.mark.parametrize("env", ["live", "demo"])
@@ -246,6 +253,7 @@ def test_build_auth_service_live_empty_pepper_refuses() -> None:
             Settings(
                 storage_backend="real",
                 environment=Environment.LIVE,
+                questdb_pg_password=SecretStr("not-the-dev-default"),
                 auth_totp_key_hex=SecretStr("11" * 32),
                 auth_recovery_hmac_key_hex=SecretStr("22" * 32),
             )

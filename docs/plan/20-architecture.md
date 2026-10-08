@@ -816,6 +816,8 @@ Layered, highest priority last: packaged defaults → `infra/compose/.env` → e
 | `CV_PG_DSN`                     | secret | —               | process |                                              |
 | `CV_QUESTDB_ILP`                | str    | `questdb:9009`  | process |                                              |
 | `CV_QUESTDB_PG`                 | str    | `questdb:8812`  | process |                                              |
+| `CV_QUESTDB_PG_USER`            | str    | `admin`         | process | PG-wire user for the bars ILP sink           |
+| `CV_QUESTDB_PG_PASSWORD`        | secret | `quest` (dev)   | process | refused when `live` + `storage_backend=real` |
 | `CV_PARQUET_ROOT`               | path   | `/data/parquet` | process |                                              |
 | `CV_KEK_SOURCE`                 | enum   | `host-keychain` | process | `host-keychain` \| `file` (dev only)         |
 | `CV_RECV_WINDOW_MS`             | int    | `5000`          | process | raising it is a stopgap, alerts when > 5000  |

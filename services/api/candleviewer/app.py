@@ -167,6 +167,7 @@ from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
 from candleviewer.storage.models import TimeRange
+from candleviewer.storage.questdb.wiring import QuestDbRowSink
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
     SqlAlchemyAlertDeliveryRepository,
 )
@@ -690,8 +691,12 @@ def create_app(
     # E12 #2031 (flag `bars_enabled`, default off - C-4.13; removal with #398/#399): the set
     # and its writer are started/stopped by the lifespan (set first, then writer).
     if resolved.bars_enabled:
+        bars_sink = _build_bars_sink(resolved)
         app.state.bars_runtime = wire_bars(
             ctx,
+            inner_sink=bars_sink,
+            sink_stop=bars_sink.stop if bars_sink is not None else None,
+            sink_degraded=(lambda: bars_sink.pgwire.degraded) if bars_sink is not None else None,
             now_us=bars_now_us or (lambda: time.time_ns() // 1000),
             tick_size=lambda sym: _catalogue_tick_size(ctx, sym),
         )
@@ -1207,6 +1212,19 @@ def wire_instrument_catalogue(
     )
     ctx.ingestion.attach_instruments(scheduler)
     return scheduler
+
+
+def _build_bars_sink(settings: Settings) -> QuestDbRowSink | None:
+    """#2037: the real QuestDB ILP sink on the `real` storage backend; `None` (guarded stub +
+    `bars_rows_not_persisted` warning) otherwise. Connects lazily - no I/O here."""
+    if settings.storage_backend != "real":
+        return None
+    return QuestDbRowSink(
+        settings.questdb_ilp,
+        settings.questdb_pg,
+        settings.questdb_pg_user,
+        settings.questdb_pg_password.get_secret_value(),
+    )
 
 
 def _write_behind_buffers(ctx: AppContext) -> list[WriteBehindLike]:
