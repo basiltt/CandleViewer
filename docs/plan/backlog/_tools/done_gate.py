@@ -471,9 +471,18 @@ def fetch(issue_no: str, gh: GhFn) -> tuple[dict[str, Any], list[dict[str, Any]]
             "number,body,files,reviews,comments,mergedAt",
         ]
     )
-    # ASSUMPTION: the linked PR carries `Closes|Fixes|Resolves #N` in its body (C-4.7); other PRs are ignored.
-    pat = re.compile(rf"(?:closes|fixes|resolves)\s+#{issue_no}\b", re.IGNORECASE)
-    return issue, [p for p in prs or [] if pat.search(p.get("body") or "")]
+    # The linked PR carries `Closes|Fixes|Resolves #N` in its body (C-4.7). Multi-PR tickets
+    # (parts land with `Refs #N` and QA closes the ticket, e.g. E17-T02) also count — but only
+    # PRs that are already MERGED, so an open `Refs` PR can never satisfy the security gate.
+    closing = re.compile(rf"(?:closes|fixes|resolves)\s+#{issue_no}\b", re.IGNORECASE)
+    refs = re.compile(rf"\brefs?\s+#{issue_no}\b", re.IGNORECASE)
+    linked = [
+        p
+        for p in prs or []
+        if closing.search(p.get("body") or "")
+        or (refs.search(p.get("body") or "") and p.get("mergedAt"))
+    ]
+    return issue, linked
 
 
 def run_gate(

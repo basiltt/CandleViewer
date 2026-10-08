@@ -275,3 +275,33 @@ def test_main_maps_json_decode_error_to_exit_2(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(dg, "run_gate", boom)
     assert dg.main(["K", "1"]) == 2
+
+
+def test_fetch_links_closing_prs_and_merged_refs_prs_only() -> None:
+    """Multi-PR tickets land parts with `Refs #N` and QA closes the ticket (E17-T02, #380):
+    merged `Refs` PRs count as linked; an OPEN `Refs` PR never does (so it cannot satisfy
+    the security gate before merge); unrelated mentions are ignored."""
+    prs = [
+        {"number": 1, "body": "Closes #380", "mergedAt": None},
+        {
+            "number": 2,
+            "body": "Part B. Refs #380 #2042",
+            "mergedAt": "2026-10-08T05:00:00Z",
+        },
+        {"number": 3, "body": "Refs #380", "mergedAt": None},
+        {
+            "number": 4,
+            "body": "see #3800 and #380x",
+            "mergedAt": "2026-10-08T05:00:00Z",
+        },
+    ]
+
+    def fake_gh(args: list[str]) -> Any:
+        return (
+            {"body": "", "comments": [], "labels": [], "state": "OPEN"}
+            if args[0] == "issue"
+            else prs
+        )
+
+    _, linked = dg.fetch("380", fake_gh)
+    assert [p["number"] for p in linked] == [1, 2]
