@@ -167,7 +167,7 @@ from candleviewer.storage.cold.kline_reader import ParquetKlineReader
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
-from candleviewer.storage.models import TimeRange
+from candleviewer.storage.models import StreamKind, TimeRange
 from candleviewer.storage.questdb.wiring import QuestDbRowSink
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
     SqlAlchemyAlertDeliveryRepository,
@@ -185,6 +185,7 @@ from candleviewer.storage.repositories.instruments_sqlalchemy import (
 from candleviewer.storage.repositories.invites_sqlalchemy import SqlAlchemyInviteRepository
 from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaRepository
 from candleviewer.storage.repositories.onboarding_sqlalchemy import SqlAlchemyOnboardingStore
+from candleviewer.storage.repositories.recorder_sqlalchemy import SqlAlchemyRecorderRepository
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
@@ -202,6 +203,11 @@ from candleviewer.storage.repositories.sessions_sqlalchemy import (
 )
 from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
 from candleviewer.storage.retention.alert_tasks import AlertDeliveriesPurgeTask, AlertGaugeTask
+from candleviewer.storage.retention.kline_boundary import (
+    KlineBoundaryRefreshTask,
+    KlineHotBoundary,
+)
+from candleviewer.storage.retention.policy import RetentionPolicy, RetentionRule
 from candleviewer.storage.retention.rule_prune import RulePruneTask
 from candleviewer.storage.retention.schedule import RetentionSchedule
 from candleviewer.storage.service import StorageService
@@ -688,8 +694,23 @@ def create_app(
     install_error_redaction(app)  # E43-T06: no secret echo via 422/500 bodies
     ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
+    # #2060: klines hot/cold boundary from the DB-seeded retention policy; the lifespan loads it
+    # (`load_kline_policy`), until then (and on failure) the 90 d fallback applies.
+    kline_boundary = KlineHotBoundary()
+    app.state.kline_boundary = kline_boundary
+    _kb_pg = (
+        SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "kline-boundary")
+        if resolved.storage_backend == "real"
+        else None
+    )
+    app.state.kline_boundary_pg = _kb_pg
+    app.state.kline_boundary_refresh = KlineBoundaryRefreshTask(
+        kline_boundary,
+        kline_policy_loader(SqlAlchemyRecorderRepository(_kb_pg) if _kb_pg is not None else None),
+        float(resolved.kline_boundary_refresh_s),
+    )
     if resolved.ingestion_ws_enabled:
-        wire_public_ws(ctx)
+        wire_public_ws(ctx, kline_boundary)
     # E12 #2031 (flag `bars_enabled`, default off - C-4.13; removal with #398/#399): the set
     # and its writer are started/stopped by the lifespan (set first, then writer).
     if resolved.bars_enabled:
@@ -1241,7 +1262,27 @@ def _write_behind_buffers(ctx: AppContext) -> list[WriteBehindLike]:
     return out
 
 
-def wire_public_ws(ctx: AppContext) -> ConnectionManager:
+def kline_policy_loader(
+    repo: SqlAlchemyRecorderRepository | None,
+) -> Callable[[], Awaitable[RetentionPolicy | None]]:
+    """#2060: loader of the klines hot window from the DB-seeded `retention_policies` (via the
+    recorder repository). Only an EXPLICIT rule counts: no rule (or no repository, fake backend)
+    -> no policy -> the 90 d fallback."""
+
+    async def load() -> RetentionPolicy | None:
+        if repo is None:
+            return None
+        days = await repo.explicit_policy_days("", StreamKind.KLINES.value)
+        if days is None:
+            return None
+        return RetentionPolicy([], [RetentionRule(StreamKind.KLINES, days, None)])
+
+    return load
+
+
+def wire_public_ws(
+    ctx: AppContext, kline_boundary: KlineHotBoundary | None = None
+) -> ConnectionManager:
     """E08-T04 (flag `ingestion_ws_enabled`, default off — C-4.13): compose the
     public WS skeleton. The exchange adapter (M4) supplies the socket factory and
     topic vocabulary; ingestion (M6) owns the connection lifecycle and is
@@ -1338,7 +1379,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
         inst = snap.get(symbol) if snap is not None else None
         return None if inst is None else int(inst.launch_time)
 
-    _wire_klines(ctx, adapter.kline_fetcher(rest, _tick_size))
+    _wire_klines(ctx, adapter.kline_fetcher(rest, _tick_size), kline_boundary)
 
     # #1892/#1912: wall clock (not the monotonic demand clock) bounds event time,
     # shifted by ClockGuard's measured offset so the exchange clock is truth.
@@ -1405,11 +1446,9 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     return manager
 
 
-# TODO(#2060): derive from the retention policy / oldest hot row (constant mirrors §7).
-_KLINE_HOT_RETENTION_US = 90 * 86_400 * 1_000_000
-
-
-def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
+def _wire_klines(
+    ctx: AppContext, fetch_klines: KlineFetcher, kline_boundary: KlineHotBoundary | None = None
+) -> None:
     """E12-S05: cache-first `/market/klines` with background exchange backfill.
 
     The hot tier is both the backfill cache and the read source; pages are written as
@@ -1431,6 +1470,7 @@ def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
             )
 
     hot = _HotKlines()
+    boundary = kline_boundary if kline_boundary is not None else KlineHotBoundary()
     backfill = KlineBackfillService(fetch_klines=fetch_klines, cache=hot)
     cold = ParquetKlineReader(
         DatasetRegistry(ctx.settings.parquet_root),
@@ -1441,8 +1481,9 @@ def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
             hot,
             backfill=backfill,
             cold=cold,
-            # klines stay hot 90 d (21-database-schema.md §7); older windows read from Parquet.
-            hot_boundary_us=lambda: time.time_ns() // 1000 - _KLINE_HOT_RETENTION_US,
+            # #2060: klines hot window from the DB-seeded retention policy (21 §7), 90 d fallback;
+            # older windows read from Parquet.
+            hot_boundary_us=boundary.boundary_us,
             recording_started_at_us=recording_started_at_us(ctx),
         ),
         backfill,

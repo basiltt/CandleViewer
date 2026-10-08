@@ -12,15 +12,23 @@ only *confirmed* klines become rows (an unconfirmed candle is never persisted as
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Final, Protocol
 
 import structlog
 
 from candleviewer.bars.errors import BarsError
+from candleviewer.bars.metrics import bars_kline_refused_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.reader import RowFetcher
-from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum, to_double
+from candleviewer.bars.rows import (
+    BUILD_VERSIONS,
+    BarPersistError,
+    bar_param_for,
+    row_checksum,
+    to_double,
+)
 from candleviewer.bars.spec import from_wire
 from candleviewer.bars.writer import SourceOverwriteRefused, bars_source_overwrite_refused_total
 from candleviewer.exchange.base.models import KlineEvent
@@ -32,6 +40,12 @@ def _log() -> Any:
 
 
 KLINE_SOURCE: Final = "kline"
+#: Allow-listed `reason` values of `bars_kline_refused_total` (bounded cardinality).
+REFUSE_PRECEDENCE_UNKNOWN: Final = "precedence_unknown"
+KLINE_REFUSE_REASONS: Final = frozenset({REFUSE_PRECEDENCE_UNKNOWN})
+#: Health reason surfaced while the stored-tape lookup is failing (#2053).
+PRECEDENCE_HEALTH_REASON: Final = "tape_precedence_unknown"
+DEFAULT_LOOKUP_TIMEOUT_S: Final = 2.0
 #: Columns a kline cannot know; always NULL on a kline-sourced row.
 ORDERFLOW_NULL_COLUMNS: Final = (
     "buy_volume",
@@ -95,6 +109,58 @@ class RowSubmitter(Protocol):
 StoredHigherSource = Callable[[str, str, list[int]], Awaitable[set[int]]]
 
 
+class TapePrecedenceUnknown(BarPersistError):
+    """The stored-tape lookup failed, so tape precedence (BR-07) cannot be proven: the kline
+    rows are refused, never written over an unknown tape state (#2053)."""
+
+
+class PrecedenceHealth:
+    """Per-(symbol, interval) refusal flags: a success for one key never clears another's."""
+
+    def __init__(self) -> None:
+        self._keys: set[tuple[str, str]] = set()
+
+    @property
+    def degraded(self) -> bool:
+        return bool(self._keys)
+
+    def mark(self, key: tuple[str, str]) -> None:
+        self._keys.add(key)
+
+    def clear(self, key: tuple[str, str]) -> None:
+        self._keys.discard(key)
+
+    def reason(self) -> str:
+        return PRECEDENCE_HEALTH_REASON if self.degraded else ""
+
+
+def guarded_tape_lookup(
+    lookup: StoredHigherSource,
+    *,
+    timeout_s: float = DEFAULT_LOOKUP_TIMEOUT_S,
+    transient: tuple[type[Exception], ...] = (),  # caller-supplied driver errors
+) -> StoredHigherSource:
+    """Wrap a stored-tape lookup: `OSError`, timeouts and the caller's driver errors
+    (`transient`, e.g. asyncpg's, supplied by the composition root: `bars` imports no driver)
+    become `TapePrecedenceUnknown`. Cancellation is never swallowed."""
+    # Default `(OSError, TimeoutError)`. asyncpg errors derive from `asyncpg.PostgresError` /
+    # `asyncpg.InterfaceError`, NOT `OSError`, so they are NOT caught until the caller passes
+    # them in `transient` (#398 must wire `(asyncpg.PostgresError, asyncpg.InterfaceError)`;
+    # `bars` may not import a driver, #2053).
+    caught: tuple[type[BaseException], ...] = (OSError, TimeoutError, *transient)
+
+    async def guarded(symbol: str, bar_param: str, ts: list[int]) -> set[int]:
+        try:
+            async with asyncio.timeout(timeout_s):
+                return await lookup(symbol, bar_param, ts)
+        except caught as exc:
+            raise TapePrecedenceUnknown(
+                f"Stored-tape lookup failed ({type(exc).__name__})."
+            ) from exc
+
+    return guarded
+
+
 async def submit_kline_bars(
     writer: RowSubmitter,
     symbol: str,
@@ -102,6 +168,7 @@ async def submit_kline_bars(
     events: Sequence[KlineEvent],
     *,
     stored_higher: StoredHigherSource,
+    health: PrecedenceHealth | None = None,
 ) -> int:
     """Persist confirmed klines as `source=kline` rows; returns rows queued.
 
@@ -111,12 +178,30 @@ async def submit_kline_bars(
     deployed dedup key `(ts, symbol, bar_param)`) are refused and counted up front. If the
     writer still refuses the batch (`SourceOverwriteRefused`, a tape row written by this
     process), rows are retried one by one so only the conflicting ones are skipped — never
-    forced through.
+    forced through. If the lookup itself fails (`TapePrecedenceUnknown`) the whole batch is
+    refused: counted (`bars_kline_refused_total{reason=precedence_unknown}`), `health` set,
+    nothing queued.
     """
     spec = kline_spec(interval)
     rows = [r for r in kline_rows(events, spec) if r["symbol"] == symbol]
     if rows:
-        taken = await stored_higher(symbol, bar_param_for(spec), [int(str(r["ts"])) for r in rows])
+        try:
+            taken = await stored_higher(
+                symbol, bar_param_for(spec), [int(str(r["ts"])) for r in rows]
+            )
+        except TapePrecedenceUnknown as exc:
+            bars_kline_refused_total.labels(REFUSE_PRECEDENCE_UNKNOWN).inc(len(rows))
+            if health is not None:
+                health.mark((symbol, interval))
+            _log().error(
+                "kline_rows_refused_precedence_unknown",
+                symbol=symbol,
+                refused=len(rows),
+                error=type(exc.__cause__ or exc).__name__,
+            )
+            return 0
+        if health is not None:
+            health.clear((symbol, interval))
         if taken:
             refused = [r for r in rows if int(str(r["ts"])) in taken]
             bars_source_overwrite_refused_total.labels(KLINE_SOURCE, "tape").inc(len(refused))
@@ -160,11 +245,17 @@ def stored_tape_lookup(conn: RowFetcher) -> StoredHigherSource:
 
 
 __all__ = [
+    "KLINE_REFUSE_REASONS",
     "KLINE_SOURCE",
     "ORDERFLOW_NULL_COLUMNS",
+    "PRECEDENCE_HEALTH_REASON",
     "KlineRowError",
+    "PrecedenceHealth",
     "RowSubmitter",
     "StoredHigherSource",
+    "TapePrecedenceUnknown",
+    "bars_kline_refused_total",
+    "guarded_tape_lookup",
     "kline_row",
     "kline_rows",
     "kline_spec",

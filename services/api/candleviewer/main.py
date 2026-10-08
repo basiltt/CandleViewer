@@ -77,6 +77,10 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     bars_runtime = getattr(app.state, "bars_runtime", None)
     if bars_runtime is not None:
         await bars_runtime.start()
+    kline_refresh = getattr(app.state, "kline_boundary_refresh", None)
+    if kline_refresh is not None:  # #2060: initial load, then periodic (rules are editable)
+        await kline_refresh.load_now()
+        kline_refresh.start()
     alert_tasks = [
         t
         for t in (
@@ -117,8 +121,13 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         health_pg = getattr(app.state, "health_pg", None)
         if health_pg is not None:
             await health_pg.dispose()
+        kline_pg = getattr(app.state, "kline_boundary_pg", None)
+        if kline_pg is not None:
+            await kline_pg.dispose()
         if overrides is not None:
             await overrides.stop()
+        if kline_refresh is not None:
+            await kline_refresh.stop()
         if rule_prune is not None:
             await rule_prune.stop()
         if funding_task is not None:

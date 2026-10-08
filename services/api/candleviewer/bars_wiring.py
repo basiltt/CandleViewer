@@ -29,6 +29,7 @@ import structlog
 
 from candleviewer.bars.builder_set import BarBuilderSet
 from candleviewer.bars.emit import EmitRouter, WriterSink
+from candleviewer.bars.kline_rows import PrecedenceHealth
 from candleviewer.bars.state_store import StateStore
 from candleviewer.bars.writer import BarWriter, RowSink, default_is_permanent
 from candleviewer.exchange.base.models import TradeEvent
@@ -142,7 +143,9 @@ class BarsRuntime:
         state_root: Path,
         sink_stop: Callable[[], Awaitable[None]] | None = None,
         sink_degraded: Callable[[], bool] | None = None,
+        precedence: PrecedenceHealth | None = None,
     ) -> None:
+        self.precedence = precedence if precedence is not None else PrecedenceHealth()
         self.builder_set = builder_set
         self.writer = writer
         self._sink_stop = sink_stop
@@ -164,7 +167,11 @@ class BarsRuntime:
             or not self.writer.healthy
             or (self._sink_degraded is not None and self._sink_degraded())
         )
-        return degraded, "bars_writer_degraded" if degraded else ""
+        if degraded:
+            return True, "bars_writer_degraded"
+        if self.precedence.degraded:  # #2053: kline rows refused, tape state unknown
+            return True, self.precedence.reason()
+        return False, ""
 
     async def stop(self) -> None:
         """Set before writer, so the set's final closes reach the writer's drain."""
