@@ -250,6 +250,14 @@ x-error-codes:
     title: Requested window predates the start of recording for this symbol
     retryable: false
     surface: [rest, ws] # same slug, same meaning on the WS (23-ws-protocol.md §10.2)
+  - code: bar_window_too_large
+    status: 422
+    title: Uncursored bar window exceeds limit × bar width; paginate with `cursor` instead
+    retryable: false
+  - code: response_too_large
+    status: 422
+    title: Bar page would exceed the response size ceiling; request a smaller `limit`
+    retryable: false
   # --- 429 / 5xx ---------------------------------------------------------
   - code: rate_limited
     status: 429
@@ -1958,6 +1966,16 @@ paths:
         cold tier for windows older than the QuestDB hot retention. Each response states which
         tiers were touched in `meta.sources`, and `meta.recording_started_at` tells the UI where
         native (tick-accurate) data begins — before that point delta/footprint fields are null.
+        Bars built from the tape are reported as `tape` in `meta.sources`.
+
+        **Window vs cursor (#2045, E12-T05).** A request without `cursor` whose `to − from`
+        exceeds `limit` × bar width (estimated for non-time bars) returns 422
+        `bar_window_too_large` and the client must paginate; a request with `cursor` is bounded
+        by `limit` per page and may span any window, with `meta.has_more` / `meta.next_cursor`
+        driving continuation. `cursor` is opaque and server-issued — clients must not parse it
+        (it encodes `ts` today and `(generation, index)` after migration 0004); a malformed or
+        expired cursor returns `invalid_cursor`. A page that would exceed the response ceiling
+        returns 422 `response_too_large`.
       parameters:
         - $ref: "#/components/parameters/SymbolQuery"
         - name: interval
@@ -1967,6 +1985,7 @@ paths:
         - $ref: "#/components/parameters/From"
         - $ref: "#/components/parameters/To"
         - $ref: "#/components/parameters/BarLimit"
+        - $ref: "#/components/parameters/MarketCursor"
         - name: price_type
           in: query
           description: Which price series to aggregate.
@@ -2030,6 +2049,8 @@ paths:
                       recording_started_at: "2026-09-01T00:00:00Z"
                       generated_at: "2026-09-14T10:31:02.400Z"
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
         "503": { $ref: "#/components/responses/ServiceUnavailable" }
 
@@ -2071,6 +2092,15 @@ paths:
         the client restarts. A request whose window starts before
         `recording_started_at` returns `no_data_recorded` (422) rather than silently
         substituting REST klines, because tick-accurate construction is impossible there.
+
+        **Window vs cursor (#2045, E12-T05).** A request without `cursor` whose `to − from`
+        exceeds `limit` × bar width (estimated for non-time bars) returns 422
+        `bar_window_too_large` and the client must paginate; a request with `cursor` is bounded
+        by `limit` per page and may span any window, with `meta.has_more` / `meta.next_cursor`
+        driving continuation. `cursor` is opaque and server-issued — clients must not parse it
+        (it encodes `ts` today and `(generation, index)` after migration 0004); a malformed or
+        expired cursor returns `invalid_cursor`. A page that would exceed the response ceiling
+        returns 422 `response_too_large`.
       parameters:
         - $ref: "#/components/parameters/SymbolQuery"
         - name: bar_type
@@ -2085,6 +2115,7 @@ paths:
         - $ref: "#/components/parameters/From"
         - $ref: "#/components/parameters/To"
         - $ref: "#/components/parameters/BarLimit"
+        - $ref: "#/components/parameters/MarketCursor"
         - name: include_open
           in: query
           schema: { type: boolean, default: false }
@@ -2131,7 +2162,10 @@ paths:
                         generated_at: "2026-09-14T10:31:02.410Z",
                       }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
 
   /market/footprint:
     get:
@@ -8491,6 +8525,13 @@ components:
       in: query
       description: "Opaque forward cursor from `meta.next_cursor`. Cursors expire after 1 hour."
       schema: { type: string, maxLength: 512 }
+    MarketCursor:
+      name: cursor
+      in: query
+      description: >-
+        Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`,
+        `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`.
+      schema: { type: string, maxLength: 128 }
     Limit:
       name: limit
       in: query
@@ -9089,8 +9130,12 @@ components:
           properties:
             sources:
               type: array
-              description: Storage tiers consulted.
-              items: { type: string, enum: [questdb, parquet, postgres, exchange_rest, memory] }
+              description: >-
+                Tiers whose rows are in this response (provenance, 24 §2): `tape` = bars built
+                locally from the recorded trade tape; `questdb` = exchange-kline rows in the hot
+                tier; `parquet` = cold tier; `exchange_rest` = rows just backfilled from Bybit.
+              items:
+                { type: string, enum: [questdb, parquet, postgres, exchange_rest, memory, tape] }
             recording_started_at: { type: ["string", "null"], format: date-time }
             generated_at: { type: string, format: date-time }
             coverage_holes:

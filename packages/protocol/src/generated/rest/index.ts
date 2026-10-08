@@ -1651,6 +1651,15 @@ export interface paths {
      *     the client restarts. A request whose window starts before
      *     `recording_started_at` returns `no_data_recorded` (422) rather than silently
      *     substituting REST klines, because tick-accurate construction is impossible there.
+     *
+     *     **Window vs cursor (#2045, E12-T05).** A request without `cursor` whose `to − from`
+     *     exceeds `limit` × bar width (estimated for non-time bars) returns 422
+     *     `bar_window_too_large` and the client must paginate; a request with `cursor` is bounded
+     *     by `limit` per page and may span any window, with `meta.has_more` / `meta.next_cursor`
+     *     driving continuation. `cursor` is opaque and server-issued — clients must not parse it
+     *     (it encodes `ts` today and `(generation, index)` after migration 0004); a malformed or
+     *     expired cursor returns `invalid_cursor`. A page that would exceed the response ceiling
+     *     returns 422 `response_too_large`.
      */
     get: operations["getBars"];
     put?: never;
@@ -1795,6 +1804,16 @@ export interface paths {
      *     cold tier for windows older than the QuestDB hot retention. Each response states which
      *     tiers were touched in `meta.sources`, and `meta.recording_started_at` tells the UI where
      *     native (tick-accurate) data begins — before that point delta/footprint fields are null.
+     *     Bars built from the tape are reported as `tape` in `meta.sources`.
+     *
+     *     **Window vs cursor (#2045, E12-T05).** A request without `cursor` whose `to − from`
+     *     exceeds `limit` × bar width (estimated for non-time bars) returns 422
+     *     `bar_window_too_large` and the client must paginate; a request with `cursor` is bounded
+     *     by `limit` per page and may span any window, with `meta.has_more` / `meta.next_cursor`
+     *     driving continuation. `cursor` is opaque and server-issued — clients must not parse it
+     *     (it encodes `ts` today and `(generation, index)` after migration 0004); a malformed or
+     *     expired cursor returns `invalid_cursor`. A page that would exceed the response ceiling
+     *     returns 422 `response_too_large`.
      */
     get: operations["getKlines"];
     put?: never;
@@ -4522,8 +4541,8 @@ export interface components {
       generated_at?: string;
       /** Format: date-time */
       recording_started_at?: string | null;
-      /** @description Storage tiers consulted. */
-      sources?: ("questdb" | "parquet" | "postgres" | "exchange_rest" | "memory")[];
+      /** @description Tiers whose rows are in this response (provenance, 24 §2): `tape` = bars built locally from the recorded trade tape; `questdb` = exchange-kline rows in the hot tier; `parquet` = cold tier; `exchange_rest` = rows just backfilled from Bybit. */
+      sources?: ("questdb" | "parquet" | "postgres" | "exchange_rest" | "memory" | "tape")[];
     };
     /**
      * @description Arbitrary-precision decimal transported as a string (convention C6).
@@ -7398,6 +7417,8 @@ export interface components {
     LayoutId: string;
     /** @description Page size. */
     Limit: number;
+    /** @description Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`, `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`. */
+    MarketCursor: string;
     MethodId: string;
     OrderId: string;
     PositionId: string;
@@ -10347,6 +10368,8 @@ export interface operations {
     parameters: {
       query: {
         bar_type: components["schemas"]["BarType"];
+        /** @description Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`, `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`. */
+        cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
         include_delta?: boolean;
@@ -10375,7 +10398,10 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
+      503: components["responses"]["ServiceUnavailable"];
     };
   };
   getDataCoverage: {
@@ -10563,6 +10589,8 @@ export interface operations {
   getKlines: {
     parameters: {
       query: {
+        /** @description Opaque, server-issued bar cursor from `meta.next_cursor` (`/market/klines`, `/market/bars`); clients must not parse it. Malformed or expired -> `invalid_cursor`. */
+        cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
         /** @description Attach per-bar delta/CVD/trade-count (requires recorded tape for the window). */
@@ -10593,6 +10621,8 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
       503: components["responses"]["ServiceUnavailable"];
     };
