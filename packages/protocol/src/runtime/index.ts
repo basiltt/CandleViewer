@@ -576,3 +576,102 @@ export function decodeHeatmapColumn(buf: ArrayBufferView): DecodedHeatmapColumn 
     rows,
   };
 }
+
+/** §14 structured item shape of a decoded binary frame (topic fields such as `symbol` are not on the wire). */
+export type StructuredPayload = Record<string, unknown>;
+
+type Decoded =
+  | DecodedBookSnapshot
+  | DecodedBookDelta
+  | DecodedTrades
+  | DecodedBars
+  | DecodedFootprint
+  | DecodedHeatmapColumn;
+
+const bookSide = (levels: BookLevel[], side: "bid" | "ask"): string[][] =>
+  levels.filter((l) => l.side === side).map((l) => [l.price, l.size]);
+
+/**
+ * Maps a decoded CVWB frame onto the §14 JSON item shape (decimal strings for price/size via
+ * `unscale`; integers stay `bigint` where the wire is 64-bit). The binary-only side data
+ * (flags bits with no §14 field) is dropped exactly as the §14 schemas omit it.
+ */
+export function toStructured(d: Decoded): StructuredPayload {
+  const h = d.header;
+  const base = { price_scale: h.priceScale, qty_scale: h.qtyScale };
+  switch (h.bodyKind) {
+    case BODY_KIND.BOOK_SNAPSHOT:
+    case BODY_KIND.BOOK_DELTA: {
+      const b = d as DecodedBookSnapshot | DecodedBookDelta;
+      return {
+        ...base,
+        bids: bookSide(b.levels, "bid"),
+        asks: bookSide(b.levels, "ask"),
+        coalesced: h.flags.coalesced,
+        ...("trailer" in b ? { xu: b.trailer.xu, xseq: b.trailer.xseq } : {}),
+      };
+    }
+    case BODY_KIND.TRADES:
+      return {
+        ...base,
+        trades: (d as DecodedTrades).trades.map((t) => ({
+          ts_ms: t.tsMs,
+          price: t.price,
+          size: t.size,
+          side: t.side,
+          is_block_trade: t.flags.blockTrade,
+          is_liquidation: t.flags.liquidationOrigin,
+        })),
+      };
+    case BODY_KIND.BARS:
+      return {
+        ...base,
+        bars: (d as DecodedBars).bars.map((b) => ({
+          generation: b.generation,
+          index: b.index,
+          t_ms: b.tsMs,
+          o: b.open,
+          h: b.high,
+          l: b.low,
+          c: b.close,
+          v: b.volume,
+          turnover: b.turnover,
+          trades: b.trades,
+          delta: b.delta,
+          confirm: b.confirmed,
+        })),
+        coalesced: h.flags.coalesced,
+      };
+    case BODY_KIND.FOOTPRINT:
+      return {
+        ...base,
+        bars: (d as DecodedFootprint).groups.map((g) => ({
+          t_ms: g.tsMs,
+          cells: g.cells.map((c) => ({
+            price: c.price,
+            bid_volume: c.bidVolume,
+            ask_volume: c.askVolume,
+            trades: c.trades,
+            is_poc: c.flags.poc,
+          })),
+        })),
+        coalesced: h.flags.coalesced,
+      };
+    default: {
+      const c = d as DecodedHeatmapColumn;
+      return {
+        ...base,
+        columns: [
+          {
+            t_ms: c.tsMs,
+            price_min: c.priceMin,
+            price_step: c.priceStep,
+            bids: c.rows.map((r) => Number(r.bidSize)),
+            asks: c.rows.map((r) => Number(r.askSize)),
+          },
+        ],
+        estimated: h.flags.estimated,
+      };
+    }
+  }
+}

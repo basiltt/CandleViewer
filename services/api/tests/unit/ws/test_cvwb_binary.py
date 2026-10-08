@@ -229,3 +229,24 @@ def test_fuzz_corpus_every_seed_behaves_as_declared() -> None:
         except FrameMalformedError:
             got = "malformed"
         assert got == seed["expect"], seed["name"]
+
+
+def test_encode_counts_frames_and_bytes_per_body_kind() -> None:
+    from candleviewer.ws.metrics import ENCODED
+
+    for name, frame in cvwb_vectors.vector_frames():
+        frames, nbytes = ENCODED[frame.body_kind]
+        f0, b0 = frames._value.get(), nbytes._value.get()
+        size = len(encode(frame))
+        assert frames._value.get() == f0 + 1, name
+        assert nbytes._value.get() == b0 + size, name
+
+
+def test_failed_encode_is_not_counted() -> None:
+    from candleviewer.ws.metrics import ENCODED
+
+    frames, _ = ENCODED[BOOK_DELTA]
+    before = frames._value.get()
+    with pytest.raises(FrameEncodeError):
+        encode(Frame(BOOK_DELTA, records=((0, 0, -1),)))
+    assert frames._value.get() == before

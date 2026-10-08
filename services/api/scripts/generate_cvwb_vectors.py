@@ -11,11 +11,12 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
-from candleviewer.ws.cvwb_vectors import render_corpus, render_vectors
+from candleviewer.ws.cvwb_vectors import render_corpus, render_structured, render_vectors
 
 REPO = Path(__file__).resolve().parents[3]
 TARGETS: dict[Path, Callable[[], str]] = {
     REPO / "packages" / "fixtures" / "golden" / "cvwb" / "vectors.json": render_vectors,
+    REPO / "packages" / "fixtures" / "golden" / "cvwb" / "structured.json": render_structured,
     REPO / "tests" / "fuzz" / "ws-frames" / "corpus.json": render_corpus,
 }
 
