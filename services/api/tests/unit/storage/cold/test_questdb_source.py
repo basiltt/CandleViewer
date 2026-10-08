@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+import structlog
 from structlog.testing import capture_logs
 
 from candleviewer.observability.logging import configure_logging
@@ -85,7 +86,12 @@ async def test_unmapped_stream_is_rejected() -> None:
 
 @pytest.mark.parametrize("severity", ["INFO", "WARNING", "CRITICAL"])
 async def test_logging_sink_emits_every_level(severity: str) -> None:
-    configure_logging(env="demo")  # as an earlier suite would: pins the cached chain + stdout
-    with capture_logs() as logs:
-        await LoggingSystemEventSink().emit(severity, "CODE_X", {"partition": "trades/x"})  # type: ignore[arg-type]  # parametrised literal
-    assert [e["code"] for e in logs] == ["CODE_X"]
+    sink = LoggingSystemEventSink()
+    configure_logging(env="demo")
+    try:
+        await sink.emit(severity, "CODE_X", {"partition": "trades/x"})  # type: ignore[arg-type]  # parametrised literal
+        with capture_logs() as logs:
+            await sink.emit(severity, "CODE_X", {"partition": "trades/x"})  # type: ignore[arg-type]  # parametrised literal
+        assert [e["code"] for e in logs] == ["CODE_X"]
+    finally:
+        structlog.reset_defaults()

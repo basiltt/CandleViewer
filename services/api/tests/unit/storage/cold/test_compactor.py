@@ -10,6 +10,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
+import structlog
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from structlog.testing import capture_logs
@@ -115,12 +116,16 @@ async def test_active_replay_session_skips_partition_and_logs_session_id(
     async def guard(_p: Path) -> str | None:
         return "sess-42"
 
-    configure_logging(env="demo")  # as an earlier suite would: pins the cached chain + stdout
-    with capture_logs() as logs:
-        result = await _compact(tmp_path, idle_guard=guard)
-    assert result.skipped and "sess-42" in result.reason
-    assert len(list((tmp_path / PART).iterdir())) == 2
-    assert [e["session_id"] for e in logs] == ["sess-42"]
+    configure_logging(env="demo")
+    try:
+        await _compact(tmp_path, idle_guard=guard)  # first emit OUTSIDE capture pins the chain
+        with capture_logs() as logs:
+            result = await _compact(tmp_path, idle_guard=guard)
+        assert result.skipped and "sess-42" in result.reason
+        assert len(list((tmp_path / PART).iterdir())) == 2
+        assert [e["session_id"] for e in logs] == ["sess-42"]
+    finally:
+        structlog.reset_defaults()
 
 
 async def test_default_idle_guard_reads_empty_set_and_compacts(tmp_path: Path) -> None:
@@ -209,3 +214,11 @@ def test_property_compaction_preserves_row_multiset(
         zip(t.column("ts").cast(pa.int64()).to_pylist(), t.column("price").to_pylist(), strict=True)
     )
     assert keys == sorted(keys)
+
+
+def test_cold_modules_have_no_module_level_logger() -> None:
+    """Structural guard (#2009 pattern): a cached module-level logger escapes capture_logs()."""
+    from candleviewer.storage.cold import exporter, scrub
+
+    for mod in (compactor_mod, exporter, scrub):
+        assert not hasattr(mod, "logger"), mod.__name__
