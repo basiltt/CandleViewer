@@ -356,6 +356,14 @@ proposals to be confirmed against real tape density, in its section 3) are reque
 E12-T02/T03/T05/T06/S04/S05/S12/X03; abuse cases AC-01..AC-14 go to E12-X02/Q05/Q06 (see RSK-058, RSK-059).
 Rebuild controls depend on ADR-0033 (Proposed).
 
+**E13 indicator framework, presets & metric exposure** (`docs/security/threat-models/E13-indicators.md`, ticket
+E13-X01) is integrity-first where indicators become safety-relevant: ATR feeding `sl_offset_unit="atr"` stop
+sizing (IR-12, Critical: a display-only worker value must never be the source) and provisional Zig Zag swings
+(IR-11), then preset BOLA/forged built-ins (IR-01, IR-02, IR-10), unvalidated `params`/`style` (IR-07, IR-09) and
+availability of the compute surface (IR-29..IR-34). Controls SR-E13-01..11 (proposed caps, to be confirmed by
+E13-Q03) are requested on E13-T01/T02/T03/S01/S05/S07/S08; abuse cases AC-01..AC-22 go to E13-X02/Q06 (see
+RSK-060, RSK-061). Status Draft; depends on ADR-0034 (Proposed).
+
 **E35 rule engine** (`docs/security/threat-models/e35-rule-engine.md`, ticket E35-X01) models the IR,
 compiler, rule store, evaluator, executor, `pre_trade_check` hook, `emit_signal` bus, firing log/WS and
 import/export. Critical/High findings: IR resource exhaustion (RE-D1, Critical), permission drift between
