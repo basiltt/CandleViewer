@@ -1,0 +1,6 @@
+{
+  "name": "@candleviewer/matrix-tauri-shell",
+  "private": true,
+  "version": "0.0.0",
+  "description": "E06-T01 Tauri v2 harness shell (spike-only; not a workspace package, never built by CI)"
+}
