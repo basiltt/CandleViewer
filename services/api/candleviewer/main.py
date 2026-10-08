@@ -21,11 +21,12 @@ from typing import Any
 import structlog
 from fastapi import FastAPI
 
-from candleviewer.app import AppContext, Supervisor, create_app
+from candleviewer.app import AppContext, Supervisor, create_app, load_kline_policy
 from candleviewer.observability.logging import configure_logging
 from candleviewer.observability.metrics import Metrics
 from candleviewer.observability.metrics_server import MetricsRuntime
 from candleviewer.settings import Settings
+from candleviewer.storage.repositories.recorder_sqlalchemy import SqlAlchemyRecorderRepository
 
 # E04-T01: logging must be configured before anything else logs a line, and
 # exactly once per process (`configure_logging()`'s own docstring). Every
@@ -77,6 +78,12 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     bars_runtime = getattr(app.state, "bars_runtime", None)
     if bars_runtime is not None:
         await bars_runtime.start()
+    kline_boundary = getattr(app.state, "kline_boundary", None)
+    if kline_boundary is not None:  # #2060: load the klines hot window; failure keeps 90 d
+        _pg = getattr(app.state, "health_pg", None)
+        await load_kline_policy(
+            kline_boundary, SqlAlchemyRecorderRepository(_pg) if _pg is not None else None
+        )
     alert_tasks = [
         t
         for t in (
