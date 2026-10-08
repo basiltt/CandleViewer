@@ -23,6 +23,7 @@ from candleviewer.ws.binary import (
     encode,
 )
 
+_MAX_SAFE = 2**53 - 1
 _I64_MIN = -(2**63)
 _U64_MAX = 2**64 - 1
 _U32_MAX = 2**32 - 1
@@ -276,8 +277,8 @@ def render_corpus() -> str:
 # --- section 14 structured twin ---------------------------------------------------------
 # The same payload as the section 14 item shape. Prices/sizes are decimal strings
 # (common.schema `decimal`); every integer (epoch-ms, generation, index, xu, xseq) is a
-# decimal STRING here only because JSON numbers lose precision above 2**53 -- the TS
-# `toStructured()` yields bigint for those and the test compares via String().
+# JSON number, matching the generated types (`number`); values above 2**53 would be
+# rejected by the TS converter, and no committed vector carries one.
 # Heatmap `bids`/`asks` are JSON numbers (14.5 says `number`).
 
 
@@ -297,17 +298,21 @@ def structured(f: Frame) -> dict[str, Any]:
     def q(v: int) -> str:
         return _unscale(v, qs)
 
-    out: dict[str, Any] = {"price_scale": ps, "qty_scale": qs}
+    out: dict[str, Any] = {}
     if f.body_kind in (BOOK_SNAPSHOT, BOOK_DELTA):
+        out["price_scale"], out["qty_scale"] = ps, qs
         out["bids"] = [[p(r[1]), q(r[2])] for r in f.records if r[0] == 0]
         out["asks"] = [[p(r[1]), q(r[2])] for r in f.records if r[0] == 1]
         out["coalesced"] = bool(f.flags & 0b10)
         if f.trailer is not None:
-            out["xu"], out["xseq"] = str(f.trailer[0]), str(f.trailer[1])
+            # Generated type is `number`: upstream ids above 2**53 are diagnostics-only, omitted.
+            for key, val in zip(("xu", "xseq"), f.trailer, strict=True):
+                if val <= _MAX_SAFE:
+                    out[key] = val
     elif f.body_kind == TRADES:
         out["trades"] = [
             {
-                "ts_ms": str(base + r[0]),
+                "ts_ms": (base + r[0]),
                 "price": p(r[1]),
                 "size": q(r[2]),
                 "side": "buy" if r[3] == 0 else "sell",
@@ -319,9 +324,9 @@ def structured(f: Frame) -> dict[str, Any]:
     elif f.body_kind == BARS:
         out["bars"] = [
             {
-                "generation": str(r[0]),
-                "index": str(r[1]),
-                "t_ms": str(base + r[2]),
+                "generation": (r[0]),
+                "index": (r[1]),
+                "t_ms": (base + r[2]),
                 "o": p(r[3]),
                 "h": p(r[4]),
                 "l": p(r[5]),
@@ -338,7 +343,7 @@ def structured(f: Frame) -> dict[str, Any]:
     elif f.body_kind == FOOTPRINT:
         out["bars"] = [
             {
-                "t_ms": str(base + ts),
+                "t_ms": (base + ts),
                 "cells": [
                     {
                         "price": p(c[0]),
@@ -358,7 +363,7 @@ def structured(f: Frame) -> dict[str, Any]:
             raise ValueError("heatmap frame needs a prefix")
         out["columns"] = [
             {
-                "t_ms": str(base + f.prefix[0]),
+                "t_ms": (base + f.prefix[0]),
                 "price_min": p(f.prefix[1]),
                 "price_step": p(f.prefix[2]),
                 "bids": [float(q(r[0])) for r in f.records],

@@ -22,8 +22,7 @@
         ]
       ],
       "coalesced": false,
-      "xu": "123456",
-      "xseq": "18446744073709551615"
+      "xu": 123456
     }
   },
   {
@@ -35,8 +34,8 @@
       "bids": [],
       "asks": [],
       "coalesced": false,
-      "xu": "0",
-      "xseq": "0"
+      "xu": 0,
+      "xseq": 0
     }
   },
   {
@@ -64,11 +63,9 @@
     "name": "trades",
     "body_kind": 3,
     "structured": {
-      "price_scale": 1,
-      "qty_scale": 4,
       "trades": [
         {
-          "ts_ms": "1789132262000",
+          "ts_ms": 1789132262000,
           "price": "650000.0",
           "size": "0.0010",
           "side": "buy",
@@ -76,7 +73,7 @@
           "is_liquidation": false
         },
         {
-          "ts_ms": "1793427229295",
+          "ts_ms": 1793427229295,
           "price": "-0.1",
           "size": "0.0000",
           "side": "sell",
@@ -90,13 +87,11 @@
     "name": "bars_v2",
     "body_kind": 4,
     "structured": {
-      "price_scale": 2,
-      "qty_scale": 3,
       "bars": [
         {
-          "generation": "7",
-          "index": "42",
-          "t_ms": "1789132260000",
+          "generation": 7,
+          "index": 42,
+          "t_ms": 1789132260000,
           "o": "65000.12",
           "h": "65100.00",
           "l": "64900.00",
@@ -108,9 +103,9 @@
           "confirm": true
         },
         {
-          "generation": "7",
-          "index": "43",
-          "t_ms": "1789132320000",
+          "generation": 7,
+          "index": 43,
+          "t_ms": 1789132320000,
           "o": "0.01",
           "h": "0.02",
           "l": "0.00",
@@ -129,8 +124,6 @@
     "name": "bars_empty",
     "body_kind": 4,
     "structured": {
-      "price_scale": 0,
-      "qty_scale": 0,
       "bars": [],
       "coalesced": false
     }
@@ -139,11 +132,9 @@
     "name": "footprint",
     "body_kind": 5,
     "structured": {
-      "price_scale": 1,
-      "qty_scale": 3,
       "bars": [
         {
-          "t_ms": "1789132200000",
+          "t_ms": 1789132200000,
           "cells": [
             {
               "price": "650000.0",
@@ -162,7 +153,7 @@
           ]
         },
         {
-          "t_ms": "1789132260000",
+          "t_ms": 1789132260000,
           "cells": []
         }
       ],
@@ -173,11 +164,9 @@
     "name": "heatmap_column",
     "body_kind": 6,
     "structured": {
-      "price_scale": 2,
-      "qty_scale": 3,
       "columns": [
         {
-          "t_ms": "1789132262200",
+          "t_ms": 1789132262200,
           "price_min": "64990.00",
           "price_step": "0.05",
           "bids": [
