@@ -1,0 +1,43 @@
+import { test, expect } from "@playwright/test";
+import { json, stubSession } from "../support/api";
+
+// E09-Q02 (#293) denied.spec. SCR-154 is the permission-denied state; the shipped renderers are
+// R-900 /403 (ForbiddenState) and /admin/** -> 404 for non-owners. Server-side denial (E09-TC-E06/E07)
+// is owned by E09-Q03 (contract-level).
+
+test("E09-TC-E06 viewer deep link to /admin/users shows not-found with no admin data", async ({
+  page,
+}) => {
+  const adminCalls: string[] = [];
+  await stubSession(page, { role: "viewer" });
+  await page.route("**/api/v1/admin/**", (r) => {
+    adminCalls.push(r.request().url());
+    return r.fulfill(json({ users: [{ email: "secret@example.test" }] }));
+  });
+  await page.goto("/admin/users");
+  await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("secret@example.test");
+  expect(adminCalls).toEqual([]);
+});
+
+test("E09-TC-E06 owner-only risk route returns the forbidden state to a viewer", async ({
+  page,
+}) => {
+  await stubSession(page, { role: "viewer" });
+  await page.goto("/risk");
+  await expect(page.getByRole("heading", { name: "Forbidden" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Return to the terminal" })).toBeVisible();
+});
+
+test("E09-TC-E07 denied page is identical for any account id (no enumeration)", async ({
+  page,
+}) => {
+  await stubSession(page, { role: "viewer" });
+  const texts: string[] = [];
+  for (const id of ["acct-x", "acct-does-not-exist"]) {
+    await page.goto(`/admin/accounts/${id}`);
+    await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
+    texts.push(await page.getByRole("main").innerText());
+  }
+  expect(texts[0]).toBe(texts[1]);
+});
