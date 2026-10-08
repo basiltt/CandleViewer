@@ -23,14 +23,16 @@ rules:
           - pattern: "$X: $T = structlog.get_logger(...)"
           - pattern: $X = structlog.stdlib.get_logger(...)
           - pattern: "$X: $T = structlog.stdlib.get_logger(...)"
+          - pattern: $X = structlog.get_logger(...).bind(...)
+          - pattern: $X = structlog.stdlib.get_logger(...).bind(...)
+          - pattern: $X = get_logger(...)
+          - pattern: "$X: $T = get_logger(...)"
+          - pattern: $X = get_logger(...).bind(...)
       - pattern-not-inside: |
           def $F(...):
               ...
       - pattern-not-inside: |
           async def $F(...):
-              ...
-      - pattern-not-inside: |
-          class $C:
               ...
     paths:
       include:
