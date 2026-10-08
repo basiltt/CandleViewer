@@ -1,0 +1,1685 @@
+# RBAC allow/deny expectation matrix (E09-Q03, SR-018). Owned by @CandleViewer/security (CODEOWNERS):
+# a widening edit needs a Security review. Do NOT regenerate this file from the app or the contract;
+# each outcome is a reviewed expectation that the runner compares against the live behaviour.
+#
+# actors      owner | manager_with_grant (grant on account A only) | manager_without_grant |
+#             viewer | unauthenticated
+# outcomes    allow = the authorisation layer passed (the handler may still answer 4xx for the body);
+#             401 / 403 = refused. Role permissions follow 22-api-openapi.yaml `x-permissions`
+#             (the contract rbac_seed.json is generated from); `audit:read` follows 04 §7.2 / SR-067.
+# state       executed       every cell is run against the real app with a real bearer token.
+#             not_mounted    declared in the contract, not served by the app yet; the runner fails
+#                            as soon as the route appears (so the row must then become `executed`).
+#             not_executable served, but authorisation is unreachable in the CI app (identity or
+#                            backend not wired / fail-closed stub); `reason` says why. Cells are
+#                            asserted by the dedicated tests instead, never silently dropped.
+# request     valid-shape inputs for routes that validate before they authorise.
+# pending     cell -> issue: expected outcome differs from current behaviour; the cell is
+#             xfail(strict=True) so it flips red-to-green when the fix lands.
+version: 1
+actors: [owner, manager_with_grant, manager_without_grant, viewer, unauthenticated]
+operations:
+  GET /admin/audit:
+    permissions: ['audit:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+    pending: {manager_with_grant: '#2083', manager_without_grant: '#2083', viewer: '#2083'}
+  POST /admin/audit/export:
+    permissions: ['audit:export']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /admin/audit/verify:
+    permissions: ['audit:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+    pending: {viewer: '#2083'}
+  GET /admin/backups:
+    permissions: ['backups:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /admin/backups:
+    permissions: ['backups:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/backups/{backupId}:
+    permissions: ['backups:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  DELETE /admin/backups/{backupId}:
+    permissions: ['backups:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /admin/backups/{backupId}/restore:
+    permissions: ['backups:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /admin/backups/{backupId}/verify:
+    permissions: ['backups:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/capacity:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/feature-flags:
+    permissions: ['flags:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  PUT /admin/feature-flags/{flagKey}:
+    permissions: ['flags:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/health:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 501 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/incidents:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/jobs/{jobId}:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  PUT /admin/log-level:
+    permissions: ['admin:write']
+    scope: none
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 501 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/overview:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /admin/recorder/compact:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /admin/recorder/purge:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /admin/security/summary:
+    permissions: ['audit:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /admin/support-bundle:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /admin/support-bundle/{job_id}:
+    permissions: ['admin:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /alerts:
+    permissions: ['alerts:read']
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /alerts:
+    permissions: ['alerts:write']
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /alerts/deliveries:
+    permissions: ['alerts:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /alerts/deliveries/ack-all:
+    permissions: ['alerts:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /alerts/deliveries/{deliveryId}/ack:
+    permissions: ['alerts:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /alerts/{alertId}:
+    permissions: ['alerts:read']
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /alerts/{alertId}:
+    permissions: ['alerts:write']
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /alerts/{alertId}:
+    permissions: ['alerts:write']
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /alerts/{alertId}/enabled:
+    permissions: ['alerts:write']
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /auth/login:
+    permissions: []
+    scope: none
+    public: true
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  POST /auth/logout:
+    permissions: []
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /auth/mfa/enroll:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /auth/mfa/enroll/confirm:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /auth/mfa/methods/{methodId}:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /auth/mfa/recovery:
+    permissions: []
+    scope: none
+    public: true
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  POST /auth/mfa/verify:
+    permissions: []
+    scope: none
+    public: true
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  PUT /auth/password:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /auth/refresh:
+    permissions: []
+    scope: none
+    public: true
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 401 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  GET /auth/session:
+    permissions: []
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /auth/sessions:
+    permissions: []
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /auth/step-up:
+    permissions: []
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /chart-templates:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /chart-templates:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /chart-templates/{templateId}:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /chart-templates/{templateId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /chart-templates/{templateId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /detectors/config:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /detectors/config:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /detectors/methodology:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /drawings:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /drawings:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /drawings/batch:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /drawings/{drawingId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /drawings/{drawingId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /exchange-accounts:
+    permissions: ['accounts:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /exchange-accounts:
+    permissions: ['accounts:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /exchange-accounts/{accountId}:
+    permissions: ['accounts:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  DELETE /exchange-accounts/{accountId}:
+    permissions: ['accounts:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  PATCH /exchange-accounts/{accountId}:
+    permissions: ['accounts:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /exchange-accounts/{accountId}/fee-rate:
+    permissions: ['accounts:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /exchange-accounts/{accountId}/keys:
+    permissions: ['keys:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /exchange-accounts/{accountId}/keys:
+    permissions: ['keys:manage']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  DELETE /exchange-accounts/{accountId}/keys/{keyId}:
+    permissions: ['keys:manage']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /exchange-accounts/{accountId}/keys/{keyId}/rotate:
+    permissions: ['keys:manage']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /exchange-accounts/{accountId}/keys/{keyId}/test:
+    permissions: ['keys:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /exchange-accounts/{accountId}/profiles:
+    permissions: ['accounts:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /exchange-accounts/{accountId}/profiles:
+    permissions: ['accounts:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /exchange-accounts/{accountId}/profiles/{profileId}:
+    permissions: ['accounts:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /exchange-accounts/{accountId}/profiles/{profileId}:
+    permissions: ['accounts:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  DELETE /exchange-accounts/{accountId}/profiles/{profileId}:
+    permissions: ['accounts:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /executions:
+    permissions: ['executions:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /executions/closed-pnl:
+    permissions: ['executions:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /health/live:
+    permissions: []
+    scope: none
+    public: true
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  GET /health/ready:
+    permissions: []
+    scope: none
+    public: true
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  GET /indicator-presets:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /indicator-presets:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /indicator-presets/{presetId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /indicator-presets/{presetId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /indicators:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /instruments:
+    permissions: ['instruments:read']
+    scope: none
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 501 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /instruments/refresh:
+    permissions: ['instruments:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /instruments/{symbol}:
+    permissions: ['instruments:read']
+    scope: none
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 501 (identity/backend not wired
+      or fail-closed stub)'
+    request:
+      path: {symbol: BTCUSDT}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /instruments/{symbol}/ticker:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: executed
+    request:
+      path: {symbol: BTCUSDT}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /invites/{inviteToken}:
+    permissions: []
+    scope: none
+    public: true
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  POST /invites/{inviteToken}:
+    permissions: []
+    scope: none
+    public: true
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  POST /invites/{inviteToken}/confirm:
+    permissions: []
+    scope: none
+    public: true
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: allow}
+  GET /journal/analytics:
+    permissions: ['journal:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /journal/tags:
+    permissions: ['journal:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /journal/tags:
+    permissions: ['journal:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /journal/trades:
+    permissions: ['journal:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /journal/trades/{journalTradeId}:
+    permissions: ['journal:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PATCH /journal/trades/{journalTradeId}:
+    permissions: ['journal:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /journal/trades/{journalTradeId}/context:
+    permissions: ['journal:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /journal/trades/{journalTradeId}/notes:
+    permissions: ['journal:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /journal/trades/{journalTradeId}/notes:
+    permissions: ['journal:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /layout-presets:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/bars:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/data-coverage:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/footprint:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /market/footprint/recompute:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /market/funding:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: executed
+    request:
+      params: {symbol: BTCUSDT}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/heatmap:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/klines:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 422 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/liquidations:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/metrics:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/open-interest:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/orderbook:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: executed
+    request:
+      params: {symbol: BTCUSDT}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/profile:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/regime/explain:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /market/trades:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: executed
+    request:
+      params: {symbol: BTCUSDT}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /me:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /me/keymap:
+    permissions: ['settings:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /me/limits:
+    permissions: ['settings:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /me/preferences:
+    permissions: ['settings:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PATCH /me/preferences:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /me/sessions:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  DELETE /me/sessions/{sessionId}:
+    permissions: []
+    scope: self
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /notifications:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /onboarding/checklist:
+    permissions: []
+    scope: self
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 501 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /onboarding/checklist/dismiss:
+    permissions: []
+    scope: self
+    public: false
+    state: not_executable
+    reason: 'authorisation is unreachable in the CI app: every actor gets 501 (identity/backend not wired
+      or fail-closed stub)'
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /onboarding/complete:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /orders:
+    permissions: ['orders:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /orders:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /orders/cancel-all:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /orders/{orderId}:
+    permissions: ['orders:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  DELETE /orders/{orderId}:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PATCH /orders/{orderId}:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /orders/{orderId}/diagnostics:
+    permissions: ['orders:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /permissions:
+    permissions: ['users:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /positions:
+    permissions: ['positions:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /positions/close-all:
+    permissions: ['positions:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /positions/{positionId}:
+    permissions: ['positions:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /positions/{positionId}/close:
+    permissions: ['positions:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /positions/{positionId}/leverage:
+    permissions: ['positions:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /positions/{positionId}/reverse:
+    permissions: ['positions:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /positions/{positionId}/tpsl:
+    permissions: ['positions:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /recording/retention-policies:
+    permissions: ['recording:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /recording/retention-policies:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /recording/sessions:
+    permissions: ['recording:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /recording/status:
+    permissions: ['recording:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /recording/storage:
+    permissions: ['recording:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /recording/symbols:
+    permissions: ['recording:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /recording/symbols:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /recording/symbols/{recordedSymbolId}:
+    permissions: ['recording:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  DELETE /recording/symbols/{recordedSymbolId}:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PATCH /recording/symbols/{recordedSymbolId}:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /recording/symbols/{recordedSymbolId}/pin:
+    permissions: ['recording:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /replay/sessions:
+    permissions: ['replay:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /replay/sessions:
+    permissions: ['replay:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /replay/sessions/{replayId}:
+    permissions: ['replay:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  DELETE /replay/sessions/{replayId}:
+    permissions: ['replay:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /replay/sessions/{replayId}/control:
+    permissions: ['replay:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /risk/lockouts/{accountId}/override:
+    permissions: ['killswitch:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /risk/summary:
+    permissions: ['positions:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /roles:
+    permissions: ['users:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /rules:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /rules:
+    permissions: ['rules:write']
+    scope: granted_accounts
+    public: false
+    state: executed
+    request:
+      json:
+        ir: {}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /rules/accounts:
+    permissions: ['rules:read']
+    scope: account
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /rules/runs/{runId}/events:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /rules/validate:
+    permissions: ['rules:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /rules/vocabulary:
+    permissions: ['rules:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /rules/{ruleId}:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /rules/{ruleId}:
+    permissions: ['rules:write']
+    scope: granted_accounts
+    public: false
+    state: executed
+    request:
+      json:
+        ir: {}
+      headers: {If-Match: '1'}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /rules/{ruleId}:
+    permissions: ['rules:write']
+    scope: granted_accounts
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /rules/{ruleId}/active-version:
+    permissions: ['rules:write']
+    scope: granted_accounts
+    public: false
+    state: executed
+    request:
+      json: {version: 1}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /rules/{ruleId}/compile:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /rules/{ruleId}/mode:
+    permissions: ['rules:write', 'rules:arm_live']
+    scope: granted_accounts
+    public: false
+    state: executed
+    request:
+      json: {mode: simulate}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /rules/{ruleId}/runs:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /rules/{ruleId}/simulate:
+    permissions: ['rules:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /rules/{ruleId}/versions:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /rules/{ruleId}/versions/{versionId}:
+    permissions: ['rules:read']
+    scope: granted_accounts
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /scanner:
+    permissions: ['marketdata:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /schemas/rule-ir.json:
+    permissions: ['rules:read']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /session/environment:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /settings:
+    permissions: ['settings:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PATCH /settings:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /settings/arm:
+    permissions: ['orders:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /settings/hotkey-audit:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: executed
+    request:
+      json: {command_id: chart.zoom, before: a, after: b, acknowledged_unsafe: false}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /settings/hotkeys:
+    permissions: ['settings:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /settings/hotkeys:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /settings/hotkeys/{hotkeyProfileId}:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /settings/hotkeys/{hotkeyProfileId}:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /settings/hotkeys/{hotkeyProfileId}/activate:
+    permissions: ['settings:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /system/build:
+    permissions: []
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /telemetry/frontend:
+    permissions: []
+    scope: self
+    public: false
+    state: executed
+    request:
+      json: {}
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /trade-groups:
+    permissions: ['orders:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /trade-groups:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /trade-groups/preview:
+    permissions: ['orders:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /trade-groups/{tradeGroupId}:
+    permissions: ['orders:read']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /trade-groups/{tradeGroupId}/amend:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  POST /trade-groups/{tradeGroupId}/cancel:
+    permissions: ['orders:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /trading/kill-switch:
+    permissions: ['orders:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /trading/kill-switch:
+    permissions: ['killswitch:write']
+    scope: granted_accounts
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /users:
+    permissions: ['users:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /users:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /users/invites:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /users/{userId}:
+    permissions: ['users:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  DELETE /users/{userId}:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  PATCH /users/{userId}:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /users/{userId}/account-access:
+    permissions: ['users:read']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  PUT /users/{userId}/account-access:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /users/{userId}/invite:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  DELETE /users/{userId}/invite:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  POST /users/{userId}/mfa/reset:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /users/{userId}/mfa/reset-preview:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  PUT /users/{userId}/roles:
+    permissions: ['users:write']
+    scope: none
+    public: false
+    state: executed
+    outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
+  GET /watchlists:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /watchlists:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  PUT /watchlists/{watchlistId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /watchlists/{watchlistId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /workspaces:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /workspaces:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /workspaces/{workspaceId}:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /workspaces/{workspaceId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /workspaces/{workspaceId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /workspaces/{workspaceId}/export:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  GET /workspaces/{workspaceId}/layouts:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  POST /workspaces/{workspaceId}/layouts:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  GET /workspaces/{workspaceId}/layouts/{layoutId}:
+    permissions: ['workspaces:read']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: allow, unauthenticated: '401'}
+  PUT /workspaces/{workspaceId}/layouts/{layoutId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+  DELETE /workspaces/{workspaceId}/layouts/{layoutId}:
+    permissions: ['workspaces:write']
+    scope: self
+    public: false
+    state: not_mounted
+    reason: declared in 22-api-openapi.yaml; the owning epic has not mounted it in the app yet
+    outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
+# WS topic families (23-ws-protocol.md §6.3). sub_ok = subscription accepted; 401 = frame before
+# `auth`; account_scope_denied / 403 as in §5.2. `system` is implicit (no check).
+topics:
+  alerts:
+    permission: alerts:read
+    scope: self
+    sample: alerts
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  bars:
+    permission: marketdata:read
+    scope: none
+    sample: bars.BTCUSDT.time.1
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  book:
+    permission: marketdata:read
+    scope: none
+    sample: book.BTCUSDT.50
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  executions:
+    permission: executions:read
+    scope: granted_accounts
+    sample: executions
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: account_scope_denied,
+      viewer: account_scope_denied, unauthenticated: not_authenticated}
+  footprint:
+    permission: marketdata:read
+    scope: none
+    sample: footprint.BTCUSDT.time.1
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  heatmap:
+    permission: marketdata:read
+    scope: none
+    sample: heatmap.BTCUSDT
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  liquidations:
+    permission: marketdata:read
+    scope: none
+    sample: liquidations.BTCUSDT
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  metrics:
+    permission: marketdata:read
+    scope: none
+    sample: metrics.BTCUSDT
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  orders:
+    permission: orders:read
+    scope: granted_accounts
+    sample: orders
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: account_scope_denied,
+      viewer: account_scope_denied, unauthenticated: not_authenticated}
+  positions:
+    permission: positions:read
+    scope: granted_accounts
+    sample: positions
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: account_scope_denied,
+      viewer: account_scope_denied, unauthenticated: not_authenticated}
+  profile:
+    permission: marketdata:read
+    scope: none
+    sample: profile.BTCUSDT.volume
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  recorder:
+    permission: recording:read
+    scope: none
+    sample: recorder
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  rules:
+    permission: rules:read
+    scope: granted_accounts
+    sample: rules
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: account_scope_denied,
+      viewer: account_scope_denied, unauthenticated: not_authenticated}
+  system:
+    permission: null
+    scope: null
+    sample: system
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  ticker:
+    permission: marketdata:read
+    scope: none
+    sample: ticker.BTCUSDT
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  trade_groups:
+    permission: orders:read
+    scope: granted_accounts
+    sample: trade_groups
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: account_scope_denied,
+      viewer: account_scope_denied, unauthenticated: not_authenticated}
+  trades:
+    permission: marketdata:read
+    scope: none
+    sample: trades.BTCUSDT
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: sub_ok, viewer: sub_ok,
+      unauthenticated: not_authenticated}
+  wallet:
+    permission: accounts:read
+    scope: granted_accounts
+    sample: wallet
+    outcomes: {owner: sub_ok, manager_with_grant: sub_ok, manager_without_grant: account_scope_denied,
+      viewer: account_scope_denied, unauthenticated: not_authenticated}
