@@ -13,6 +13,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 from pydantic import ValidationError
 
+from candleviewer.bars.limits import RENKO_TICKS_RANGE
 from candleviewer.bars.models import KIND_PARAM, PARAM_FIELDS, BarSpec
 from candleviewer.bars.schema import golden_specs, render_schema, render_vectors
 from candleviewer.bars.spec import SpecRegistry, bar_specs_registered_total, canonical_json, dec_str
@@ -41,6 +42,8 @@ def specs(draw: st.DrawFn) -> BarSpec:
     value: object = (
         draw(positive_dec) if field.endswith("threshold") else draw(st.integers(1, 10**9))
     )
+    if kind == "renko":  # SR-E12-03 bounds are part of BarSpec validation (E12-S04)
+        value = draw(st.integers(*RENKO_TICKS_RANGE))
     return BarSpec.model_validate(
         {
             "kind": kind,
@@ -90,6 +93,9 @@ def test_barspec_missing_param_names_required_field(kind: str) -> None:
         {"kind": "volume", "volume_threshold": Decimal("NaN")},
         {"kind": "time", "interval_ms": 1, "session_anchor_utc_min": 1440},
         {"kind": "renko", "range_ticks": 3, "reversal_bricks": 0},
+        {"kind": "renko", "range_ticks": 1},
+        {"kind": "renko", "range_ticks": 100_001},
+        {"kind": "renko", "range_ticks": 30, "reversal_bricks": 11},
         {"kind": "time", "interval_ms": 1, "fill_gaps": True},
     ],
 )

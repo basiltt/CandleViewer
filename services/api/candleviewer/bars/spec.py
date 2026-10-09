@@ -22,7 +22,7 @@ from typing import Any, Final, Literal
 import structlog
 
 from candleviewer.bars.errors import BarSpecError
-from candleviewer.bars.models import BarSpec
+from candleviewer.bars.models import BarSpec, check_renko_bounds
 from candleviewer.observability.metrics import Counter
 
 SPEC_HASH_VERSION: Final = 1
@@ -127,6 +127,7 @@ def from_wire(bar_type: str, param: str) -> BarSpec:
         return BarSpec(kind="delta", delta_threshold=Decimal(n))
     if bar_type == "range":
         return BarSpec(kind="range", range_ticks=n)
+    check_renko_bounds(n, 2)  # ordinary invalid-param 422 before any registry/series work
     return BarSpec(kind="renko", range_ticks=n)
 
 

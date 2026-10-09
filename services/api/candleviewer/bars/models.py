@@ -18,6 +18,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from candleviewer.bars.errors import BarSpecError
+from candleviewer.bars.limits import MAX_REVERSAL_BRICKS, RENKO_TICKS_RANGE
 from candleviewer.domain.primitives import Notional, Px, Qty, Symbol, TsUs
 from candleviewer.exchange.base.models import TradeEvent
 
@@ -47,6 +48,15 @@ MAX_SIG_DIGITS = 28  # decimal context precision; instrument tick/lot values are
 def _normalise(d: Decimal) -> Decimal:
     """`Decimal("50.00")` -> `Decimal("50")`; never exponent form for integers."""
     return Decimal(format(d.normalize(), "f"))
+
+
+def check_renko_bounds(range_ticks: int | Decimal, reversal_bricks: int) -> None:
+    """SR-E12-03 / BR-29 renko bounds (reject, never clamp); raises `BarSpecError` (-> 422)."""
+    lo, hi = RENKO_TICKS_RANGE
+    if not lo <= range_ticks <= hi:
+        raise BarSpecError(f"The renko brick size must be between {lo} and {hi} ticks.")
+    if reversal_bricks > MAX_REVERSAL_BRICKS:
+        raise BarSpecError(f"reversal_bricks must be at most {MAX_REVERSAL_BRICKS}.")
 
 
 class BarSpec(BaseModel):
@@ -82,6 +92,8 @@ class BarSpec(BaseModel):
             )
         if expected not in populated:
             raise BarSpecError(f"A bar spec of kind '{self.kind}' requires {expected} to be set.")
+        if self.kind == "renko":
+            check_renko_bounds(self.param_value, self.reversal_bricks)
         for f in ("volume_threshold", "delta_threshold"):
             v = getattr(self, f)
             if v is not None:

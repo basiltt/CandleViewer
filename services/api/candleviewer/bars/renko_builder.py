@@ -35,12 +35,13 @@ from typing import Final
 import orjson
 
 from candleviewer.bars.errors import BarsError, BarSpecError
+from candleviewer.bars.limits import MAX_BRICKS_PER_TRADE
 from candleviewer.bars.metrics import (
     bar_build_latency_seconds,
     bar_renko_multi_brick_total,
     bar_renko_reversals_total,
 )
-from candleviewer.bars.models import Bar, BarSpec, BarUpdate, BuilderState
+from candleviewer.bars.models import Bar, BarSpec, BarUpdate, BuilderState, check_renko_bounds
 from candleviewer.bars.time_builder import _NONE, _Draft, bars_built_total
 from candleviewer.domain.primitives import TsUs
 from candleviewer.exchange.base.models import TradeEvent
@@ -56,28 +57,17 @@ class RenkoBarUpdate(BarUpdate):
     contract-first change of the bar model / wire payload (see PR deviations).
     """
 
+    # TODO(#2130): move `volume_allocated` onto `Bar` + the `bars_renko` column + wire payload.
+
     volume_allocated: bool
     open_source_ts: int
 
 
-#: Brick-size bounds, E12 threat model SR-E12-03 / BR-29 (reject, never clamp): a tiny brick on a
-#: volatile symbol emits bricks per trade, so renko shares the range-bar bounds.
-MIN_RENKO_TICKS: Final = 2
-MAX_RENKO_TICKS: Final = 100_000
-MAX_REVERSAL_BRICKS: Final = 10
-
-
 def check_renko_spec(spec: BarSpec) -> None:
-    """Builder-side bounds for a renko spec; raises `BarSpecError` (-> 422)."""
+    """Builder-side bounds (defence in depth; `BarSpec` and `from_wire` reject first)."""
     if spec.kind != "renko":
         raise BarSpecError("A renko builder needs a bar spec of kind 'renko'.")
-    n = int(spec.param_value)
-    if not MIN_RENKO_TICKS <= n <= MAX_RENKO_TICKS:
-        raise BarSpecError(
-            f"The renko brick size must be between {MIN_RENKO_TICKS} and {MAX_RENKO_TICKS} ticks."
-        )
-    if spec.reversal_bricks > MAX_REVERSAL_BRICKS:
-        raise BarSpecError(f"reversal_bricks must be at most {MAX_REVERSAL_BRICKS}.")
+    check_renko_bounds(spec.param_value, spec.reversal_bricks)
     if spec.price_source != "last":
         raise BarSpecError("Renko bricks from the mark price are not available yet; use 'last'.")
 
@@ -133,6 +123,10 @@ class RenkoBarBuilder:
             first = c + sign * (self._rev - 1) * w
             n -= self._rev - 1
             self._revs.inc()
+        if n > MAX_BRICKS_PER_TRADE:  # bad print / outlier: refuse, the set quarantines us
+            raise BarsError(
+                f"One trade would complete {n} renko bricks (cap {MAX_BRICKS_PER_TRADE})."
+            )
         if n > 1:
             self._multi.inc()
         out: list[BarUpdate] = []
@@ -245,18 +239,19 @@ class RenkoBarBuilder:
             raise BarsError("The builder state belongs to a different symbol or bar spec.")
         if state.state_version != STATE_VERSION:
             raise BarsError(f"Builder state version {state.state_version} is not supported.")
-        doc = orjson.loads(state.blob)
         try:
+            doc = orjson.loads(state.blob)
             cur, nxt, anchor, direction, width = (
                 doc["cur"], doc["next"], doc["anchor"], doc["dir"], doc["width"]
             )  # fmt: skip
-        except KeyError as e:
-            raise BarsError("The renko builder state is incomplete.") from e
-        if Decimal(width) != self._w:  # ADR-0033: a tick-size change starts a new epoch
+            w = Decimal(width)
+            a = None if anchor is None else Decimal(anchor)
+            d = None if cur is None else _Draft.load(cur)
+        except (KeyError, TypeError, ValueError, ArithmeticError) as e:  # JSON/Decimal errors
+            raise BarsError("The renko builder state is incomplete or corrupt.") from e
+        if w != self._w:  # ADR-0033: a tick-size change starts a new epoch
             raise BarsError("The renko state was built with another brick size; start a new epoch.")
         if direction not in (-1, 0, 1):
             raise BarsError("The renko builder state has an invalid direction.")
-        self._cur = None if cur is None else _Draft.load(cur)
-        self._next, self._dir = nxt, direction
-        self._anchor = None if anchor is None else Decimal(anchor)
+        self._cur, self._next, self._dir, self._anchor = d, nxt, direction, a
         self._last_seq = state.last_trade_seq

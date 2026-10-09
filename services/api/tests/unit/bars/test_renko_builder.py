@@ -6,6 +6,7 @@ from decimal import Decimal as D
 
 import orjson
 import pytest
+from pydantic import ValidationError
 
 from candleviewer.bars.builder_set import default_factory, renko_factory
 from candleviewer.bars.errors import BarsError, BarSpecError
@@ -155,12 +156,30 @@ def test_renko_malformed_atr_is_an_ordinary_invalid_param(param: str) -> None:
         ({"range_ticks": 1}, "between 2 and 100000"),
         ({"range_ticks": 100_001}, "between 2 and 100000"),
         ({"range_ticks": 10, "reversal_bricks": 11}, "at most 10"),
-        ({"range_ticks": 10, "price_source": "mark"}, "mark price"),
     ],
 )
 def test_renko_spec_bounds_rejected(kw: dict[str, object], match: str) -> None:
-    with pytest.raises(BarSpecError, match=match):
+    with pytest.raises(ValidationError, match=match):  # rejected at BarSpec, before any builder
         _renko(**kw)
+
+
+def test_renko_builder_rechecks_bounds_defence_in_depth() -> None:
+    spec = BarSpec.model_construct(kind="renko", range_ticks=1, reversal_bricks=2)
+    with pytest.raises(BarSpecError, match="between 2 and 100000"):
+        RenkoBarBuilder(spec, SYM, lambda _s: D("0.1"))
+
+
+def test_renko_one_trade_over_brick_cap_raises() -> None:
+    b = _renko(ticks=2, tick="0.01")
+    b.on_trade(trade(1, "100", seq=1))
+    with pytest.raises(BarsError, match="cap 1000"):
+        b.on_trade(trade(2, "10100", seq=2))  # 1e6 ticks in one print
+    assert closes(b.on_trade(trade(3, "120", seq=3)))  # 1000 bricks exactly: allowed
+
+
+def test_renko_mark_price_source_refused() -> None:
+    with pytest.raises(BarSpecError, match="mark price"):
+        _renko(price_source="mark")
 
 
 def test_renko_rejects_wrong_kind_unknown_tick_and_foreign_symbol() -> None:
@@ -211,6 +230,10 @@ def test_renko_restore_refusals() -> None:
     _feed(a, ["100"])
     with pytest.raises(BarsError, match="incomplete"):
         _renko().restore(_state(a, dir="DROP"))
+    with pytest.raises(BarsError, match="corrupt"):
+        _renko().restore(a.snapshot().model_copy(update={"blob": b"{not json"}))
+    with pytest.raises(BarsError, match="corrupt"):
+        _renko().restore(_state(a, width="x"))
     with pytest.raises(BarsError, match="invalid direction"):
         _renko().restore(_state(a, dir=2))
     with pytest.raises(BarsError, match="new epoch"):

@@ -90,3 +90,7 @@ def test_golden_renko_matches_committed_bricks_byte_for_byte() -> None:
         GOLDEN.write_text(text, encoding="utf-8", newline="\n")
     assert GOLDEN.read_text(encoding="utf-8") == text
     assert _build(SPECS["renko:10"])[0] == _build(SPECS["renko:10"])[0]  # BI-4
+
+
+# TODO(#2131): QuestDB integration test (`@pytest.mark.integration`, tests/integration/bars/) that
+# writes one multi-brick run and asserts all N same-ts bricks survive, once migration 0004 lands.
