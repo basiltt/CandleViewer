@@ -1,0 +1,97 @@
+rules:
+  - id: cv-no-float-prices
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Float arithmetic or `float()` on a price/size/turnover value in bar-builder,
+      ingestion or store code. Prices and sizes are decimals end to end (wire
+      contract: docs/plan/23-ws-protocol.md §3.1 "decimal contract"; AGENTS.md §5.2);
+      binary floating point rounds `0.1 + 0.2` and silently corrupts highs, lows,
+      VWAP and turnover (E12 STRIDE R7 data accuracy). Fix: compute with `Decimal`
+      and convert exactly once at the QuestDB DOUBLE boundary through
+      `candleviewer.bars.rows.to_double` (reads: `Decimal(repr(x))`). This rule
+      covers expressions; `cv-decimal-discipline` covers `float` annotations.
+      Rule doc: docs/plan/security/ci-gates-e12.md#cv-no-float-prices.
+    metadata:
+      rule-id: cv-no-float-prices
+      sr: SR-E12-13
+      references:
+        - docs/plan/23-ws-protocol.md §3.1
+        - docs/security/threat-models/E12-bars.md
+        - docs/plan/security/ci-gates-e12.md
+    patterns:
+      # TODO(#2137, #2138) E12-X03 follow-up: true positives on main at merge, NOT false positives. Two
+      # float-arithmetic sites predate this rule and need a code fix in their owning module
+      # (fix tickets #2137 and #2138, see ci-gates-e12.md "Known findings"):
+      #   TODO(#2137) storage/questdb/repository.py QuestDbRepository.write_trades: float(price) * float(qty)
+      #   TODO(#2138) bars/reader.py stored_bar: turnover=repr(vwap * volume) on floats
+      # Exempted by enclosing function only, so the rest of each file stays covered. Delete
+      # both pattern-not-inside entries in the fix PR.
+      - pattern-not-inside: |
+          async def write_trades(self, rows: Sequence[TradeRow]) -> None:
+              ...
+      - pattern-not-inside: |
+          def stored_bar(row: dict[str, object]) -> StoredBar:
+              ...
+      - pattern-either:
+          # float() of a price-like attribute/key in builder or ingestion code.
+          - patterns:
+              - pattern-either:
+                  - pattern: float($E.$F)
+                  - pattern: float($E[$F])
+              - metavariable-regex:
+                  metavariable: $F
+                  regex: '(?i)^["'']?(\w*price|qty|\w*_size|size|turnover|notional|vwap|volume|open|high|low|close)["'']?$'
+              - pattern-not-inside: |
+                  def to_double(...):
+                      ...
+              # A bare conversion as a value of the ILP/row payload dict IS the documented
+              # Decimal -> QuestDB DOUBLE storage boundary (bars/rows.py docstring); arithmetic
+              # on it is still caught by the branches below.
+              - pattern-not-inside: '{..., $K: float($A), ...}'
+              - pattern-not-inside: '$ITEM[$K] = float($A)'
+              - metavariable-pattern:
+                  metavariable: $E
+                  patterns:
+                    - pattern-not: math
+          # Arithmetic with a float() operand.
+          - patterns:
+              - pattern-either:
+                  - pattern: float($X) * $Y
+                  - pattern: $Y * float($X)
+                  - pattern: float($X) / $Y
+                  - pattern: $Y / float($X)
+                  - pattern: float($X) + $Y
+                  - pattern: $Y + float($X)
+                  - pattern: float($X) - $Y
+                  - pattern: $Y - float($X)
+              - metavariable-regex:
+                  metavariable: $X
+                  regex: '(?i)(price|qty|size|turnover|notional|vwap|volume|open|high|low|close)'
+          # Arithmetic on a name bound from float() (incl. tuple unpacking).
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      $V = float(...)
+                      ...
+                  - pattern-inside: |
+                      $V, $W = float(...), float(...)
+                      ...
+                  - pattern-inside: |
+                      $W, $V = float(...), float(...)
+                      ...
+              - pattern-either:
+                  - pattern: $V * $Z
+                  - pattern: $Z * $V
+                  - pattern: $V / $Z
+                  - pattern: $V + $Z
+                  - pattern: $V - $Z
+              - metavariable-regex:
+                  metavariable: $V
+                  regex: '(?i)(price|qty|size|turnover|notional|vwap|volume|open|high|low|close)'
+    paths:
+      include:
+        - "services/api/candleviewer/bars/**"
+        - "services/api/candleviewer/ingestion/**"
+        - "services/api/candleviewer/storage/**"
+        - "**/cv-no-float-prices*"

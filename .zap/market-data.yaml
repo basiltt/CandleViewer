@@ -1,0 +1,61 @@
+# E12-X03: OWASP ZAP automation plan for the market-data read surface (/market/klines, /market/bars).
+# Run: zap.sh -cmd -autorun .zap/market-data.yaml  (nightly only: .github/workflows/dast-market-nightly.yml)
+# Authenticated, LOW privilege: ZAP_LOWPRIV_TOKEN is a CI secret for the seeded read-only demo user
+# (same secret and seeding as dast-rules-nightly.yml; never committed; rotation per
+# docs/plan/security/ci-gates-e12.md "DAST"). Local compose stack only, never a live exchange.
+env:
+  contexts:
+    - name: market-data
+      urls: ["http://127.0.0.1:8000"]
+      includePaths:
+        - "http://127.0.0.1:8000/market/klines.*"
+        - "http://127.0.0.1:8000/market/bars.*"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+jobs:
+  - type: openapi
+    parameters:
+      apiFile: docs/plan/22-api-openapi.yaml
+      targetUrl: http://127.0.0.1:8000
+      context: market-data
+  - type: replacer
+    rules:
+      - description: low-privilege session (market-data read only)
+        matchType: req_header
+        matchString: Authorization
+        replacementString: "Bearer ${ZAP_LOWPRIV_TOKEN}"
+        initiators: []
+  # Tuning: documented 400 validation_failed / 422 bar_window_too_large|no_data_recorded|
+  # response_too_large problem+json responses are the CONTRACT (22-api, E12-X02 inputs), not
+  # findings. Only the alerts ZAP raises purely because a 4xx came back are filtered, and only
+  # on these two paths; injection/disclosure rules are never filtered.
+  - type: alertFilter
+    alertFilters:
+      # reason: "Application Error Disclosure" matches the RFC 7807 `detail` text of a 422
+      - { ruleId: 90022, newRisk: "False Positive", url: "http://127.0.0.1:8000/market/(klines|bars).*", urlRegex: true, evidence: 'problem\+json|bar_window_too_large|validation_failed|no_data_recorded|response_too_large', evidenceRegex: true }
+      # reason: 4xx problem responses are intentionally non-cacheable
+      - { ruleId: 10049, newRisk: "False Positive", url: "http://127.0.0.1:8000/market/(klines|bars).*", urlRegex: true }
+  - type: passiveScan-wait
+    parameters: { maxDuration: 5 }
+  - type: activeScan
+    parameters:
+      context: market-data
+      maxScanDurationInMins: 20
+    policyDefinition:
+      defaultStrength: Medium
+      defaultThreshold: Medium
+      rules:
+        - { id: 40018, name: SQL Injection, strength: High, threshold: Low }
+        - { id: 40024, name: SQL Injection - SQLite (generic SQL), strength: High, threshold: Low }
+        - { id: 40027, name: SQL Injection - MsSQL (generic SQL), strength: Medium, threshold: Low }
+        - { id: 90019, name: Server Side Include, strength: Medium, threshold: Low }
+        - { id: 90020, name: Command injection, strength: Medium, threshold: Low }
+        - { id: 40012, name: Reflected XSS, strength: Medium, threshold: Low }
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: zap-reports
+      reportFile: market-data
+    risks: [high, medium, low, info]

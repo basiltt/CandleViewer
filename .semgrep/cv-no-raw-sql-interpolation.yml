@@ -1,0 +1,57 @@
+rules:
+  - id: cv-no-raw-sql-interpolation
+    languages: [python]
+    severity: ERROR
+    message: >-
+      QuestDB/Postgres query text built with an f-string, `%`, `.format()` or `+`
+      in a market-data module (bars/, ingestion/, api/market*). Request values
+      (symbol, bar param, window bounds) reach these queries; interpolating them
+      is SQL injection (E12 STRIDE BR-25, CONSTITUTION C-12). Fix: keep the text
+      constant and pass values as bound parameters (`$1..$n` for PGWire,
+      `:name` for SQLAlchemy `text()`); a table/column name must come from a
+      closed allow-list checked immediately above (`if kind not in _FAMILIES:
+      raise`) or from `storage.sql_identifiers.checked_identifier`. Scope note:
+      direct `execute(f"...")`/`text(f"...")` calls are owned by
+      `cv-raw-sql-string-interpolation` and storage/** by
+      `cv-storage-sql-construction`; this rule covers query text assembled
+      before the call, so the three never double-fire. Rule doc:
+      docs/plan/security/ci-gates-e12.md#cv-no-raw-sql-interpolation.
+    metadata:
+      rule-id: cv-no-raw-sql-interpolation
+      sr: SR-040
+      references:
+        - docs/security/threat-models/E12-bars.md BR-25
+        - docs/plan/security/ci-gates-e12.md
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: f"..."
+              - pattern-regex: '(?i)f["'']\s*(SELECT\s|INSERT\s+INTO\s|UPDATE\s+\w+\s+SET\s|DELETE\s+FROM\s|WITH\s+\w+\s+AS\s*\()'
+          - patterns:
+              - pattern-either:
+                  - pattern: '"$SQL" % $ARGS'
+                  - pattern: '"$SQL".format(...)'
+                  - pattern: '"$SQL" + $Y'
+                  - pattern: '$Y + "$SQL"'
+              - metavariable-regex:
+                  metavariable: $SQL
+                  regex: '(?i)^\s*(SELECT\s|INSERT\s+INTO\s|UPDATE\s+\w+\s+SET\s|DELETE\s+FROM\s|WITH\s+\w+\s+AS\s*\()'
+      # Owned by cv-raw-sql-string-interpolation (no double-firing).
+      - pattern-not-inside: $C.execute(...)
+      - pattern-not-inside: text(...)
+      # Identifier interpolation proven safe by a closed allow-list guard in the same function.
+      - pattern-not-inside: |
+          if $K not in $ALLOW:
+              raise $ERR
+          ...
+      - pattern-not-inside: |
+          $K = checked_identifier(...)
+          ...
+    paths:
+      include:
+        - "services/api/candleviewer/bars/**"
+        - "services/api/candleviewer/ingestion/**"
+        - "services/api/candleviewer/api/market.py"
+        - "services/api/candleviewer/api/market_*.py"
+        - "services/api/candleviewer/bars_wiring.py"
+        - "**/cv-no-raw-sql-interpolation*"

@@ -1,0 +1,30 @@
+rules:
+  - id: cv-nosec-needs-reason-owner
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Unjustified Bandit suppression in the market-data surface. Every `# nosec`
+      in bars/, ingestion/ and api/market* must name the Bandit test id and carry
+      `reason=<hyphenated-token>` and `owner=@<handle>[/<team>]` on the same line,
+      e.g. `# nosec B608 reason=table-from-closed-allowlist owner=@CandleViewer/backend`
+      (grammar shared with tools/ci/suppressions.py, 04-security-program.md §12.2).
+      A blanket or unexplained suppression hides the next real finding. If the
+      finding is real, fix it; if it is accepted, follow §16.2 (exception process).
+      Rule doc: docs/plan/security/ci-gates-e12.md#cv-nosec-needs-reason-owner.
+    metadata:
+      rule-id: cv-nosec-needs-reason-owner
+      sr: SR-156
+      references:
+        - docs/plan/04-security-program.md §12.2, §16.2
+        - docs/plan/security/ci-gates-e12.md
+    patterns:
+      - pattern-regex: '#\s*nosec\b[^\n]*'
+      - pattern-not-regex: '#\s*nosec\s+B\d{3}(,\s*B\d{3})*\s+[^\n]*reason=[\w.-]+[^\n]*owner=@[A-Za-z0-9][\w./-]*'
+    paths:
+      include:
+        - "services/api/candleviewer/bars/**"
+        - "services/api/candleviewer/ingestion/**"
+        - "services/api/candleviewer/api/market.py"
+        - "services/api/candleviewer/api/market_*.py"
+        - "services/api/candleviewer/bars_wiring.py"
+        - "**/cv-nosec-needs-reason-owner*"

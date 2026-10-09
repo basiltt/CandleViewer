@@ -1,0 +1,47 @@
+rules:
+  - id: cv-unbounded-query-window
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-E12-02: a market-data store read in a route handler is not preceded by the
+      shared window cap from `candleviewer.bars.limits` (`MAX_TIME_WINDOW_US` /
+      `MAX_NON_TIME_WINDOW_US`). Without the cap a single request can ask QuestDB for
+      years of rows (E12 STRIDE: resource exhaustion on /market/klines and
+      /market/bars). Fix: compare the requested span against the `bars.limits`
+      constant and return `422 bar_window_too_large` before the read, exactly as
+      api/market.py and api/market_bars.py do; never restate the number locally.
+      Rule doc: docs/plan/security/ci-gates-e12.md#cv-unbounded-query-window.
+    metadata:
+      rule-id: cv-unbounded-query-window
+      sr: SR-E12-02
+      references:
+        - services/api/candleviewer/bars/limits.py
+        - docs/security/threat-models/E12-bars.md
+        - docs/plan/security/ci-gates-e12.md
+    patterns:
+      - pattern-either:
+          - pattern: $R.read_bars(...)
+          - pattern: $R.read_klines(...)
+          - pattern: $R.read($SYM, $IV, $RNG, ..., limit=$L, ...)
+      # The cap check, written directly or through a chosen-cap variable.
+      - pattern-not-inside: |
+          if <... MAX_TIME_WINDOW_US ...>:
+              ...
+          ...
+      - pattern-not-inside: |
+          $CAP = <... MAX_TIME_WINDOW_US ...>
+          ...
+          if <... $CAP ...>:
+              ...
+          ...
+      - pattern-not-inside: |
+          $CAP = <... MAX_NON_TIME_WINDOW_US ...>
+          ...
+          if <... $CAP ...>:
+              ...
+          ...
+    paths:
+      include:
+        - "services/api/candleviewer/api/market.py"
+        - "services/api/candleviewer/api/market_*.py"
+        - "**/cv-unbounded-query-window*"
