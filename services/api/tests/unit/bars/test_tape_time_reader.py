@@ -51,6 +51,12 @@ def test_stored_bar_maps_tape_row_with_order_flow() -> None:
     assert bar.turnover == "5.0" and bar.confirmed and bar.tape_built
 
 
+def test_stored_bar_turnover_uses_decimal_product_not_float_product() -> None:
+    # float 0.1 * 3.0 == 0.30000000000000004 (1 ULP off); the Decimal product is exactly 0.3.
+    assert 0.1 * 3.0 != 0.3
+    assert stored_bar(_row(0, vwap=0.1, volume=3.0)).turnover == "0.3"
+
+
 def test_stored_bar_kline_sourced_row_has_null_delta() -> None:
     bar = stored_bar(_row(0, source="kline"))
     assert (bar.delta, bar.min_delta, bar.max_delta) == (None, None, None)

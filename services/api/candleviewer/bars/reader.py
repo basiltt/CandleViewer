@@ -13,6 +13,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Final, Protocol
 
 import structlog
@@ -223,7 +224,8 @@ class StoredBar:
     """A `bars_*` row in the kline-like shape `api.market_response` serialises.
 
     Prices stay the stored DOUBLE rendered with `repr` (round-trips exactly, `bars.rows`).
-    `turnover` is not a stored column: it is `vwap * volume`, rendered the same way.
+    `turnover` is not a stored column: it is `vwap * volume` computed in `Decimal`, rendered
+    the same way.
     """
 
     ts_us: int
@@ -253,14 +255,14 @@ def _num(v: object) -> str:
 
 def stored_bar(row: dict[str, object]) -> StoredBar:
     close_ts = row.get("close_ts")
-    vwap, volume = float(str(row.get("vwap") or 0)), float(str(row.get("volume") or 0))
+    vwap, volume = Decimal(str(row.get("vwap") or 0)), Decimal(str(row.get("volume") or 0))
     source = str(row.get("source") or "tape")  # NULL = pre-0003 legacy row, tape-built
     flow = source != "kline"
     return StoredBar(
         ts_us=int(str(row["ts"])),
         close_ts_us=int(str(close_ts)) if close_ts is not None else None,
         open=_num(row["open"]), high=_num(row["high"]), low=_num(row["low"]),
-        close=_num(row["close"]), volume=_num(volume), turnover=repr(vwap * volume),
+        close=_num(row["close"]), volume=_num(volume), turnover=repr(float(vwap * volume)),
         confirmed=bool(row.get("is_closed")), trades=int(str(row.get("trade_count") or 0)),
         delta=_num(row.get("delta") or 0) if flow else None,
         min_delta=_num(row.get("min_delta") or 0) if flow else None,
