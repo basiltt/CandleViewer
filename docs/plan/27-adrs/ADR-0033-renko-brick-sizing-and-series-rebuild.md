@@ -1,8 +1,8 @@
 # ADR-0033 — Renko brick sizing and series rebuild semantics
 
-- Status: **proposed** (owner ratification pending, decision item on #1778).
+- Status: **accepted** (ratified by the owner 2026-10-09; decision record on #1778, item N).
 - Date: 2026-10-07
-- Deciders: Owner (`@basiltt`) — owner approval pending.
+- Deciders: Owner (`@basiltt`) — **ratified 2026-10-09** as written (decision record on #1778, 2026-10-09).
 - Numbering note: the ticket (E12-K01, #525) says "ADR-0014"; 0014 is taken (Observability) and 0031 is reserved by
   E45-K01 (`ADR-0031-resilience-and-chaos`, not yet on `main`), so this is the next free number after 0032.
 - Related: E12-K01 (#525, this spike), E12-T01 (#344, `BarSpec`), E12-S04 (Renko builder), E12-S12

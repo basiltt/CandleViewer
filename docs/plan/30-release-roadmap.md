@@ -192,6 +192,11 @@ E50 split after re-plan: **61 pts R0 (S02–S04)**, 13 pts R1 (S05–S09: `E50-T
 
 > **Update 2026-09-24 (post-adoption re-plan, supersedes the 2026-09-15 note):** with 59 shim/dual-runtime/tracking tickets retired, R1 backlog eng drops 439 → 407 (−32) and S05/S06 are back at capacity; only S07 +2 (holiday, baseline charting chain) remains. The R5 defect/polish reserve is **restored to 140 pts**. Details: `backlog/_reconciliation-report.md` §17.
 >
+> **Update 2026-10-09 (owner decision, #1778 item Y):** E35-S03 (rule actions through the OMS) moves S14 → S15
+> because it genuinely depends on E32-T01 (native-SL choke point, C-2.6) in S15; E35-S06/S07 follow it. S15 therefore
+> carries **+8 eng pts**, funded from the R5 defect/polish reserve (140 → 132 pts). Recorded as an accepted overage in
+> `backlog/_tools/validate.py` so the gate still catches *new* overages.
+>
 > *Superseded —* **Update 2026-09-15 (E50 added):** R1 and R2 each run marginally over train capacity (+7 / +4 eng pts) because E50's statechart-readiness gates must precede R3's first statechart. Both are funded from the R5 defect/polish reserve, which therefore **drops from 140 to 129 pts**. Details and the re-plan trigger: `backlog/_reconciliation-report.md` §13.
 
 Reserves are *named line items*, not optimism: R4 carries a **90-pt pen-test remediation reserve** (unknown findings are certain, their content is not) and R5 carries a **140-pt defect/polish reserve**. If a reserve is unused it converts to R5 scope, never to an earlier date claim.
