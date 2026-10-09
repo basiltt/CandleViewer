@@ -37,7 +37,7 @@ Precedence reminder: `CONSTITUTION.md` > `AGENTS.md` > everything below > tool d
 | 28 | `28-statechart-catalogue.md` | **Normative, runtime-agnostic behavioural contracts** for all twenty long-lived lifecycles (order, trade group + legs, four algos, native-SL protection, rule instance, alert, recorder, replay, connection, book health, paper liquidation, auth session, live gate, kill switch, reconciliation, risk lockout): XState-v5-compatible JSON plus derived state/event/guard/action/service tables and invariants — and the explicit list of hot paths that must **never** be statecharts. Generated from `machines/*.json`; never hand-edited. Executed exclusively by `xstate-statemachine==0.9.1` via `cv.statechart.factory` (ADR-0016 Accepted). |
 | 29 | `29-statechart-adoption-plan.md` | Adoption plan for `xstate-statemachine==0.9.1` as the sole statechart executor: pin/attestation, FINAL mandatory config, standing CV constraints, catalogue fixes (B16 C-04, B18 C-07b, B11, B8 High), rollout across sprints/backlog. |
 | 30 | `30-release-roadmap.md` | Release trains R0→R5, sprint calendar, epic register (E01–E50), critical path, descoping ladder. |
-| 32 | `32-risk-register.md` | Full risk register (RSK-001…RSK-050, 45 live entries), `Risk` field taxonomy R1–R15, gating table per train. |
+| 32 | `32-risk-register.md` | Full risk register (RSK-001…RSK-062, 57 live entries), `Risk` field taxonomy R1–R15, gating table per train. |
 | 33 | `33-raci.md` | RACI for every governance, product, architecture, engineering, quality/security/a11y and release deliverable/ceremony. |
 
 Not yet created at this path: `31-sprint-plan.md` (per-sprint ticket detail — tracked separately as the
