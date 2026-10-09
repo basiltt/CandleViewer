@@ -294,7 +294,81 @@ def rule_kill_ancestor(file: str, chart: dict) -> list[Finding]:
                     "invoking state has no ancestor declaring a kill/cancel event (C-04)",
                 )
             )
+    findings.extend(_kill_frozen_exception(file, chart))
     return findings
+
+
+#: Catalogue §1.3c SL-protection exception (#1650, owner decision #1778 item X):
+#: the only chart-level marker that may satisfy C-04 with a non-terminal KILL target.
+SL_PROTECTION_TAG = "cv:slProtection"
+FROZEN_STATE = "frozen"
+#: Recovery arms a `frozen` state may carry (catalogue B8 names none today).
+FROZEN_ALLOWED_EXIT_EVENTS: frozenset[str] = frozenset({"RECONCILED", "RESUME"})
+
+
+def _is_sl_protection(chart: dict) -> bool:
+    meta = chart.get("meta")
+    return isinstance(meta, dict) and meta.get(SL_PROTECTION_TAG) is True
+
+
+def _kill_frozen_exception(file: str, chart: dict) -> list[Finding]:
+    """CV-LINT-KILL-ANCESTOR, §1.3c SL-protection exception (C-04, C-2.6).
+
+    A KILL arm may target a non-final state named `frozen` only when the chart
+    root carries `meta["cv:slProtection"] = true`; that `frozen` state must not
+    invoke, time out or run `always`, and its arms are internal (no target)
+    except the catalogue recovery events. Untagged charts get no exception."""
+    findings: list[Finding] = []
+    states = dict(_walk_states(chart))
+    tagged = _is_sl_protection(chart)
+    for state_path, state in states.items():
+        on = state.get("on")
+        if not isinstance(on, dict) or "KILL" not in on:
+            continue
+        for arm in _transition_targets(on["KILL"]):
+            dest = arm.get("target")
+            if not isinstance(dest, str):
+                continue
+            dest_path = dest.lstrip("#").split(".", 1)[-1] if dest.startswith("#") else dest
+            node = states.get(dest_path)
+            if dest_path.rsplit(".", 1)[-1] != FROZEN_STATE or not isinstance(node, dict):
+                continue
+            if node.get("type") == "final":
+                continue
+            where = f"{state_path}.on.KILL"
+            if not tagged:
+                findings.append(
+                    Finding(
+                        "CV-LINT-KILL-ANCESTOR",
+                        file,
+                        where,
+                        f"non-terminal KILL target {FROZEN_STATE!r} is allowed only on a chart "
+                        f'tagged meta["{SL_PROTECTION_TAG}"] = true (C-04, §1.3c)',
+                    )
+                )
+                continue
+            findings.extend(_frozen_shape(file, dest_path, node))
+    return findings
+
+
+def _frozen_shape(file: str, path: str, node: dict) -> list[Finding]:
+    bad: list[str] = []
+    for key in ("invoke", "after", "always", "states"):
+        if node.get(key):
+            bad.append(f"declares {key!r}")
+    for event, value in (node.get("on") or {}).items():
+        for arm in _transition_targets(value):
+            if "target" in arm and event not in FROZEN_ALLOWED_EXIT_EVENTS:
+                bad.append(f"leaves on {event!r}")
+    return [
+        Finding(
+            "CV-LINT-KILL-ANCESTOR",
+            file,
+            path,
+            f"SL-protection {FROZEN_STATE!r} state {why} (C-04 exception, §1.3c)",
+        )
+        for why in bad
+    ]
 
 
 def rule_reenter(file: str, chart: dict) -> list[Finding]:

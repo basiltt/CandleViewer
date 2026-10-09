@@ -8,9 +8,9 @@ until their owning epics land, so each case asserts the runtime half of the
 invariant: the machine survives the fault with a sound configuration, no
 fault latch, nothing silently dropped, and journal replay exactly once.
 
-Invariants whose chart is not yet committed (B1 `order`, B8
-`position_protection`) are collected the moment the chart lands — the
-pending list is asserted, so it cannot grow silently.
+Invariants whose chart is not yet committed are collected the moment the
+chart lands — the pending list is asserted, so it cannot grow silently
+(B1 `order` and B8 `position_protection` landed in #1650).
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ from tests.xstate_contract.chaos._chaos import (
 )
 
 #: Charts still owned by an unlanded epic (no committed machine JSON yet).
-PENDING_CHARTS = {1: "E29", 8: "E32"}
+PENDING_CHARTS: dict[int, str] = {}
 
 ROWS = catalogue_rows()
 LEDGER = [
@@ -64,9 +64,9 @@ def test_ledger_covers_every_catalogue_invariant() -> None:
     pending = {inv for inv, n, _t in ROWS if n in PENDING_CHARTS}
     assert covered | pending == {inv for inv, _n, _t in ROWS}
     assert covered.isdisjoint(pending)
-    assert {chart_for_number(n) for n in PENDING_CHARTS} == {None}, (
-        "a pending chart has landed: drop it from PENDING_CHARTS"
-    )
+    assert all(
+        chart_for_number(n) is None for n in PENDING_CHARTS
+    ), "a pending chart has landed: drop it from PENDING_CHARTS"
     assert len(covered) == len(LEDGER) >= 80
     assert {f for _i, _m, f in LEDGER} <= set(FAMILIES)
     assert set(FAMILIES) == {f for _i, _m, f in LEDGER}, "every family is exercised"

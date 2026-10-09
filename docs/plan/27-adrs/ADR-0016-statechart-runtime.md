@@ -1054,3 +1054,8 @@ Thirteen rounds in, **the remaining risk in this adoption is ours to discharge, 
 - **Ours before live orders:** merge the R14-03 chart fixes (B16, B18, B11) into catalogue 28; add the B8 attempt counter (B610-OC-CD03).
 
 Full record: `docs/research/xstate/79-r14-final-readiness-verdict.md`.
+
+## Addendum — 2026-10-09: SL-protection exception to C-04 (#1650, owner decision #1778 item X)
+
+- **B1 `order`:** root `KILL` → new final `lifecycle.killed`; entry marks `halted_by_kill`, issues the exchange cancel via `cancel_order` (same `orderLinkId`, C-2.10) and audits. Reconciliation re-syncs true exchange state (C-2.5). The `protection` region only audits a KILL.
+- **B8 `position_protection`:** root `KILL` → non-terminal `sl.frozen` (no amends, native SL untouched, audited, plain-bool flag per C-2.20). Permitted only through the narrow, tag-gated `cv:slProtection` exception written into catalogue §1.3c and enforced by `CV-LINT-KILL-ANCESTOR` (untagged charts get no exception — unit-tested). No lint baseline was moved.

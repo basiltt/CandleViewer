@@ -1,0 +1,287 @@
+{
+  "id": "position_protection",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "type": "parallel",
+  "context": {
+    "account_id": null,
+    "symbol": null,
+    "position_qty": "0",
+    "native_sl_px": null,
+    "desired_sl_px": null,
+    "sl_deadline_us": null,
+    "naked_since_us": null,
+    "attach_attempts": 0,
+    "fallback_attempts": 0,
+    "frozen": false
+  },
+  "states": {
+    "sl": {
+      "initial": "flat",
+      "states": {
+        "flat": {
+          "on": {
+            "POSITION_OPENED": {
+              "target": "#position_protection.sl.attaching"
+            }
+          }
+        },
+        "attaching": {
+          "entry": [
+            "arm_sl_deadline",
+            "bump_attach_attempts"
+          ],
+          "invoke": {
+            "id": "att",
+            "src": "attach_native_sl",
+            "onDone": {
+              "target": "#position_protection.sl.verifying"
+            },
+            "onError": [
+              {
+                "target": "#position_protection.sl.attaching",
+                "reenter": true,
+                "guard": "attach_attempts_left"
+              },
+              {
+                "target": "#position_protection.sl.naked"
+              }
+            ]
+          },
+          "on": {
+            "SL_DEADLINE": {
+              "target": "#position_protection.sl.naked"
+            }
+          }
+        },
+        "verifying": {
+          "invoke": {
+            "id": "ver",
+            "src": "read_position_sl",
+            "onDone": [
+              {
+                "target": "#position_protection.sl.protected",
+                "guard": "exchange_reports_sl"
+              },
+              {
+                "target": "#position_protection.sl.naked",
+                "guard": "fallback_attempts_left"
+              },
+              {
+                "target": "#position_protection.sl.naked_unrecoverable"
+              }
+            ],
+            "onError": [
+              {
+                "target": "#position_protection.sl.naked",
+                "guard": "fallback_attempts_left"
+              },
+              {
+                "target": "#position_protection.sl.naked_unrecoverable"
+              }
+            ]
+          }
+        },
+        "protected": {
+          "tags": [
+            "protected"
+          ],
+          "entry": [
+            "reset_fallback_attempts"
+          ],
+          "on": {
+            "TIGHTEN_SL": [
+              {
+                "target": "#position_protection.sl.amending",
+                "guard": "tightens_only"
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
+              }
+            ],
+            "LOOSEN_SL": [
+              {
+                "target": "#position_protection.sl.amending",
+                "guard": "explicit_audited_override"
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
+              }
+            ],
+            "WATCHDOG_MISS": {
+              "target": "#position_protection.sl.naked"
+            },
+            "POSITION_FLAT": {
+              "target": "#position_protection.sl.flat"
+            }
+          }
+        },
+        "amending": {
+          "invoke": {
+            "id": "am",
+            "src": "set_trading_stop",
+            "onDone": {
+              "target": "#position_protection.sl.verifying"
+            },
+            "onError": {
+              "target": "#position_protection.sl.verifying"
+            }
+          },
+          "on": {}
+        },
+        "naked": {
+          "tags": [
+            "naked",
+            "critical"
+          ],
+          "entry": [
+            "stamp_naked_since",
+            "bump_fallback_attempts",
+            "raise_critical_alert",
+            "emit_naked_metric"
+          ],
+          "invoke": {
+            "id": "fb",
+            "src": "attach_fallback_sl",
+            "onDone": {
+              "target": "#position_protection.sl.verifying"
+            },
+            "onError": {
+              "target": "#position_protection.sl.naked_unrecoverable"
+            }
+          },
+          "on": {
+            "POSITION_FLAT": {
+              "target": "#position_protection.sl.flat"
+            }
+          }
+        },
+        "naked_unrecoverable": {
+          "tags": [
+            "naked",
+            "critical"
+          ],
+          "entry": [
+            "page_owner",
+            "consider_reduce_only_close"
+          ],
+          "on": {
+            "SL_OBSERVED": {
+              "target": "#position_protection.sl.protected"
+            },
+            "POSITION_FLAT": {
+              "target": "#position_protection.sl.flat"
+            }
+          }
+        },
+        "frozen": {
+          "tags": [
+            "frozen",
+            "kill_halted"
+          ],
+          "entry": [
+            "audit_kill",
+            "publish_frozen_flag"
+          ],
+          "on": {
+            "TIGHTEN_SL": {
+              "actions": [
+                "audit_amend_refused_frozen"
+              ]
+            },
+            "LOOSEN_SL": {
+              "actions": [
+                "audit_amend_refused_frozen"
+              ]
+            },
+            "KILL": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            },
+            "POSITION_OPENED": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            },
+            "SL_DEADLINE": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            },
+            "WATCHDOG_MISS": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            },
+            "SL_OBSERVED": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            },
+            "POSITION_FLAT": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            }
+          }
+        }
+      },
+      "on": {
+        "KILL": {
+          "target": "#position_protection.sl.frozen"
+        }
+      }
+    },
+    "watchdog": {
+      "initial": "idle",
+      "states": {
+        "idle": {
+          "on": {
+            "POSITION_OPENED": {
+              "target": "#position_protection.watchdog.scanning"
+            }
+          }
+        },
+        "scanning": {
+          "on": {
+            "SCAN_DUE": [
+              {
+                "target": "#position_protection.watchdog.scanning",
+                "reenter": true,
+                "guard": "sl_observed",
+                "actions": [
+                  "reset_miss_counter"
+                ]
+              },
+              {
+                "target": "#position_protection.watchdog.scanning",
+                "reenter": true,
+                "actions": [
+                  "bump_miss_counter",
+                  "maybe_raise_watchdog_miss"
+                ]
+              }
+            ],
+            "POSITION_FLAT": {
+              "target": "#position_protection.watchdog.idle"
+            }
+          }
+        }
+      }
+    }
+  },
+  "meta": {
+    "cv:slProtection": true
+  }
+}
