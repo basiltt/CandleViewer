@@ -85,8 +85,8 @@ export function AdminInviteScreen(): JSX.Element {
         <label htmlFor="inv-role">Role</label>
         <select id="inv-role" value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="viewer">Viewer</option>
-          <option value="manager">Manager</option>
         </select>
+        <p>Invitations grant the viewer role; promote the user after activation.</p>
         <p>Expires 72 hours after creation. Account access is granted after activation.</p>
         {error ? <p role="alert">{error}</p> : null}
         <button type="submit">Create invitation</button>

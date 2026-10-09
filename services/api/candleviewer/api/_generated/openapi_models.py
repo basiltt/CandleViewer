@@ -4864,7 +4864,14 @@ class CreateUserRequest(BaseModel):
     username: Annotated[str, Field(max_length=40, min_length=3, pattern="^[a-zA-Z0-9._-]+$")]
     email: EmailStr
     display_name: Annotated[str | None, Field(max_length=80)] = None
-    roles: Annotated[list[Literal["owner", "manager", "viewer"]], Field(min_length=1)]
+    roles: Annotated[
+        list[Literal["viewer"]],
+        Field(
+            description="Invites grant `viewer` only (#2109); the owner promotes after activation.",
+            max_length=1,
+            min_length=1,
+        ),
+    ]
     mfa_required: bool | None = True
     account_access: list[AccountAccessGrantInput] | None = None
 

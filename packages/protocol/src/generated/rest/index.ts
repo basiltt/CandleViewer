@@ -4502,7 +4502,8 @@ export interface components {
       email: string;
       /** @default true */
       mfa_required: boolean;
-      roles: components["schemas"]["RoleName"][];
+      /** @description Invites grant `viewer` only (#2109); the owner promotes after activation. */
+      roles: "viewer"[];
       username: string;
     };
     DataCoverage: {

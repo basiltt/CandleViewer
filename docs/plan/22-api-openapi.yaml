@@ -854,7 +854,7 @@ paths:
                     user:
                       {
                         id: "11111111-2222-3333-4444-555555555555",
-                        username: "mgr.alice",
+                        username: "viewer.alice",
                         email: "alice@example.com",
                         roles: [manager],
                         status: active,
@@ -970,11 +970,11 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/CreateUserRequest" }
             examples:
-              manager:
+              viewer:
                 value:
-                  username: "mgr.alice"
+                  username: "viewer.alice"
                   email: "alice@example.com"
-                  roles: [manager]
+                  roles: [viewer]
                   mfa_required: true
                   account_access:
                     [{ exchange_account_id: "a1000000-0000-4000-8000-000000000002", level: trade }]
@@ -9544,7 +9544,12 @@ components:
         username: { type: string, minLength: 3, maxLength: 40, pattern: "^[a-zA-Z0-9._-]+$" }
         email: { type: string, format: email }
         display_name: { type: string, maxLength: 80 }
-        roles: { type: array, minItems: 1, items: { $ref: "#/components/schemas/RoleName" } }
+        roles:
+          type: array
+          minItems: 1
+          maxItems: 1
+          description: "Invites grant `viewer` only (#2109); the owner promotes after activation."
+          items: { type: string, enum: [viewer] }
         mfa_required: { type: boolean, default: true }
         account_access:
           { type: array, items: { $ref: "#/components/schemas/AccountAccessGrantInput" } }

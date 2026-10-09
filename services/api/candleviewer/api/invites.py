@@ -175,7 +175,16 @@ def make_invites_router(
         try:
             parsed = InviteCreateRequest.model_validate(body)
         except ValidationError:
-            # Covers owner-role invites, account_access grants and malformed fields.
+            # Covers non-viewer roles, account_access grants and malformed fields.
+            await emitter.emit(
+                "users.invite_refused",
+                actor_label=str(got.user_id),
+                actor_user_id=got.user_id,
+                actor_ip=request.client.host if request.client else None,
+                outcome=AuditOutcome.DENIED,
+                severity=Severity.WARNING,
+                reason="invalid_invite_request",
+            )
             return _problem(422, "Unprocessable entity", "invalid invite request")
         try:
             invite = await auth.invites.create(parsed, invited_by=got.user_id)
@@ -249,7 +258,7 @@ def make_invites_router(
             status_code=200,
             content={
                 "display_name": view.display_name,
-                "role": view.role,
+                "role": "viewer",
                 "expires_at": view.expires_at.isoformat(),
             },
         )
@@ -314,9 +323,27 @@ def make_invites_router(
             }
         ):
             return _problem(400, "Bad request", "method_id and code are required")
+
+        async def _audit_downgrade(rec: InviteRecord, stored_role: str) -> None:
+            await emitter.emit(
+                "users.invite_role_downgraded",
+                actor_label=rec.username,
+                actor_user_id=rec.user_id,
+                actor_ip=request.client.host if request.client else None,
+                object_kind="user",
+                object_id=str(rec.user_id),
+                severity=Severity.WARNING,
+                before_state={"role": stored_role},
+                after_state={"role": "viewer"},
+            )
+
         try:
             record, recovery = await auth.invites.complete_redemption(
-                invite_token, method_id=method_id, code=code, source_ip=_client_ip(request)
+                invite_token,
+                method_id=method_id,
+                code=code,
+                source_ip=_client_ip(request),
+                audit_downgrade=_audit_downgrade,
             )
         except InviteRejected as exc:
             await _reject_audit(exc.reason, request)

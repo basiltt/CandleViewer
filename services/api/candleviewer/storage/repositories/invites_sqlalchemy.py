@@ -86,6 +86,18 @@ _PENDING = _sql(
 _FIND_BY_ID = _sql("SELECT @C@ @F@ WHERE i.id = CAST(:iid AS uuid)")
 
 
+_DOWNGRADE_INVITES = sa.text(
+    "UPDATE user_invites SET role = CAST('viewer' AS role_name) "
+    "WHERE user_id = CAST(:id AS uuid) AND role <> CAST('viewer' AS role_name)"
+)
+_DOWNGRADE_ROLE = sa.text(
+    "UPDATE user_roles SET role_id = "
+    "(SELECT id FROM roles WHERE name = CAST('viewer' AS role_name)) "
+    "WHERE user_id = CAST(:id AS uuid) AND role_id IN "
+    "(SELECT id FROM roles WHERE name <> CAST('viewer' AS role_name))"
+)
+
+
 class SqlAlchemyInviteRepository:
     def __init__(
         self, relational: SqlAlchemyRelationalRepository, record_factory: Callable[..., Any]
@@ -191,6 +203,12 @@ class SqlAlchemyInviteRepository:
                 await uow.session.execute(_CLEAR_PENDING, {"id": str(user_id)})
             await uow.commit()
         return bool(won)
+
+    async def downgrade_to_viewer(self, user_id: uuid.UUID) -> None:
+        async with self._relational.unit_of_work() as uow:
+            await uow.session.execute(_DOWNGRADE_INVITES, {"id": str(user_id)})
+            await uow.session.execute(_DOWNGRADE_ROLE, {"id": str(user_id)})
+            await uow.commit()
 
     async def reissue(
         self,
