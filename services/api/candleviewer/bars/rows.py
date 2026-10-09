@@ -54,7 +54,7 @@ _PREFIX: Final = {
 _CHECKSUM_FIELDS: Final = (
     "symbol", "bar_param", "open", "high", "low", "close", "volume", "buy_volume",
     "sell_volume", "delta", "min_delta", "max_delta", "delta_pct", "trade_count", "vwap",
-    "is_closed", "build_version", "source",
+    "is_closed", "build_version", "source", "generation", "index",
 )  # fmt: skip
 
 
@@ -102,7 +102,13 @@ def table_for(spec: BarSpec) -> str:
     return f"bars_{spec.kind}"
 
 
-def bar_row(bar: Bar, spec: BarSpec, *, source: str = "tape") -> dict[str, object]:
+#: ADR-0033 series generation; every live series is generation 0 until ADR-0033 is ratified.
+LIVE_GENERATION: Final = 0
+
+
+def bar_row(
+    bar: Bar, spec: BarSpec, *, source: str = "tape", generation: int = LIVE_GENERATION
+) -> dict[str, object]:
     """One ILP-ready row (designated timestamp `ts` = bar open, µs). Raises on synthetic bars."""
     assert_persistable(bar)
     if source not in SOURCES:
@@ -129,6 +135,8 @@ def bar_row(bar: Bar, spec: BarSpec, *, source: str = "tape") -> dict[str, objec
         "is_closed": bar.closed,
         "build_version": BUILD_VERSIONS[spec.kind],
         "source": source,
+        "generation": generation,
+        "index": bar.index,  # bar identity with (bar_param, generation); NOT derived from ts
     }
     row["row_checksum"] = row_checksum(row)
     return row

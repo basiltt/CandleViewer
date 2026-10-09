@@ -110,13 +110,6 @@ def test_source_must_be_known() -> None:
         bar_row(_bar(), SPEC, source="guess")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "21 §4.8 is ahead of the DDL since #2019 (generation/index columns and dedup keys "
-        "land with QuestDB migration 0004, #2016); strict so the marker must go when it lands"
-    ),
-)
 def test_ddl_matches_schema_doc() -> None:
     doc = (ROOT / "docs/plan/21-database-schema.md").read_text("utf-8")
     block = doc[doc.index("### 4.8") : doc.index("### 4.9")]
@@ -128,7 +121,7 @@ def test_ddl_matches_schema_doc() -> None:
     # exactly when the DDL catches up with §4.8 (migration 0004, #2016).
     doc_keys_m = re.search(r"DEDUP UPSERT KEYS\(([^)]*)\)", block)
     assert doc_keys_m is not None
-    doc_keys = tuple(k.strip() for k in doc_keys_m.group(1).split(","))
+    doc_keys = tuple(k.strip().strip('"') for k in doc_keys_m.group(1).split(","))
     tables = {
         t.name: t for t in parse_ddl_dir(ROOT / "backend/db/questdb") if t.name.startswith("bars_")
     }
@@ -230,7 +223,7 @@ async def test_amended_close_has_same_dedup_key() -> None:
     amended = bar_row(_bar(close=Decimal("100.9")), SPEC)
 
     def key(r: dict[str, object]) -> tuple[object, ...]:
-        return (r["ts"], r["symbol"], r["bar_param"])
+        return (r["ts"], r["symbol"], r["bar_param"], r["generation"], r["index"])
 
     assert key(first) == key(amended) and first["close"] != amended["close"]
     assert amended["row_checksum"] != first["row_checksum"]

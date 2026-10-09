@@ -24,6 +24,7 @@ from candleviewer.bars.models import BarSpec
 from candleviewer.bars.reader import RowFetcher
 from candleviewer.bars.rows import (
     BUILD_VERSIONS,
+    LIVE_GENERATION,
     BarPersistError,
     bar_param_for,
     row_checksum,
@@ -88,6 +89,8 @@ def kline_row(event: KlineEvent, spec: BarSpec) -> dict[str, object]:
         "is_closed": True,
         "build_version": BUILD_VERSIONS["time"],
         "source": KLINE_SOURCE,
+        "generation": LIVE_GENERATION,
+        "index": None,  # a kline has no builder index (NULL, never a guess)
     }
     row["row_checksum"] = row_checksum(row)
     return row

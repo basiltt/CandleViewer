@@ -2487,7 +2487,7 @@ CREATE TABLE bars_time (
   generation      LONG,           -- ADR-0033 series generation (= epoch); 0 for live series until ADR-0033 ratified
   index           LONG            -- Bar.index (24 §3.1): strictly increasing per (symbol, bar_param, generation)
 ) TIMESTAMP(ts) PARTITION BY MONTH WAL
-  DEDUP UPSERT KEYS(ts, symbol, bar_param, generation, index);   -- #2014; lands with migration 0004
+  DEDUP UPSERT KEYS(ts, symbol, bar_param, generation, index);   -- #2014; landed in migration 0004 (#2016)
 ```
 
 Identical column set (differing only in `bar_param` semantics) for:
@@ -2511,7 +2511,7 @@ All six tables also carry two integrity columns added by `backend/db/questdb/000
 
 Source precedence is enforced in `BarWriter` against rows written by the same process; the stored-row check belongs to the E12-T05 backfill caller (follow-up filed).
 
-**Amends (#1985):** a `BarUpdate(kind="close", amended=True)` re-emits a bar with the same identity `(bar_param, generation, index)`; the writer must UPSERT on the table's `DEDUP UPSERT KEYS` so the amended row replaces the earlier one (never appended, never lost). Pending #2016: deployed DEDUP keys are still `(ts, symbol, bar_param)` until migration 0004. A same-source amend replaces the row; `SourceOverwriteRefused` applies only to a lower-ranked source.
+**Amends (#1985):** a `BarUpdate(kind="close", amended=True)` re-emits a bar with the same identity `(bar_param, generation, index)`; the writer must UPSERT on the table's `DEDUP UPSERT KEYS` so the amended row replaces the earlier one (never appended, never lost). Migration 0004 (#2016, landed) re-keyed the deployed tables to `(ts, symbol, bar_param, generation, index)`; `index` is quoted (`"index"`) in the DDL because INDEX is a QuestDB keyword. A same-source amend replaces the row; `SourceOverwriteRefused` applies only to a lower-ranked source.
 
 **Deviation (E12-T02, BR-25 ask on #345):** the stored `bar_param` is the readable form (`5m`, `tick:500`, …) rather than the `spec_hash`, per the §4.8 table and the ticket's design note (low SYMBOL cardinality, operator-readable queries). The BR-25 proposal to store `spec_hash` is not adopted because specs with non-default options have no readable form and are refused at persistence (`BarPersistError`); `spec_hash` ⇄ `bar_param` is 1:1 via `to_wire`. Revisit if option-bearing specs must be persisted.
 
@@ -3026,6 +3026,8 @@ QuestDB cannot alter an existing table's `DEDUP UPSERT KEYS` column set to add a
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | A. expand→migrate→contract (C-5.1) | `0004` creates `bars_*_v2` with the new key; `BarWriter` dual-writes; rebuild history into v2 from `trades`/Parquet (activity bars cannot be recovered from the collapsed v1 rows); readers switch; a later release drops v1                                                                             | 3 releases, dual-write code, a rebuild job |
 | B. drop-and-recreate               | `backend/db/questdb/0004_bars_key_by_index.sql` drops and recreates the six `bars_*` tables with `generation LONG` + `index LONG` and the new key (keeping `source`/`row_checksum` from 0003); bars are rebuilt from `trades` on demand (they are derived data, §8 retention: "rebuildable from trades") | one file; loses only derived rows          |
+
+**Status: LANDED (#2016) as path B.** The owner approved item R on #1778 on 2026-10-09 (no production data exists); `backend/db/questdb/0004_bars_key_by_index.sql` drops and recreates the six tables. The writer stamps `generation = 0` (QuestDB has no column DEFAULT) and `"index"` = `Bar.index`; kline-sourced rows carry a NULL `index`; reads order by `(generation, index, ts)`.
 
 **Recommended: B**, because R0 has no production data, `bars_*` is a derived cache of `trades` (never the system of record), and v1 rows of activity families are already corrupt where collisions occurred, so migrating them adds nothing. B is a destructive DDL change and therefore an **explicit owner decision** (#1778 item R); if the owner declines, path A applies. The 0004 file must be idempotent on an empty install, and its PR records the owner's acknowledgement.
 
