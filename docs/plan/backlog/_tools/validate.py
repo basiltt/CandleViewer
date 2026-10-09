@@ -110,8 +110,11 @@ ERRORS: list[str] = []
 
 # Owner-accepted capacity overages (docs/plan/30-release-roadmap.md §3.1 / §12, decision
 # 2026-09-24): the S07 reduced sprint carries +2 eng pts, and therefore train R1 carries +2.
-# These downgrade to WARN so the governance CI gate stays meaningful for *new* overages.
-ACCEPTED_OVERAGE = {"sprint": {7: 2}, "train": {"R1": 2}}
+# Decision 2026-10-09 (#1778 item Y): E35-S03 moved S14 -> S15 for its real E32-T01 (native-SL
+# choke point, C-2.6) dependency, dragging E35-S06/S07 with it; S15 carries +8 eng pts, funded
+# from the R5 defect/polish reserve. These downgrade to WARN so the governance CI gate stays
+# meaningful for *new* overages.
+ACCEPTED_OVERAGE = {"sprint": {7: 2, 15: 8}, "train": {"R1": 2}}
 WARNINGS: list[str] = []
 MOVES: list[dict] = []
 UNFIXABLE_SPRINTS: set[int] = set()

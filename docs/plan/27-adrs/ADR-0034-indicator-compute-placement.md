@@ -1,9 +1,10 @@
 # ADR-0034 — Indicator compute placement (`client_worker` vs `server`) and the worker-mirror parity contract
 
-- Status: **proposed** (owner ratification pending; finalised by E13-T04).
+- Status: **accepted** (ratified by the owner 2026-10-09; decision record on #1778, item S; E13-Q03 Electron
+  measurement hand-off accepted; finalised by E13-T04).
 - Date: 2026-10-08
-- Deciders: Owner (`@basiltt`) — owner approval pending (Architect + backend lead collapse to the owner per the
-  agent-delivery adaptations).
+- Deciders: Owner (`@basiltt`) — **ratified 2026-10-09** as written (decision record on #1778). Architect +
+  backend lead collapse to the owner per the agent-delivery adaptations.
 - Numbering note: 0031 is reserved by E45-K01 (`ADR-0031-resilience-and-chaos`, not on `main`); 0033 is the last
   on `main`, so this is the next free number.
 - Related: E13-K01 (#348, this spike), E13-T01, E13-T02, E13-T04, E13-S08, E13-Q03, E13-Q05, E13-X01;

@@ -19,7 +19,7 @@ Scope (locked, repeated because it constrains every line below): **web app only*
 | Estimation scale | Fibonacci 1-2-3-5-8; >8 must split | `01-sdlc-and-branching.md` §11.1 |
 | Design-ahead rule | Design for a screen is **Done ≥2 sprints** before the frontend story enters a sprint | `00-planning-brief.md`, board DoR |
 | Total plan horizon | **Sprint 01 – Sprint 26** (2026-09-25 → 2027-03-25), GA cut 2027-03-25 | this doc §3 |
-| Planned engineering budget | 26 × 90 = **2 340 pts**; allocated **1 911 pts to epics (82%)**, plus **230 pts of named reserves** (90 pen-test remediation, 140 defect/polish) = 2 141 committed (91%), **199 pts (9%) held as train-level buffer** | this doc §3.1 |
+| Planned engineering budget | 26 × 90 = **2 340 pts**; allocated **1 911 pts to epics (82%)**, plus **230 pts of named reserves** (90 pen-test remediation, 132 defect/polish after the 2026-10-09 S15 overage, §3.1) = 2 133 committed (91%), **207 pts (9%) held as train-level buffer** | this doc §3.1 |
 
 ### 1.1 Sprint calendar (S01–S26)
 
@@ -188,13 +188,18 @@ E50 split after re-plan: **61 pts R0 (S02–S04)**, 13 pts R1 (S05–S09: `E50-T
 | R2 | 4 (S10–S13) | 360 | — | 360 | 327 | 33 (9%) |
 | R3 | 6 (S14–S19) | 540 | — | 540 | 486 | 54 (10%) |
 | R4 | 3 (S20–S22) | 270 | — | 270 | 144 + 90 pen-test remediation reserve | 36 (13%) |
-| R5 | 4 (S23–S26) | 360 | — | 360 | 186 + 140 defect/polish reserve | 34 (9%) |
+| R5 | 4 (S23–S26) | 360 | — | 360 | 186 + 132 defect/polish reserve (140 − 8, §3.1 note 2026-10-09) | 42 (12%) |
 
 > **Update 2026-09-24 (post-adoption re-plan, supersedes the 2026-09-15 note):** with 59 shim/dual-runtime/tracking tickets retired, R1 backlog eng drops 439 → 407 (−32) and S05/S06 are back at capacity; only S07 +2 (holiday, baseline charting chain) remains. The R5 defect/polish reserve is **restored to 140 pts**. Details: `backlog/_reconciliation-report.md` §17.
 >
+> **Update 2026-10-09 (owner decision, #1778 item Y):** E35-S03 (rule actions through the OMS) moves S14 → S15
+> because it genuinely depends on E32-T01 (native-SL choke point, C-2.6) in S15; E35-S06/S07 follow it. S15 therefore
+> carries **+8 eng pts**, funded from the R5 defect/polish reserve (140 → 132 pts). Recorded as an accepted overage in
+> `backlog/_tools/validate.py` so the gate still catches *new* overages.
+>
 > *Superseded —* **Update 2026-09-15 (E50 added):** R1 and R2 each run marginally over train capacity (+7 / +4 eng pts) because E50's statechart-readiness gates must precede R3's first statechart. Both are funded from the R5 defect/polish reserve, which therefore **drops from 140 to 129 pts**. Details and the re-plan trigger: `backlog/_reconciliation-report.md` §13.
 
-Reserves are *named line items*, not optimism: R4 carries a **90-pt pen-test remediation reserve** (unknown findings are certain, their content is not) and R5 carries a **140-pt defect/polish reserve**. If a reserve is unused it converts to R5 scope, never to an earlier date claim.
+Reserves are *named line items*, not optimism: R4 carries a **90-pt pen-test remediation reserve** (unknown findings are certain, their content is not) and R5 carries a **132-pt defect/polish reserve** (140 less the 8 pts funding the S15 overage, 2026-10-09). If a reserve is unused it converts to R5 scope, never to an earlier date claim.
 
 #### 3.1.1 The honest consequence of adding E50 to R0/R1
 
