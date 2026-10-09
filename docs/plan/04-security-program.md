@@ -519,7 +519,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 | SR-019 | One identity per human. Shared accounts are prohibited. The system MUST list a user's active sessions and allow the user (and the Owner) to revoke them.                                                                                                                                                                                                          | e2e                  |
 | SR-020 | TOTP (RFC 6238, SHA-1 or SHA-256, 6 digits, 30 s) MUST be mandatory for the Owner and for every user with any trading capability. Viewers SHOULD enable it; the Owner may make it mandatory globally via a setting. Enrolment is enforced at first login (the user cannot reach any other screen until enrolled).                                                 | e2e                  |
 | SR-021 | TOTP verification MUST allow at most ±1 time step of skew and MUST reject re-use of a code already accepted for that user (replay cache).                                                                                                                                                                                                                         | unit                 |
-| SR-022 | Ten single-use recovery codes MUST be generated at enrolment, each 128-bit CSPRNG, displayed exactly once, stored Argon2id-hashed. Using one consumes it; regenerating invalidates all prior codes. Each use is audited and alerts the Owner.                                                                                                                     | unit, e2e            |
+| SR-022 | Ten single-use recovery codes MUST be generated at enrolment, each 128-bit CSPRNG, displayed exactly once, stored as HMAC-SHA256 with a server-side pepper (codes are high-entropy random, so a slow KDF is unnecessary; owner decision #1778 AD). Using one consumes it; regenerating invalidates all prior codes. Each use is audited and alerts the Owner.                                                                                                                     | unit, e2e            |
 | SR-023 | A documented break-glass path MUST exist for total Owner lockout: an offline CLI, runnable only with filesystem access to the host and the KEK, that resets the Owner's TOTP; every use writes an audit event and is loudly surfaced in the UI afterwards.                                                                                                        | drill, manual-review |
 | SR-024 | Idle session timeout 8 h; absolute lifetime 7 days; "remember this device" MUST NOT bypass TOTP. Trading capability requires a session authenticated within the last 12 h.                                                                                                                                                                                        | unit, e2e            |
 | SR-025 | **Step-up re-authentication** (password + TOTP, valid for 5 minutes) MUST be required for: enabling live trading, adding/rotating/revoking credentials, creating/deleting users, changing roles or account grants, changing risk caps or per-account profiles, disabling the kill switch, changing retention or deleting recorded data, and exporting audit logs. | e2e                  |
@@ -786,7 +786,7 @@ flowchart LR
 
 #### 7.2.0 The permission vocabulary (canonical)
 
-Capabilities in this section are enforced by a **closed set of 36 permission strings**. That set is defined once, in `22-api-openapi.yaml`, where every operation carries an `x-rbac` block:
+Capabilities in this section are enforced by a **closed set of 38 permission strings**. That set is defined once, in `22-api-openapi.yaml`, where every operation carries an `x-rbac` block:
 
 ```yaml
 x-rbac: { permissions: [orders:write], scope: granted_accounts }
@@ -802,10 +802,10 @@ x-rbac: { permissions: [orders:write], scope: granted_accounts }
 | Market data            | `marketdata:read`                                                                                         |
 | Recording & replay     | `recording:read`, `recording:write`, `replay:read`, `replay:write`                                        |
 | Trading                | `orders:read`, `orders:write`, `positions:read`, `positions:write`, `executions:read`, `killswitch:write` |
-| Rules & alerts         | `rules:read`, `rules:write`, `alerts:read`, `alerts:write`                                                |
+| Rules & alerts         | `rules:read`, `rules:write`, `rules:arm_live`, `alerts:read`, `alerts:write`                              |
 | Journal                | `journal:read`, `journal:write`                                                                           |
 | Workspaces & settings  | `workspaces:read`, `workspaces:write`, `settings:read`, `settings:write`                                  |
-| Administration         | `admin:read`, `audit:read`, `audit:export`, `flags:read`, `flags:write`, `backups:read`, `backups:write`  |
+| Administration         | `admin:read`, `admin:write`, `audit:read`, `audit:export`, `flags:read`, `flags:write`, `backups:read`, `backups:write`  |
 
 **A permission is necessary but never sufficient.** Every request is authorised by the 4-tuple defined in `24-internal-schemas.md` §15.2 — `(permission, account scope, symbol allowance, environment enabled)` — plus, for the rows marked `(step-up)` below, a session elevated within the last 15 minutes. The `scope` field on `x-rbac` selects how the account dimension is applied:
 
@@ -821,24 +821,31 @@ x-rbac: { permissions: [orders:write], scope: granted_accounts }
 | -------------------------------------------------- | :-------------------------------: | :-----------------------------------------: | :-------------: |
 | `marketdata:read`, `instruments:read`              |                 ✔                 |                      ✔                      |        ✔        |
 | `instruments:write`                                |                 ✔                 |                      ✖                      |        ✖        |
-| `replay:read`, `replay:write`                      |                 ✔                 |               ✔(own sessions)               | ✔(own sessions) |
+| `replay:read` | ✔ | ✔(own sessions) | ✔(own sessions) |
+| `replay:write` | ✔ | ✔(own sessions) | ✖ |
 | `recording:read`                                   |                 ✔                 |                      ✔                      |        ✔        |
-| `recording:write`                                  |  ✔(step-up for purge/retention)   |                      ✖                      |        ✖        |
-| `workspaces:read`, `workspaces:write`              |                 ✔                 |                   ✔(own)                    |     ✔(own)      |
-| `settings:read`, `settings:write`                  |                 ✔                 |                   ✔(own)                    |     ✔(own)      |
+| `recording:write` | ✔(step-up for purge/retention) | ✔(step-up for purge/retention) | ✖ |
+| `workspaces:read` | ✔ | ✔(own) | ✔(own) |
+| `workspaces:write` | ✔ | ✔(own) | ✖ |
+| `settings:read` | ✔ | ✔(own) | ✔(own) |
+| `settings:write` | ✔ | ✔(own) | ✖ |
 | `orders:read`, `positions:read`, `executions:read` |                 ✔                 |                    ✔(g)                     |      ✔(g)       |
 | `orders:write`, `positions:write`                  |                 ✔                 |             ✔(g, `trade` grant)             |        ✖        |
-| `killswitch:write`                                 |                 ✔                 |                      ✖                      |        ✖        |
+| `killswitch:write` | ✔ | ✔(engage within granted scope; release owner-only) | ✖ |
 | `rules:read`                                       |                 ✔                 |           ✔(own + bound accounts)           |     ✔(own)      |
 | `rules:write`                                      |                 ✔                 | ✔(g, `trade` grant; live arming owner-only) |        ✖        |
-| `alerts:read`, `alerts:write`                      |                 ✔                 |                   ✔(own)                    |     ✔(own)      |
-| `journal:read`, `journal:write`                    |                 ✔                 |                   ✔(own)                    | ✔(g, read only) |
+| `rules:arm_live` | ✔ | ✖ | ✖ |
+| `alerts:read` | ✔ | ✔(own) | ✔(own) |
+| `alerts:write` | ✔ | ✔(own) | ✖ |
+| `journal:read` | ✔ | ✔(own) | ✔(g) |
+| `journal:write` | ✔ | ✔(own) | ✖ |
 | `accounts:read`                                    |                 ✔                 |                    ✔(g)                     |      ✔(g)       |
 | `accounts:write`                                   |            ✔(step-up)             |                      ✖                      |        ✖        |
 | `keys:read`                                        | ✔ (metadata only — never secrets) |                      ✖                      |        ✖        |
 | `keys:manage`                                      |            ✔(step-up)             |                      ✖                      |        ✖        |
 | `users:read`, `users:write`                        |       ✔(step-up for write)        |                      ✖                      |        ✖        |
 | `admin:read`                                       |                 ✔                 |                      ✖                      |        ✖        |
+| `admin:write` | ✔ | ✖ | ✖ |
 | `audit:read`                                       |           ✔ (all, raw)            |           ✔(own events, redacted)           |        ✖        |
 | `audit:export`                                     |            ✔(step-up)             |                      ✖                      |        ✖        |
 | `flags:read`, `flags:write`                        |       ✔(step-up for write)        |                      ✖                      |        ✖        |
@@ -930,7 +937,7 @@ Each row names the permission(s) and the operation(s) in `22-api-openapi.yaml` t
 - The UI MUST hide affordances the role lacks, but hiding is never the control; the server returns 403 regardless (SR-017, D1).
 - A denied request MUST return 403 with a stable reason code and MUST be audited; it MUST NOT reveal whether the target object exists.
 - Grants are evaluated at request time; a revoked grant takes effect immediately, including terminating active WS subscriptions (SR-074) and disabling dependent rules (SR-103).
-- Capability strings are a closed enum in code — the 36 permissions listed in §7.2.0 — and the enum is **generated** from the `x-rbac` blocks in `22-api-openapi.yaml` rather than hand-maintained. Routes reference the generated enum; §7.2.2 is generated into a fixture used by the SR-151 tests, so a capability that is documented but unroutable, or a route whose permission is undocumented, fails CI (`rbac_vocabulary_single_source`, `rbac_matrix_fixture`).
+- Capability strings are a closed enum in code — the 38 permissions listed in §7.2.0 — and the enum is **generated** from the `x-rbac` blocks in `22-api-openapi.yaml` rather than hand-maintained. Routes reference the generated enum; §7.2.2 is generated into a fixture used by the SR-151 tests, so a capability that is documented but unroutable, or a route whose permission is undocumented, fails CI (`rbac_vocabulary_single_source`, `rbac_matrix_fixture`).
 - The account dimension is applied per the `x-rbac.scope` value (§7.2.0): `granted_accounts` **narrows silently on reads** and **fails in full on writes**, so a fan-out never partially executes because of a scope gap.
 
 ---

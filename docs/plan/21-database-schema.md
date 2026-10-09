@@ -3035,7 +3035,7 @@ Seeds are declarative YAML applied idempotently by `python -m candleviewer.db.se
 
 ### 10.1 Roles and permissions
 
-The permission vocabulary is **not defined here**. It is defined once by the `x-rbac` blocks in `22-api-openapi.yaml` (36 strings, listed in `04-security-program.md` §7.2.0) and seeded verbatim into this table. The seed file is _generated_ by `tools/rbac/generate_seed.py` from the OpenAPI document, so the database can never drift from the routes; contract test `rbac_vocabulary_single_source` re-generates it in CI and fails on any diff.
+The permission vocabulary is **not defined here**. It is defined once by the `x-rbac` blocks in `22-api-openapi.yaml` (38 strings, listed in `04-security-program.md` §7.2.0) and seeded verbatim into this table. The seed file is _generated_ by `tools/rbac/generate_seed.py` from the OpenAPI document, so the database can never drift from the routes; contract test `rbac_vocabulary_single_source` re-generates it in CI and fails on any diff.
 
 ```yaml
 roles:
@@ -3075,6 +3075,7 @@ permissions:
   # rules & alerts
   - {code: "rules:read",        domain: rules,      dangerous: false}
   - {code: "rules:write",       domain: rules,      dangerous: true}
+  - {code: "rules:arm_live",    domain: rules,      dangerous: true}   # owner-only (via "*")
   - {code: "alerts:read",       domain: alerts,     dangerous: false}
   - {code: "alerts:write",      domain: alerts,     dangerous: false}
   # journal
@@ -3087,6 +3088,7 @@ permissions:
   - {code: "settings:write",    domain: settings,   dangerous: false}
   # administration
   - {code: "admin:read",        domain: admin,      dangerous: false}
+  - {code: "admin:write",       domain: admin,      dangerous: false}   # owner-only (via "*")
   - {code: "audit:read",        domain: admin,      dangerous: false}
   - {code: "audit:export",      domain: admin,      dangerous: true}
   - {code: "flags:read",        domain: admin,      dangerous: false}
@@ -3098,29 +3100,30 @@ role_permissions:
   owner: ["*"]
   manager:
     ["marketdata:read", "instruments:read",
-     "recording:read", "replay:read", "replay:write",
+     "recording:read", "recording:write", "replay:read", "replay:write",
      "orders:read", "orders:write", "positions:read", "positions:write", "executions:read",
      "rules:read", "rules:write", "alerts:read", "alerts:write",
      "journal:read", "journal:write",
      "accounts:read",
      "workspaces:read", "workspaces:write", "settings:read", "settings:write",
-     "audit:read"]
+     "audit:read", "killswitch:write"]
   viewer:
     ["marketdata:read", "instruments:read",
-     "recording:read", "replay:read", "replay:write",
+     "recording:read", "replay:read",
      "orders:read", "positions:read", "executions:read",
-     "rules:read", "alerts:read", "alerts:write",
+     "rules:read", "alerts:read",
      "journal:read",
      "accounts:read",
-     "workspaces:read", "workspaces:write", "settings:read", "settings:write"]
+     "workspaces:read", "settings:read"]
 ```
 
 Three things in this seed are deliberate and should not be "tidied":
 
 - **`manager` excludes `keys:read` and `keys:manage` entirely.** A manager never sees credential metadata, not even a key prefix — that is what makes the "manager cannot enumerate the owner's infrastructure" property hold.
-- **`viewer` holds `workspaces:write`, `settings:write`, `alerts:write` and `replay:write`.** These are `scope: self` permissions: they let a viewer arrange their own panes, set their own preferences, manage their own alerts and run their own replays. None of them can touch an account or emit an order, so granting them does not weaken the read-only guarantee.
+- **`viewer` holds no write permission.** `alerts:write`, `replay:write`, `settings:write`, `workspaces:write` and `journal:write` are denied to viewer, matching `x-permissions` and `rbac_seed.json` (owner decision #1778 Z, 2026-10-09). A viewer is strictly read-only.
+- **`manager` holds `killswitch:write` and `recording:write`.** Kill-switch engage is limited to the manager's granted scope; release is owner-only. `recording:write` purge/retention actions still need step-up.
 - **`audit:read` is `manager`, not `viewer`** (`04-security-program.md` §7.2.1, SR-067; revision `0016`). The manager's slice is its own events with payloads redacted, applied at request time; the owner reads raw; a viewer has no audit access.
-- **`manager` holds `rules:write` but arming a rule against live is still owner-only.** The live/demo distinction is not a separate permission; it is the environment leg of the 4-tuple check plus the `live_trading` flag (`04-security-program.md` §7.2.2 row 23a). Splitting it into `rules:arm_live` was rejected because it would put the same decision in two places.
+- **Live rule arming is `rules:arm_live`, which is owner-only** (seeded via `owner: ["*"]`; manager and viewer hold neither it nor `admin:write`). `manager` holds `rules:write` for demo/granted-account rules only.
 
 Row-level scoping (`✔(g)`, `✔(own)`) is **not** expressed in `role_permissions`; it is enforced at request time from `user_account_access` via the `x-rbac.scope` field, exactly as §7.2.0 describes.
 

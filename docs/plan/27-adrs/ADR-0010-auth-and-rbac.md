@@ -109,7 +109,7 @@ decision* are not settled here. Paths are under `services/api/candleviewer/`.
 
 | Id | Fact | Status |
 |---|---|---|
-| D-1 | Recovery codes are stored as a keyed HMAC-SHA256 of the normalised code (`auth/recovery_codes.py`; about 138 bits of entropy), not Argon2id as SR-022 states. | pending owner decision (#1778 item AD) |
+| D-1 | Recovery codes are stored as a keyed HMAC-SHA256 of the normalised code (`auth/recovery_codes.py`; about 138 bits of entropy), not Argon2id as SR-022 states. | **Resolved** — owner decision #1778 AD (2026-10-09): keep HMAC-SHA256 with a server-side pepper; codes are high-entropy random so a slow KDF is unnecessary. SR-022 text amended in `04-security-program.md`. |
 | D-2 | Step-up verifies a TOTP code only (`auth/step_up.py`); SR-025 asks for password plus TOTP. | pending owner decision (#1778 item AE) |
 | F-1 | No CSRF double-submit token. Decision 3 above calls for one. The code relies on `SameSite=Strict`, the Origin allow-list and the bearer-header model. | open, fix or Owner-signed acceptance (#2090) |
 | F-2 | Access tokens are not bound to IP or user-agent; theft is detected only on refresh-token reuse. | design decision, pending owner decision |
