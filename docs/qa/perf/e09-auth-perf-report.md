@@ -23,16 +23,19 @@ No number in this file is invented.
 
 ## Chaos outcomes (`services/api/tests/chaos/auth/`, `-m "chaos and integration"`)
 
-C-13.6 mapping: #10 (datastore outage), #6 (clock drift); the rest are auth-specific.
+C-13.6 mapping: #10 (datastore outage). C-13.6 #6 is `recv_window` drift on the exchange adapter and
+is NOT covered here; the TOTP step-skew scenario is only an analogue (SR-021). The rest are auth-specific.
+The tests drive the real SessionService, RevocationHub and WS gateway over an in-memory storage seam.
+There is no dedicated session sweeper in `candleviewer/auth`; expiry is lazy in `require_active`.
 
 | Scenario | Local result (in-process fakes, Python 3.14) |
 |---|---|
 | Postgres restart (fail closed, recover) | pass |
-| Postgres restart vs compose stack | skipped locally (no docker); runs in CI |
-| Clock skew +-1 accepted, +-3 rejected | pass |
+| Postgres restart vs compose stack (integration-only, real assertions) | skipped locally (no docker); runs in CI |
+| TOTP step skew +-1 accepted, +-3 rejected (#6 analogue; replay refusal cited to test_mfa_service) | pass |
 | WS gateway restart, no carried auth state | pass |
 | Revocation storm (100 sockets, `bye`/4401) | pass |
-| Session-store pressure with sweeper | pass |
+| Session expiry under pressure (lazy expiry, concurrent auth) | pass |
 
 ## Not covered yet (follow-ups)
 
