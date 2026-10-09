@@ -16,6 +16,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+import sqlalchemy as sa
 from testcontainers.postgres import PostgresContainer
 
 from candleviewer.auth.models import InviteRecord, UserRecord
@@ -83,5 +84,78 @@ async def test_concurrent_consume_has_exactly_one_winner(pg_dsn: str) -> None:
         )
         assert sum(r is not None for r in results) == 1
         assert await repo.consume(th, now=now, pending_password_hash=PW) is None
+    finally:
+        await rel.dispose()
+
+
+async def test_downgrade_to_viewer_rewrites_invite_and_user_role(pg_dsn: str) -> None:
+    now = datetime.now(UTC)
+    await seed(pg_dsn, "owner2", "correct horse battery")
+    rel = SqlAlchemyRelationalRepository(pg_dsn)
+    repo = SqlAlchemyInviteRepository(rel, lambda **f: InviteRecord.model_validate(f))
+    try:
+        users = SqlAlchemyUserRepository(
+            rel, lambda **f: UserRecord.model_validate(f), clock=lambda: datetime.now(UTC)
+        )
+        owner = await users.find_by_identifier("owner2")
+        assert owner is not None
+        uid = uuid.uuid4()
+        th = "d" * 64
+        assert await repo.create_user_with_invite(
+            user_id=uid,
+            invite_id=uuid.uuid4(),
+            email="legacy@example.com",
+            username="legacy",
+            display_name=None,
+            role="manager",  # legacy row minted before #2109
+            placeholder_password_hash="$argon2id$x",  # noqa: S106 - placeholder, not a credential
+            invited_by=owner.id,
+            token_hash=th,
+            expires_at=now + timedelta(hours=72),
+        )
+        await repo.downgrade_to_viewer(uid)
+        async with rel.unit_of_work() as uow:
+            inv = (
+                (
+                    await uow.session.execute(
+                        sa.text(
+                            "SELECT role::text FROM user_invites WHERE user_id = CAST(:i AS uuid)"
+                        ),
+                        {"i": str(uid)},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            roles = (
+                (
+                    await uow.session.execute(
+                        sa.text(
+                            "SELECT r.name::text FROM user_roles ur "
+                            "JOIN roles r ON r.id = ur.role_id "
+                            "WHERE ur.user_id = CAST(:i AS uuid)"
+                        ),
+                        {"i": str(uid)},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            other = (
+                (
+                    await uow.session.execute(
+                        sa.text(
+                            "SELECT r.name::text FROM user_roles ur "
+                            "JOIN roles r ON r.id = ur.role_id "
+                            "WHERE ur.user_id = CAST(:i AS uuid)"
+                        ),
+                        {"i": str(owner.id)},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        assert inv == ["viewer"] and roles == ["viewer"]
+        assert "owner" in other  # unrelated user's role untouched
     finally:
         await rel.dispose()

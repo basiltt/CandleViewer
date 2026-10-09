@@ -93,7 +93,8 @@ _DOWNGRADE_INVITES = sa.text(
 _DOWNGRADE_ROLE = sa.text(
     "UPDATE user_roles SET role_id = "
     "(SELECT id FROM roles WHERE name = CAST('viewer' AS role_name)) "
-    "WHERE user_id = CAST(:id AS uuid)"
+    "WHERE user_id = CAST(:id AS uuid) AND role_id IN "
+    "(SELECT id FROM roles WHERE name <> CAST('viewer' AS role_name))"
 )
 
 

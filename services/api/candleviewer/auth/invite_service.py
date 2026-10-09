@@ -26,7 +26,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
@@ -82,6 +82,13 @@ _COMMON_PASSWORDS = frozenset(
 )
 
 Clock = Callable[[], datetime]
+#: Write-ahead audit hook for a legacy-role downgrade: `(invite, stored_role)`.
+DowngradeAudit = Callable[[InviteRecord, str], Awaitable[None]]
+
+
+def _is_viewer_role(role: str) -> bool:
+    """True only for the one role an invite may grant (#2109)."""
+    return role == InviteRole.VIEWER.value
 
 
 def _utc_now() -> datetime:
@@ -249,7 +256,13 @@ class InviteService:
         )
 
     async def complete_redemption(
-        self, token: str, *, method_id: str, code: str, source_ip: str
+        self,
+        token: str,
+        *,
+        method_id: str,
+        code: str,
+        source_ip: str,
+        audit_downgrade: DowngradeAudit | None = None,
     ) -> tuple[InviteRecord, tuple[str, ...]]:
         """Verify the first TOTP code and activate the account. Returns the
         invite (role) and the one-time recovery codes."""
@@ -274,11 +287,15 @@ class InviteService:
             users_invites_rejected_total.labels("enrollment_invalid").inc()
             raise InviteRejected("enrollment_invalid") from exc
         pending_hash = record.pending_password_hash
-        if record.role != InviteRole.VIEWER.value:
+        stored_role = record.role
+        if not _is_viewer_role(stored_role):
             # Legacy invite minted before #2109: never grant more than viewer.
+            # Audit first (C-2.9, write-ahead): if the audit write fails, nothing changes.
+            if audit_downgrade is not None:
+                await audit_downgrade(record, stored_role)
             await self._repo.downgrade_to_viewer(record.user_id)
             record = record.model_copy(
-                update={"role": InviteRole.VIEWER.value, "downgraded_from": record.role}
+                update={"role": InviteRole.VIEWER.value, "downgraded_from": stored_role}
             )
         activated = await self._repo.activate_user(
             record.user_id,

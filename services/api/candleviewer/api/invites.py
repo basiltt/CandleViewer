@@ -323,27 +323,33 @@ def make_invites_router(
             }
         ):
             return _problem(400, "Bad request", "method_id and code are required")
+
+        async def _audit_downgrade(rec: InviteRecord, stored_role: str) -> None:
+            await emitter.emit(
+                "users.invite_role_downgraded",
+                actor_label=rec.username,
+                actor_user_id=rec.user_id,
+                actor_ip=request.client.host if request.client else None,
+                object_kind="user",
+                object_id=str(rec.user_id),
+                severity=Severity.WARNING,
+                before_state={"role": stored_role},
+                after_state={"role": "viewer"},
+            )
+
         try:
             record, recovery = await auth.invites.complete_redemption(
-                invite_token, method_id=method_id, code=code, source_ip=_client_ip(request)
+                invite_token,
+                method_id=method_id,
+                code=code,
+                source_ip=_client_ip(request),
+                audit_downgrade=_audit_downgrade,
             )
         except InviteRejected as exc:
             await _reject_audit(exc.reason, request)
             if exc.reason == "enrollment_invalid":
                 return _problem(422, "Unprocessable entity", "invalid code", code="invalid_code")
             return _uniform_not_found()
-        if record.downgraded_from is not None:
-            await emitter.emit(
-                "users.invite_role_downgraded",
-                actor_label=record.username,
-                actor_user_id=record.user_id,
-                actor_ip=request.client.host if request.client else None,
-                object_kind="user",
-                object_id=str(record.user_id),
-                severity=Severity.WARNING,
-                before_state={"role": record.downgraded_from},
-                after_state={"role": record.role},
-            )
         await emitter.emit(
             "users.invite_redeemed",
             actor_label=record.username,
