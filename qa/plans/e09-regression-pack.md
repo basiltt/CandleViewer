@@ -1,0 +1,98 @@
+# E09 regression pack (auth, session, RBAC)
+
+Ticket: E09-Q06 (#297). Source plan: `qa/plans/e09-auth-rbac-test-plan.md`. Automation status: `qa/plans/e09-q02-automation-status.md`.
+All paths below are relative to `services/api/` unless they start with `apps/`.
+
+## How to run
+Automated backend subset (single command, about 30 s locally, no network, no docker):
+
+```
+cd services/api
+uv run pytest -p no:randomly --no-cov \
+  tests/unit/auth tests/unit/audit tests/unit/api tests/unit/ws tests/unit/test_ws_permissions.py \
+  tests/contract/rbac tests/security/auth tests/qa/test_e09_dryrun_group_a.py tests/chaos/auth
+```
+Expected at authoring time (2026-10-09): 1094+ passed, 1 skipped (chaos S1b needs docker). Any failure is a release-gate blocker.
+Frontend E2E (needs Playwright browsers; **not run by the pack author**): `apps/web/e2e/auth/*.spec.ts`.
+A CI-runnable tag does not exist yet; this pack lists paths instead. Adding a pytest marker is a follow-up (see Gaps).
+Time budget: automated about 10 min including setup; manual items below about 2 h. Cold execution by a second person has **not** happened.
+
+## A. Behaviour to automated test
+| Case | Behaviour | Test (file::test) |
+|---|---|---|
+| A01 | Password step returns mfa_required, no session | `tests/qa/test_e09_dryrun_group_a.py::test_e09_tc_a01_correct_credentials_return_mfa_required_no_session`; `apps/web/e2e/auth/login.spec.ts` (A01) |
+| A02 | TOTP verify issues session | `tests/unit/auth/test_mfa_service.py::test_verify_valid_code_creates_a_session` |
+| A03 | Disabled user refused | `tests/qa/test_e09_dryrun_group_a.py::test_e09_tc_a03_disabled_account_rejected_after_password_check` |
+| A04/A05 | TOTP skew +-1 accepted, further refused | `tests/unit/auth/test_mfa_service.py::test_verify_tolerates_clock_drift_within_one_step`; `tests/chaos/auth/test_auth_chaos.py::test_s2_totp_step_skew_pm1_accepted_pm3_rejected_replay_refused` |
+| A06 | TOTP replay refused | `tests/unit/auth/test_mfa_service.py::test_verify_reused_code_is_rejected`; `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_01_totp_replay_inside_skew_window_rejected` |
+| A07 | Unknown user vs wrong password indistinguishable | `tests/qa/test_e09_dryrun_group_a.py::test_e09_tc_a07_unknown_user_and_wrong_password_are_indistinguishable`; `tests/unit/auth/test_login_timing_enumeration.py::test_login_timing_unknown_vs_wrong_password_indistinguishable_over_1000_samples` |
+| A08 | Lockout with Retry-After | `tests/qa/test_e09_dryrun_group_a.py::test_e09_tc_a08_lockout_returns_423_with_retry_after`; `tests/security/auth/test_credential_abuse.py::test_ac_cred_05_lockout_expires_on_fixed_clock` |
+| A09 | 5 wrong TOTP codes lock challenge | `tests/unit/auth/test_mfa_service.py::test_verify_locks_after_five_failed_attempts` |
+| A10 | Expired challenge refused | `tests/unit/auth/test_mfa_service.py::test_verify_expired_challenge_raises_challenge_invalid` |
+| A11 | Recovery code single use | `tests/unit/auth/test_mfa_service.py::test_recovery_code_use_forces_totp_reenrollment`; `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_03_recovery_code_single_use` |
+| B01-B05 | Enrolment, recovery codes once, regeneration | `tests/unit/auth/test_mfa_service.py::test_first_login_enrolment_returns_recovery_codes`; `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_04_recovery_code_dead_after_regeneration`; `tests/unit/auth/test_recovery_codes.py` (E2E for standalone SCR-003: manual M3) |
+| B06-B09 | Forced password change and policy | `apps/web/e2e/auth/enrolment.spec.ts` (B06-B09); `tests/unit/auth/test_invite_service.py::test_password_policy_rejects_weak` |
+| C01 | Session bootstrap | `apps/web/e2e/auth/session.spec.ts` (C01); `tests/unit/api/test_auth_router.py` |
+| C02/C03 | Idle and absolute expiry | `tests/unit/auth/test_session_service.py::test_absolute_expiry_disarms_trading_by_revoking`; `::test_order_entry_refused_while_idle_locked_regardless_of_client`; `tests/security/auth/test_session_abuse.py::test_ac_ses_04_refresh_cannot_extend_absolute_lifetime` (UI half: manual M1) |
+| C04-C06 | Step-up required, grant, expiry | `tests/unit/auth/test_step_up_b16.py::test_grace_expiry_sends_elevation_deadline_back_to_normal`; `tests/unit/auth/test_step_up.py::test_dangerous_action_requires_step_up`; `apps/web/e2e/auth/stepup.spec.ts` |
+| C07 | Refresh rotation | `tests/unit/auth/test_session_service.py::test_refresh_rotates_the_token_and_revokes_the_old_session`; `tests/security/auth/test_session_abuse.py::test_ac_ses_02_every_refresh_issues_new_id_and_token` |
+| C08 | TOTP verify latency | manual M4 (perf evidence: `docs/qa/perf/e09-auth-perf-report.md`) |
+| C09 | Tampered or missing cookie | `tests/security/auth/test_session_abuse.py::test_ac_ses_07_forged_access_token_rejected`; `apps/web/e2e/auth/session.spec.ts` (C09) |
+| D01-D03 | Sessions list, revoke, sign-out everywhere | `tests/unit/auth/test_session_service.py::test_sign_out_everywhere_revokes_all_but_can_exclude_current`; `tests/unit/api/test_sessions_router.py`; `tests/security/auth/test_csrf_cookie_abuse.py::test_ac_csrf_05_idor_cannot_revoke_other_users_session` |
+| D04 | Owner TOTP reset | `tests/unit/auth/test_step_up.py::test_owner_reset_revokes_sessions_without_oms_effects_or_secret`; `::test_owner_cannot_reset_self` |
+| D05/D06 | Grant revoke / disable mid-session closes sockets | `tests/contract/rbac/test_scope_and_ws.py::test_in_flight_subscription_gets_revoked_when_the_grant_is_withdrawn`; `tests/unit/ws/test_revocation.py::test_revoke_sends_bye_and_closes_4401_only_for_that_session`; `tests/chaos/auth/test_auth_chaos.py::test_s4_revocation_storm_every_socket_gets_bye_4401` |
+| E01 | Invite creation | `tests/unit/auth/test_invite_service.py::test_create_returns_high_entropy_token_stored_only_as_hash`; `tests/unit/api/test_invites_router.py` |
+| E02-E04 | Redeem, single use, expiry | `tests/unit/auth/test_invite_service.py::test_invite_accepted_end_to_end_activates_user`, `::test_token_reuse_rejected`, `::test_expired_token_rejected_after_72h`, `::test_concurrent_redemptions_exactly_one_wins`; `apps/web/e2e/auth/onboarding.spec.ts` |
+| E05 | Onboarding checklist | `tests/unit/api/test_onboarding_checklist.py`; `tests/unit/api/test_onboarding_create_app_e2e.py` |
+| E06/E07 | Viewer and cross-account denial | `tests/contract/rbac/test_scope_and_ws.py::test_valid_capability_but_non_granted_account_is_403_nothing_mutated_and_audited`; `tests/security/auth/test_authz_abuse.py::test_ac_authz_02_account_id_tampering_denied_without_grant`; `apps/web/e2e/auth/denied.spec.ts` |
+| E08 | Tailscale-only reachability | manual M5 (deployment level; no automated test) |
+| E09 | Every route has a capability declaration | `tests/contract/rbac/test_route_matrix.py::test_undeclared_served_route_fails_the_build`; `tests/unit/api/test_deny_by_default.py` |
+| Audit | Append-only, chain, redaction, never drops | `tests/unit/audit/test_wal.py`, `tests/unit/audit/test_writer_never_drops.py`, `tests/unit/audit/test_query_verify.py`, `tests/unit/audit/test_redact_credentials.py`; every denial audited: `tests/security/auth/test_authz_abuse.py::test_ac_authz_07_every_denial_is_audited` |
+| Fail closed | Postgres outage, gateway restart, session expiry under load | `tests/chaos/auth/test_auth_chaos.py` S1, S3, S5 (S1b real restart: needs docker, skipped without) |
+
+## B. Manual steps (run on a staging deploy)
+| Id | Step | Pass when |
+|---|---|---|
+| M1 | Idle-lock and session-expiry screens (C02/C03 UI half): idle past the configured timeout, then unlock with password | Screen appears, data feed stays on, unlock works. Blocked on #1640 until SCR-005/112 are built |
+| M2 | Real-browser cookie behaviour: sign in on two contexts, sign out everywhere, reload both | Both land on sign-in; no stale shell |
+| M3 | Standalone TOTP enrolment and recovery-code screen (B01-B05) | Codes shown once; reload does not show them. Blocked on #1640 (SCR-003 not built) |
+| M4 | Time 20 consecutive TOTP verifies on staging | p95 within the SCR-002 budget in `docs/plan/14-screens-catalogue.md` |
+| M5 | From outside the tailnet, try to reach the API (E08) | Connection refused or timeout |
+| M6 | Keyboard-only pass of login, step-up dialog, invite wizard | Every control reachable with visible focus; no trap |
+| M7 | Re-run the four charters in `docs/qa/charters/` against staging with a browser and record real debriefs | Debriefs updated; anomalies filed |
+| M8 | Log scan after one login, MFA and refresh on staging for session id, token, cookie and TOTP values (SR-122) | No match in API or web logs |
+
+## B2. Security controls (SR-xxx) not covered by a case row above
+| Control | Evidence |
+|---|---|
+| SR-012 cookie flags | `tests/security/auth/test_csrf_cookie_abuse.py::test_ac_csrf_03_refresh_cookie_flags_not_downgradable` (HttpOnly, Secure, SameSite=Strict on refresh cookie); `apps/web/e2e/auth/session.spec.ts` (no secrets readable by page script) |
+| SR-112 CSP | Desktop shell: `apps/desktop/test/csp.test.ts` ("matches the SR-112 policy verbatim", "never allows unsafe-eval"); `apps/desktop/e2e/hardening.spec.ts`. Web-served CSP and CI enforcement: tracked gap #1230 |
+| SR-013 session rotation | Refresh and fixation: `tests/security/auth/test_session_abuse.py::test_ac_ses_01_fixation_preauth_id_never_becomes_session`, `::test_ac_ses_02_every_refresh_issues_new_id_and_token`. Password change: #2099. **Role change: tracked gap #2101** (no test asserts the session id rotates on role change; #2100 covers only the mid step-up revoke interleaving) |
+| SR-122 no session ids/tokens in logs | `tests/unit/observability/test_redaction.py::test_redacts_session_key`, `::test_redacts_csrf_key`, `::test_redacts_cookie_key`, `::test_redacts_authorization_key`, `::test_redacts_totp_key`, `::test_redacts_recovery_code_key`; audit side `tests/unit/audit/test_redact_credentials.py`. Key-name redaction only; an end-to-end "no token in captured logs during a login" test does not exist: tracked gap #2103, manual M8 meanwhile |
+| SR-015 per-IP throttle | `tests/unit/auth/test_login_service.py::test_per_ip_throttle_blocks_independent_of_username`; `tests/unit/auth/test_throttle.py::test_throttle_is_per_source_ip`; `tests/security/auth/test_credential_abuse.py::test_ac_cred_03_stuffing_one_ip_throttled_without_argon2_amplification`; `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_02_six_digit_bruteforce_locked_at_cap`. Review ticket: #1233 |
+| SR-016 lockout audit | `tests/unit/api/test_auth_router.py::test_account_locked_emits_auth_account_locked_audit_action_with_warning_severity`. **Owner notification: no test found and no implementation located in `candleviewer/auth`; tracked gap #2102** (review ticket #1233 covers lockout review only) |
+| SR-011 Argon2id parameters | `tests/security/auth/test_credential_abuse.py::test_ac_cred_01_hash_params_in_force_come_from_stored_hash_not_config` (m>=65536, t>=3, parsed from the hash); `tests/unit/auth/test_login_service.py::test_stale_argon2_params_trigger_rehash_on_login`; `tests/unit/auth/test_hashing.py::test_hasher_needs_rehash_true_for_stale_params`. The >=100 ms per-verify cost on the target host is not asserted: #2097 / E09-Q05 report |
+| Audit append-only DB grants | `tests/integration/audit/test_audit_repository.py::test_app_role_cannot_update_or_delete` and `::test_truncate_refused_even_for_owner` (**integration, need the docker Postgres stack; not run by the pack author**); unit: `tests/unit/migrations/test_0003_audit_log.py::test_0003_audit_checkpoints_are_append_only` |
+
+U11 (same-counter TOTP replay): `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_01_totp_replay_inside_skew_window_rejected` was read and does assert `MfaCodeReused` for the same code on two fresh challenges; `::test_ac_mfa_01b_older_step_than_last_accepted_rejected` asserts the older-step case. Citation confirmed.
+
+Added manual step: M8 grep the API and web logs from one full login, MFA and refresh on staging for the session id, token, cookie and TOTP values; pass when none appear.
+
+## CSRF position
+CSRF protection currently relies on SameSite=Strict cookies, the Origin allow-list on cookie refresh, and bearer-header auth on state-changing routes (`test_ac_csrf_01`, `_02`, `_04`). There is **no double-submit CSRF token**; that is deferred to #2090 and the SR-152 "CSRF token absent/invalid" negative test is blocked by it.
+
+## C. Gaps and deferrals (each cites an open issue unless marked untracked)
+- Server-side E2E clock for step-up and session expiry: #2086.
+- Session screens RTL/axe/Playwright, SCR-002/003/005/112 cases: #1640.
+- CSRF double-submit token and its negative test: #2090.
+- Rules-manager grant isolation test: #2094; owner check shape: #2096.
+- k6 Argon2 timing header: #2097.
+- Password change during a live step-up: #2099.
+- Role revoked mid step-up-gated action, audit order preserved: #2100.
+- Frontend auth slice coverage (>=80% floor): **not measured**, open rollup item.
+- No pytest marker/tag for this pack and no `e2e-auth` CI lane: open.
+- No cold execution of this pack by a second person: open.
+- Session id rotation on role change (SR-013): #2101.
+- Owner notification on lockout (SR-016): #2102.
+- End-to-end no-token-in-logs test (SR-122): #2103.
+- Web-served CSP enforcement: #1230.

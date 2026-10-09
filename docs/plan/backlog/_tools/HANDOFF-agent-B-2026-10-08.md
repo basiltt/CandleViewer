@@ -165,7 +165,7 @@ BACKEND behaviour, so treat E09-S03's backend as Done. Record that reasoning in 
    - Steps: `perf/k6/auth.js`, `tests/chaos/auth/` (5 scenarios, `@pytest.mark.chaos` + integration),
      `docs/qa/perf/e09-auth-perf-report.md` with numbers. Follow T14 for any wall-clock assert.
 5. **E09-Q06 #297 · Task 3 · Exploratory charters, regression pack, QA sign-off** — NEXT after 2–4
-   - Four charters under `docs/qa/charters/`, `qa/packs/e09-regression.md`. The "sign-off" is QA's, not
+   - Four charters under `docs/qa/charters/`, `qa/plans/e09-regression-pack.md`. The "sign-off" is QA's, not
      the owner's — you may run it. Coverage rollup must show auth/rbac/audit ≥85 %.
 6. **E09-X04 #300 · Task 3 · Security review, break-glass drill, Owner sign-off** — NEXT after 1
    - Do everything except the owner's signature: `docs/security/reviews/e09-auth-review.md`, both drill
