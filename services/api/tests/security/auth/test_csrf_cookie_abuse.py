@@ -1,0 +1,79 @@
+"""E09-X02 CSRF / cookie-flag abuse cases (AC-CSRF-*) against the real session router.
+
+Finding F-1 (design gap, see abuse-cases doc): the repo has no double-submit CSRF token in
+`auth/`; the implemented controls are SameSite=Strict + Origin allow-list on cookie refresh.
+"""
+
+from __future__ import annotations
+
+import uuid
+
+from candleviewer.api.sessions import REFRESH_COOKIE
+from tests.unit.api.test_sessions_router import _Env, _h
+
+_ORIGIN = "https://app.example"
+
+
+async def test_ac_csrf_01_cookie_refresh_without_or_foreign_origin_refused() -> None:
+    env = _Env(origins=frozenset({_ORIGIN}))
+    m = await env.mint(uuid.uuid4())
+    url = "/api/v1/auth/refresh"
+    for headers in ({}, {"Origin": "https://evil.example"}, {"Origin": "null"}):
+        env.client.cookies.clear()
+        r = env.client.post(url, cookies={REFRESH_COOKIE: m.refresh_token}, headers=headers)
+        assert r.status_code == 403, headers
+    rec = await env.repo.find_by_id(str(m.session_id))
+    assert rec is not None and not rec.is_revoked  # CSRF attempts did not burn the token
+
+
+async def test_ac_csrf_02_empty_allowlist_refuses_every_origin() -> None:
+    env = _Env(origins=frozenset())
+    m = await env.mint(uuid.uuid4())
+    r = env.client.post(
+        "/api/v1/auth/refresh",
+        cookies={REFRESH_COOKIE: m.refresh_token},
+        headers={"Origin": _ORIGIN},
+    )
+    assert r.status_code == 403
+
+
+async def test_ac_csrf_03_refresh_cookie_flags_not_downgradable() -> None:  # SR-012
+    env = _Env(origins=frozenset({_ORIGIN}))
+    m = await env.mint(uuid.uuid4())
+    env.client.cookies.clear()
+    r = env.client.post(
+        "/api/v1/auth/refresh",
+        cookies={REFRESH_COOKIE: m.refresh_token},
+        headers={"Origin": _ORIGIN, "X-Forwarded-Proto": "http"},
+    )
+    assert r.status_code == 200
+    cookie = r.headers["set-cookie"].lower()
+    for flag in ("httponly", "secure", "samesite=strict"):
+        assert flag in cookie
+
+
+async def test_ac_csrf_04_state_changing_routes_require_bearer_not_cookie() -> None:
+    env = _Env(origins=frozenset({_ORIGIN}))
+    m = await env.mint(uuid.uuid4())
+    env.client.cookies.set(REFRESH_COOKIE, m.refresh_token)
+    hdr = {"Origin": _ORIGIN}
+    for method, path in (
+        ("POST", "/api/v1/auth/logout"),
+        ("DELETE", f"/api/v1/me/sessions/{m.session_id}"),
+    ):
+        assert env.client.request(method, path, headers=hdr).status_code == 401, path
+    assert env.client.post("/api/v1/auth/logout", headers=_h(m.access_token)).status_code < 300
+
+
+async def test_ac_csrf_05_idor_cannot_revoke_other_users_session() -> None:  # O1/O7 on sessions
+    env = _Env()
+    victim = await env.mint(uuid.uuid4())
+    attacker = await env.mint(uuid.uuid4())
+    r = env.client.delete(
+        f"/api/v1/me/sessions/{victim.session_id}", headers=_h(attacker.access_token)
+    )
+    assert r.status_code in (403, 404)
+    rec = await env.repo.find_by_id(str(victim.session_id))
+    assert rec is not None and not rec.is_revoked
+    listing = env.client.get("/api/v1/auth/sessions", headers=_h(attacker.access_token)).json()
+    assert str(victim.session_id) not in str(listing)
