@@ -146,6 +146,11 @@ Screen `SCR-041`; `CMP-220 IntervalPicker`; `CMP-029 Skeleton-Chart`. Keyboard h
 | E12-TC-E04 | Two symbols (BTCUSDT, ETHUSDT thin) | Switch symbol, then back | Engine is not torn down (same canvas, no reload); data of the previous symbol is never shown under the new symbol's title; no leaked subscriptions (WS topic list shows only the active topic) | US-CHART-005 · E12-S11 | Q03 · pending |
 | E12-TC-E05 | Switch during an in-flight backfill | Switch interval mid-load | Old request cancelled; result of the old interval never painted | US-CHART-005 · E12-S11, E12-S05 | Q03 · pending |
 | E12-TC-E06 | Switch to a bar type via `CMP-220` (tick 500) | Select | `SCR-042` shows tick series; interval list reflects the active bar mode | US-CHART-005 · E12-S12 | Q03 · pending |
+| E12-TC-E07 | `btcusdt-2026-09-01`, 1m chart, 5 000 bars loaded | Pan by dragging horizontally; then by keyboard (arrow keys; `Home` resets) | View pans along the time axis with no refetch for already-loaded bars; inertia is off under `prefers-reduced-motion`; keyboard path reaches the same positions as drag | US-CHART-006 · E12-S09 | pending → E12-Q03 (#419) |
+| E12-TC-E08 | Same | Scroll-wheel zoom with the pointer over a known bar; repeat with `+`/`-` | The bar under the cursor stays under the cursor (anchor) within 1 px; the visible range changes monotonically; no blank frame | US-CHART-006 · E12-S09 | pending → E12-Q03 (#419) |
+| E12-TC-E09 | Same, autoscale on | Pan until a different price range is visible; drag the price axis; double-click the axis | Autoscale fits the visible highs/lows; dragging the axis disengages it and shows a lock badge; double-click restores auto-fit | US-CHART-006 · E12-S09 | pending → E12-Q03 (#419) |
+
+E07–E09 close the US-CHART-006 gap recorded on #419 (comment 6085451276); frame-rate budgets are `E12-Q05`.
 
 ## 6. Group F — Days-to-load & history honesty (US-CHART-010; E12-S06, E12-T06)
 
@@ -160,7 +165,7 @@ marker, not recorder retention (E16).
 | E12-TC-F04 | Request would exceed the client memory budget | Set 365 d on 1 s | Warning with the estimate; load only after explicit confirm; declining loads nothing | US-CHART-010 · E12-S06 | Q03 · pending |
 | E12-TC-F05 | Settings screen | Inspect per-view defaults | Chart, footprint, profile and replay each have their own default lookback | US-CHART-010 · E12-S06 | Q03 · pending |
 | E12-TC-F06 | `btcusdt-2026-09-02-gap` (deliberate WS gap) | Request time bars across the gap; watch the WS topic | Bars across the gap are rebuilt from REST/tape consistently; `ws_topic_gap_total{topic="bars"}` increments and the client resyncs from a snapshot; no duplicated or missing bar after resync | US-CHART-010 · E12-T06 | Q04 + Q03 · pending (T06) |
-| E12-TC-F07 | Window wider than `limit × interval` | `GET /market/klines` | Per `22-api-openapi.yaml`: oversized window is refused with the documented 422, or the response keeps the newest bars as the contract text states; executor quotes the contract sentence in the run log (wording was an open item on #398) | US-CHART-010 · E12-T05 | Q04 · shipped |
+| E12-TC-F07 | `btcusdt-2026-09-01`, time `1m` | `GET /market/klines` over a window wider than `limit × interval` (e.g. `limit=200`, 2 days) | **200, not 422:** the first page holds the oldest `limit` bars of the window, oldest→newest, with `meta.has_more=true` and `meta.next_cursor`; following the cursor until `has_more=false` yields every bar once. 422 `bar_window_too_large` applies only to non-time windows over 31 d (D10) | US-CHART-010 · E12-T05 | Q04 · shipped |
 
 ## 7. Group X — Cross-bar-type invariants (no single child ticket owns these)
 
@@ -176,6 +181,8 @@ must increase per rebuild so a no-op "rebuild" cannot pass.
 | E12-TC-X04 | Non-time families | Inspect every returned bar of tick/volume/range/delta/renko | Each carries `close_t_ms` (closed bars: last trade time; open bar per contract); time bars are defined by interval | US-CHART-003, 004 · E12-T05 | Q04 · shipped |
 | E12-TC-X05 | Same | Check BI-2 (`delta == buy_volume − sell_volume`) and BI-3 (`min_delta ≤ delta ≤ max_delta`) on every bar | Hold for all bars of all families | US-CHART-003, 004 · E12-T04 | Q02 · shipped |
 | E12-TC-X06 | Any response | Inspect `meta` | `build_version` and `spec_hash` present; `meta.sources` lists only tiers actually read; tape wins over klines on overlap | US-MKT-008, US-CHART-001 · E12-T05 | Q04 · shipped |
+| E12-TC-X07 | Caller holding `orders:read` only (no `marketdata:read`) | `GET /market/bars` and `GET /market/klines` | **403**; response body contains no bars and no market data | US-CHART-001, 003 · E12-T05 | Q04 · shipped |
+| E12-TC-X08 | No principal (no/invalid session) | Same two requests | **401**; no market data disclosed. (A bars router with no resolver wired fails closed with 501 — verified on #398, not a staging case) | US-CHART-001, 003 · E12-T05 | Q04 · shipped |
 
 ## 8. Fixture & test-data appendix
 
@@ -217,21 +224,18 @@ colour. "Pending" = child ticket unmerged. No story has an empty row.
 
 | Story | Cases | Automated in Q02/Q03/Q04 | Manual-only |
 |---|---|---|---|
-| US-CHART-001 | A01–A06, X03, X06 | A01–A06, X03, X06 | — |
+| US-CHART-001 | A01–A06, X03, X06–X08 | A01–A06, X03, X06–X08 | — |
 | US-CHART-002 | B01–B05 | B01–B05 (Q03, pending) | — |
-| US-CHART-003 | C01–C11, E06, F02, X01–X05 | all except C11 | C11 (budget → Q05) |
+| US-CHART-003 | C01–C11, E06, F02, X01–X05, X07, X08 | all except C11 | C11 (budget → Q05) |
 | US-CHART-004 | D01–D13, X01, X02, X04, X05 | all | — |
 | US-CHART-005 | E01–E06 | E01–E06 (Q03, pending) | — |
-| US-CHART-006 | E01, E04 (viewport preserved on switch; partial) | Q03 (pending) | pan/zoom/autoscale/lock itself: **gap**, follow-up requested (see below) |
+| US-CHART-006 | E07–E09 | E07–E09 (Q03 #419, pending) | — |
 | US-CHART-010 | F01–F07 | F01–F07 | — |
-| US-MKT-008 | A07, A08, F03, X06 | A07, A08, F03, X06 | — |
+| US-MKT-008 | A07, A08, F03, X06–X08 | A07, A08, F03, X06–X08 | — |
 
-**Gap noted (not left blank):** US-CHART-006 is only partly an E12 story (pan/zoom belongs to the engine; E12
-covers viewport preservation on switch and LOD via `E12-S09`). A follow-up for dedicated pan/zoom/autoscale
-cases is raised against `E12-Q03`; `18-traceability-matrix.md` maps it to `SCR-030/031/043`, outside the six
-groups of this ticket.
+Pan/zoom/autoscale (US-CHART-006) is engine-owned; cases E07–E09 cover it and were requested on #419.
 
-Case counts: A 8, B 5, C 11, D 13, E 6, F 7, X 6 = **56**.
+Case counts: A 8, B 5, C 11, D 13, E 9, F 7, X 8 = **61**.
 
 ## 10. Review, dry run and cross-links
 
