@@ -125,3 +125,20 @@ def test_app_without_identity_provider_fails_closed_501() -> None:
     app.include_router(make_audit_router(_FakeAuditService(), None))
     r = TestClient(app).get("/admin/audit", headers={"Authorization": "Bearer owner-tok"})
     assert r.status_code == 501
+
+
+# ---- #2083: owner-ness resolved via PrincipalSnapshot.is_owner -------------------
+
+
+async def test_resolver_owner_role_resolves_is_owner_true() -> None:
+    from candleviewer.api.audit_principal import _is_owner
+
+    assert _is_owner(uuid.uuid4(), ["owner"]) is True
+    assert _is_owner(uuid.uuid4(), ["manager"]) is False
+    assert _is_owner(uuid.uuid4(), ["viewer"]) is False
+
+
+def test_resolver_unknown_role_fails_closed_not_owner() -> None:
+    from candleviewer.api.audit_principal import _is_owner
+
+    assert _is_owner(uuid.uuid4(), ["owner", "superadmin"]) is False

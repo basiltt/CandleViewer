@@ -17,6 +17,19 @@ from fastapi import Request
 
 from candleviewer.audit.access import AuditPrincipal
 from candleviewer.auth.errors import SessionIdleLocked, SessionNotFound, SessionRevoked
+from candleviewer.auth.scopes import PrincipalSnapshot
+
+
+def _is_owner(user_id: uuid.UUID, roles: Any) -> bool:
+    """Owner-ness via the sanctioned `PrincipalSnapshot.is_owner` (SR-017).
+    Unknown role names fail closed (not owner) instead of raising."""
+    try:
+        snapshot = PrincipalSnapshot(
+            user_id=user_id, roles=frozenset(str(r) for r in roles), permissions=frozenset()
+        )
+    except ValueError:
+        return False
+    return snapshot.is_owner
 
 
 class _Sessions(Protocol):
@@ -60,6 +73,7 @@ class SessionAuditPrincipalResolver:
             user_id=record.user_id,
             username=str(user["username"]),
             permissions=frozenset(str(p) for p in info.get("permissions", ())),
+            is_owner=_is_owner(record.user_id, user.get("roles") or ()),
             session_id=record.id,
             ip=request.client.host if request.client is not None else None,
             request_id=request_id,

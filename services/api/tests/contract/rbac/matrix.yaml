@@ -21,11 +21,10 @@ actors: [owner, manager_with_grant, manager_without_grant, viewer, unauthenticat
 operations:
   GET /admin/audit:
     permissions: ['audit:read']
-    scope: none
+    scope: self
     public: false
     state: executed
     outcomes: {owner: allow, manager_with_grant: allow, manager_without_grant: allow, viewer: '403', unauthenticated: '401'}
-    pending: {manager_with_grant: '#2083', manager_without_grant: '#2083', viewer: '#2083'}
   POST /admin/audit/export:
     permissions: ['audit:export']
     scope: none
@@ -38,7 +37,6 @@ operations:
     public: false
     state: executed
     outcomes: {owner: allow, manager_with_grant: '403', manager_without_grant: '403', viewer: '403', unauthenticated: '401'}
-    pending: {viewer: '#2083'}
   GET /admin/backups:
     permissions: ['backups:read']
     scope: none

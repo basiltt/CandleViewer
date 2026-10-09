@@ -36,7 +36,13 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from candleviewer.audit.access import AuditAccessDenied, AuditPrincipal, authorize
+from candleviewer.audit.access import (
+    AuditAccessDenied,
+    AuditPrincipal,
+    AuditView,
+    authorize,
+    redact_entry_for_view,
+)
 from candleviewer.audit.models import AUDIT_QUERY_MAX_LIMIT, AuditExportRequest, AuditVerifyRequest
 
 
@@ -142,7 +148,9 @@ def make_audit_router(
         def __init__(self, response: JSONResponse) -> None:
             self.response = response
 
-    async def _authorize_or_raise(request: Request, operation: str) -> AuditServiceLike:
+    async def _authorize_or_raise(
+        request: Request, operation: str
+    ) -> tuple[AuditServiceLike, AuditPrincipal, AuditView]:
         if audit_service is None or not audit_service.is_active:
             raise _HttpProblem(_problem(503, "Service unavailable", "audit backend is not wired"))
         if principal_resolver is None:
@@ -160,10 +168,10 @@ def make_audit_router(
                 _problem(401, "Unauthorized", "no verified session for this request")
             )
         try:
-            await authorize(principal, operation, audit_service.writer)
+            view = await authorize(principal, operation, audit_service.writer)
         except AuditAccessDenied as exc:
             raise _HttpProblem(_problem(403, "Forbidden", str(exc))) from exc
-        return audit_service
+        return audit_service, principal, view
 
     @router.get("")
     async def query_audit_log(
@@ -182,13 +190,17 @@ def make_audit_router(
         limit: int = 50,
     ) -> JSONResponse:
         try:
-            service = await _authorize_or_raise(request, "query")
+            service, principal, view = await _authorize_or_raise(request, "query")
         except _HttpProblem as problem:
             return problem.response
         if limit < 1 or limit > AUDIT_QUERY_MAX_LIMIT:
             return _problem(
                 400, "Bad request", f"limit must be between 1 and {AUDIT_QUERY_MAX_LIMIT}"
             )
+        if view is AuditView.OWN_REDACTED:
+            # SR-067: a non-owner reads only its own events; the filter is
+            # forced server-side, whatever `actor_user_id` the caller sent.
+            actor_user_id = str(principal.user_id)
         try:
             page = await service.query.query(
                 actor_user_id=actor_user_id,
@@ -203,6 +215,12 @@ def make_audit_router(
             )
         except ValidationError as exc:
             return _problem(400, "Bad request", str(exc))
+        if view is AuditView.OWN_REDACTED:
+            own = str(principal.user_id)
+            items = [
+                redact_entry_for_view(e, view) for e in page.items if str(e.actor_user_id) == own
+            ]
+            page = page.model_copy(update={"items": items, "count": len(items)})
         return JSONResponse(status_code=200, content=_jsonable(page))
 
     @router.post("/verify")
@@ -211,7 +229,7 @@ def make_audit_router(
         body: dict[str, Any] | None = None,
     ) -> JSONResponse:
         try:
-            service = await _authorize_or_raise(request, "verify")
+            service, _, _ = await _authorize_or_raise(request, "verify")
         except _HttpProblem as problem:
             return problem.response
         try:
@@ -224,7 +242,7 @@ def make_audit_router(
     @router.post("/export")
     async def export_audit_log(request: Request, body: dict[str, Any]) -> JSONResponse:
         try:
-            service = await _authorize_or_raise(request, "export")
+            service, _, _ = await _authorize_or_raise(request, "export")
         except _HttpProblem as problem:
             return problem.response
         try:

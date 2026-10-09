@@ -186,7 +186,10 @@ def test_missing_permission_short_circuits_before_scope_check() -> None:
         # above, not this permission-only matrix).
         ("manager", Permission.KILLSWITCH_WRITE, Allow),
         ("viewer", Permission.ORDERS_WRITE, Deny),
-        ("viewer", Permission.AUDIT_READ, Allow),
+        # 04 §7.2.1 / SR-067 (#2083): owner raw, manager own-redacted, viewer none.
+        ("owner", Permission.AUDIT_READ, Allow),
+        ("manager", Permission.AUDIT_READ, Allow),
+        ("viewer", Permission.AUDIT_READ, Deny),
     ],
 )
 def test_role_permission_matrix(
@@ -194,7 +197,7 @@ def test_role_permission_matrix(
 ) -> None:
     """Exhaustive-flavoured matrix over the seed's role_permissions grants
     (ticket "Role seeds": manager has no `users:write`/`keys:manage`/
-    `killswitch:write` beyond own scope; viewer includes audit read)."""
+    `killswitch:write` beyond own scope; viewer has no audit read, manager does)."""
     import json
     from pathlib import Path
 
@@ -224,3 +227,24 @@ def test_custom_role_named_owner_is_rejected() -> None:
             roles=frozenset({"owner_impersonator"}),
             permissions=frozenset({Permission.ORDERS_WRITE}),
         )
+
+
+def test_wildcard_grant_is_owner_only_in_seed_and_contract() -> None:
+    """`*` means every permission (and the raw audit view); only `owner` may hold it (#2083)."""
+    import json
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[3]
+    seed = json.loads((root / "candleviewer" / "auth" / "rbac_seed.json").read_text("utf-8"))
+    holders = {r for r, codes in seed["role_permissions"].items() if "*" in codes}
+    assert holders == {"owner"}
+    assert seed["role_permissions"]["owner"] == ["*"]
+
+    text = (root.parent.parent / "docs" / "plan" / "22-api-openapi.yaml").read_text("utf-8")
+    block = re.search(r"x-permissions:\n(.*?)\npaths:", text, re.S)
+    assert block is not None
+    for role in ("manager", "viewer"):
+        codes = re.search(role + r":\n((?:    - .*\n)+)", block.group(1))
+        assert codes is not None
+        assert "*" not in {c.strip("- ").strip() for c in codes.group(1).splitlines()}
