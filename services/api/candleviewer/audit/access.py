@@ -10,6 +10,10 @@ Grants follow `docs/plan/04-security-program.md` §7.2.1 / §7.2.2 rows 49,
 * `verify` (`audit:read`, row 49a): Owner only.
 * `export` (`audit:export`, row 50): Owner only (step-up enforced upstream).
 
+Owner-ness arrives on the principal (`is_owner`), resolved by the caller via
+`candleviewer.auth.scopes.PrincipalSnapshot.is_owner`; the wildcard grant
+`*` is treated as owner too.
+
 Anything that is not provably the Owner is narrowed, never widened: a
 principal with `audit:read` but no `owner` role gets the redacted own-events
 view. Every denial is itself audited (`admin.audit_denied`, severity
@@ -56,11 +60,9 @@ class AuditPrincipal:
     session_id: uuid.UUID | None = None
     ip: str | None = None
     request_id: uuid.UUID | None = None
-    roles: frozenset[str] = frozenset()
-
-    @property
-    def is_owner(self) -> bool:
-        return "*" in self.permissions or "owner" in self.roles
+    #: Resolved by the session resolver through `auth.scopes.PrincipalSnapshot.is_owner`
+    #: (the sanctioned owner check, SR-017); this module never compares role names.
+    is_owner: bool = False
 
     def has(self, permission: str) -> bool:
         return "*" in self.permissions or permission in self.permissions  # nosem: no-adhoc-authz reason=Principal.has_permission-wildcard-impl-pending-E09-T01-authorize owner=@CandleViewer/security review=2026-12-31  # noqa: E501  # fmt: skip
@@ -98,7 +100,7 @@ async def authorize(principal: AuditPrincipal, operation: str, emitter: _Emitter
     `AuditAccessDenied`. Unknown operations are denied (fail closed)."""
     permission = _OPERATION_PERMISSION.get(operation)
     if permission is not None and principal.has(permission):
-        if principal.is_owner:
+        if principal.is_owner or principal.has("*"):
             return AuditView.RAW
         if operation not in _OWNER_ONLY:
             return AuditView.OWN_REDACTED
@@ -123,9 +125,36 @@ async def authorize(principal: AuditPrincipal, operation: str, emitter: _Emitter
     raise AuditAccessDenied(operation, required)
 
 
+#: SR-067 allow-list: the only `AuditEntry` fields a non-owner projection keeps.
+#: Anything not named here (payload, IP, user-agent, any field added later) is
+#: dropped or nulled by default.
+OWN_REDACTED_FIELDS: frozenset[str] = frozenset(
+    {
+        "id",
+        "ts",
+        "actor_user_id",
+        "actor_username",
+        "action",
+        "subject_type",
+        "subject_id",
+        "outcome",
+        "severity",
+        "request_id",
+        "entry_hash",
+        "prev_hash",
+    }
+)
+
+
 def redact_entry_for_view(entry: AuditEntry, view: AuditView) -> AuditEntry:
-    """SR-067 projection: raw for the Owner; metadata only (no `detail`
-    payload, `ip`, `user_agent`) otherwise."""
+    """SR-067 projection: raw for the Owner; otherwise only the allow-listed
+    `OWN_REDACTED_FIELDS` keep their values and every other field is blanked
+    (`detail` -> `{}`, everything else -> `None`)."""
     if view is AuditView.RAW:
         return entry
-    return entry.model_copy(update={"detail": {}, "ip": None, "user_agent": None})
+    blanked: dict[str, object] = {
+        name: ({} if name == "detail" else None)
+        for name in type(entry).model_fields
+        if name not in OWN_REDACTED_FIELDS
+    }
+    return entry.model_copy(update=blanked)

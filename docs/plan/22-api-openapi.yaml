@@ -572,7 +572,7 @@ x-permissions:
     - settings:read
     - settings:write
     - killswitch:write
-    - audit:read # own events, redacted (04 §7.2.1, SR-067)
+    - audit:read
   viewer:
     - accounts:read
     - instruments:read

@@ -227,3 +227,24 @@ def test_custom_role_named_owner_is_rejected() -> None:
             roles=frozenset({"owner_impersonator"}),
             permissions=frozenset({Permission.ORDERS_WRITE}),
         )
+
+
+def test_wildcard_grant_is_owner_only_in_seed_and_contract() -> None:
+    """`*` means every permission (and the raw audit view); only `owner` may hold it (#2083)."""
+    import json
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[3]
+    seed = json.loads((root / "candleviewer" / "auth" / "rbac_seed.json").read_text("utf-8"))
+    holders = {r for r, codes in seed["role_permissions"].items() if "*" in codes}
+    assert holders == {"owner"}
+    assert seed["role_permissions"]["owner"] == ["*"]
+
+    text = (root.parent.parent / "docs" / "plan" / "22-api-openapi.yaml").read_text("utf-8")
+    block = re.search(r"x-permissions:\n(.*?)\npaths:", text, re.S)
+    assert block is not None
+    for role in ("manager", "viewer"):
+        codes = re.search(role + r":\n((?:    - .*\n)+)", block.group(1))
+        assert codes is not None
+        assert "*" not in {c.strip("- ").strip() for c in codes.group(1).splitlines()}

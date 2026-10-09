@@ -76,6 +76,11 @@
       "path": "services/api/candleviewer/migrations/versions/0015_rules_arm_live_permission.py",
       "sha256": "70641b92921dab730c362eb31e97d382e10d6f47d3af625796aa1720ab536bda",
       "down_revision": "0014_alerts"
+    },
+    "0016_audit_read_grants": {
+      "path": "services/api/candleviewer/migrations/versions/0016_audit_read_grants.py",
+      "sha256": "4d89286c624bcb14ff585bfd73763cb1586331104518ba27e38e24cd1f4f759e",
+      "down_revision": "0015_rules_arm_live_permission"
     }
   }
 }

@@ -13,6 +13,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from candleviewer.audit.access import (
+    OWN_REDACTED_FIELDS,
     AuditAccessDenied,
     AuditPrincipal,
     AuditView,
@@ -149,7 +150,7 @@ def _role(role: str, *perms: str) -> AuditPrincipal:
         user_id=uuid.uuid4(),
         username=role,
         permissions=frozenset(perms),
-        roles=frozenset({role}),
+        is_owner=role == "owner",
     )
 
 
@@ -200,3 +201,28 @@ def test_redact_entry_for_manager_strips_payload_and_pii() -> None:
     assert out.detail == {} and out.ip is None and out.user_agent is None
     assert out.action == "order.place" and out.entry_hash == "h"
     assert redact_entry_for_view(entry, AuditView.RAW) == entry
+
+
+def test_redact_projection_is_an_allow_list_new_fields_hidden_by_default() -> None:
+    class _FutureEntry(AuditEntry):
+        geo_country: str | None = None
+
+    entry = _FutureEntry(
+        id=1,
+        ts=datetime(2026, 10, 1, tzinfo=UTC),
+        actor_user_id=uuid.uuid4(),
+        action="order.place",
+        outcome=AuditOutcome.SUCCESS,
+        severity=Severity.INFO,
+        ip="100.84.12.9",
+        request_id="r",
+        detail={"k": "v"},
+        entry_hash="h",
+        prev_hash=None,
+        geo_country="NL",
+    )
+    out = redact_entry_for_view(entry, AuditView.OWN_REDACTED)
+    assert isinstance(out, _FutureEntry)
+    assert out.geo_country is None and out.detail == {} and out.ip is None
+    assert out.action == "order.place"
+    assert "geo_country" not in OWN_REDACTED_FIELDS

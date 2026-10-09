@@ -95,7 +95,6 @@ def _viewer_no_export() -> AuditPrincipal:
         user_id=uuid.uuid4(),
         username="viewer",
         permissions=frozenset({"orders:read", "accounts:read"}),
-        roles=frozenset({"viewer"}),
     )
 
 
@@ -104,7 +103,6 @@ def _manager_with_read() -> AuditPrincipal:
         user_id=uuid.uuid4(),
         username="manager",
         permissions=frozenset({"orders:read", "audit:read"}),
-        roles=frozenset({"manager"}),
     )
 
 
