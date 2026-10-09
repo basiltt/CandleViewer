@@ -5,16 +5,18 @@ so this test drives the same primitives that cascade must call, through the real
 `create_app()` wiring: `SessionService.revoke_all` and the app's own `RevocationHub`. It is a
 regression guard for the propagation path, not the staging drill (which a human still runs).
 
-Measured on the injected clock: revocation is stamped at the action instant (zero injected-time
-delay, i.e. no timer/deferred path), and every effect is observed before the call returns.
+Measured on the injected clock only: revocation is stamped at the action instant (zero
+injected-time delay, i.e. no timer/deferred path), and every effect is observed before the call
+returns. Every WS read has a hard deadline so a missing `bye` fails fast instead of hanging.
 """
 
 from __future__ import annotations
 
 import os
-import time
 import uuid
-from datetime import UTC, datetime
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -34,7 +36,8 @@ from tests.unit.auth.session_fakes import FakeSessionRepository
 
 _T0 = datetime(2026, 10, 9, 12, 0, 0, tzinfo=UTC)
 #: SR-029 says "immediately"; E42-T04 states the product bound as 5 s.
-_SR029_BOUND_S = 5.0
+_SR029_BOUND = timedelta(seconds=5)
+_WS_TIMEOUT_S = 5.0
 
 
 class _Clock:
@@ -95,10 +98,22 @@ def env() -> Any:
         e.run(e.step_up.stop)
 
 
+def _recv(ws: Any) -> dict[str, Any]:
+    """`receive_json` with a hard deadline (same pattern as the E09-Q03 RBAC pack). The blocking
+    read runs in a worker thread; leaving the `with` block closes the socket and unblocks it."""
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        frame: dict[str, Any] = pool.submit(ws.receive_json).result(timeout=_WS_TIMEOUT_S)
+    except FutureTimeout:
+        pytest.fail(f"no WS frame within {_WS_TIMEOUT_S}s (expected frame never arrived)")
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+    return frame
+
+
 def _auth_ws(ws: Any, token: str) -> dict[str, Any]:
     ws.send_json({"t": "auth", "id": "a", "p": {"access_token": token}})
-    out: dict[str, Any] = ws.receive_json()
-    return out
+    return _recv(ws)
 
 
 def test_disable_user_drill_terminates_sessions_sockets_and_pending_actions(env: Any) -> None:
@@ -115,14 +130,12 @@ def test_disable_user_drill_terminates_sessions_sockets_and_pending_actions(env:
         ok = _auth_ws(ws, a.access_token)
         assert ok["t"] == "auth_ok"
         ws.send_json({"t": "sub", "id": "s", "p": {"topics": [{"ch": "book.BTCUSDT.50"}]}})
-        assert ws.receive_json()["p"]["results"][0]["ok"] is True
+        assert _recv(ws)["p"]["results"][0]["ok"] is True
 
         action_at = env.clock.now
-        wall = time.perf_counter()
         closed = env.run(env.disable, user)
-        wall_s = time.perf_counter() - wall
 
-        bye = ws.receive_json()
+        bye = _recv(ws)
         assert bye["t"] == "bye"
         assert bye["p"]["code"] == CLOSE_TOKEN_EXPIRED
         assert bye["p"]["reason"] == "user_disabled"
@@ -133,7 +146,8 @@ def test_disable_user_drill_terminates_sessions_sockets_and_pending_actions(env:
     for minted in (a, b):
         rec = env.repo.sessions[str(minted.session_id)]
         assert rec.revoked_at is not None
-        assert (rec.revoked_at - action_at).total_seconds() == 0.0
+        assert rec.revoked_at - action_at == timedelta(0)
+        assert rec.revoked_at - action_at <= _SR029_BOUND
         assert rec.revoked_reason == "user_disabled"
         with pytest.raises((SessionRevoked, SessionNotFound)):
             env.run(env.sessions.authenticate_access_token, minted.access_token)
@@ -141,9 +155,6 @@ def test_disable_user_drill_terminates_sessions_sockets_and_pending_actions(env:
     assert env.run(env.step_up.pending_action_class, str(a.session_id)) is None
     # Blast radius: another user's session is untouched.
     assert env.repo.sessions[str(bystander.session_id)].revoked_at is None
-    # Wall-clock sanity bound only (in-process); the staging drill records the real figure.
-    assert wall_s < _SR029_BOUND_S
-    print(f"SR-029 drill: injected-clock delay=0.000s wall={wall_s * 1000:.2f}ms sockets={closed}")
 
 
 def test_disable_user_drill_revoked_token_cannot_reopen_a_socket(env: Any) -> None:
