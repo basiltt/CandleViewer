@@ -141,6 +141,8 @@ API surface for this domain: `GET /market/klines`, `GET /market/bars`, `GET /cha
 | **US-CHART-013** Order and position overlays on the chart | Must | SCR-030, SCR-040 | CMP-004, CMP-040, CMP-043, CMP-109, CMP-119, CMP-180, CMP-181, CMP-182, CMP-183, CMP-188, CMP-189, CMP-191, CMP-192, CMP-194, CMP-195, CMP-197, CMP-198, CMP-219, CMP-220, CMP-221, CMP-222, CMP-223, CMP-224, CMP-225, CMP-226, CMP-227, CMP-229 | F6, F16 | FM#246, FM#228 |
 | **US-CHART-014** Accessible chart data alternative | Must | SCR-045, SCR-058, SCR-117 | CMP-004, CMP-006, CMP-021, CMP-032, CMP-046, CMP-049, CMP-053, CMP-056, CMP-065, CMP-069, CMP-086, CMP-099, CMP-225, CMP-227, CMP-228 | — | — |
 
+Black-box test plan (E12-Q01): [`qa/plans/e12-bars-and-series-test-plan.md`](../../qa/plans/e12-bars-and-series-test-plan.md) — case ↔ story table in its §9 (US-CHART-001..006, 010, US-MKT-008).
+
 ### 2.6 DRAW — Drawing tools (9 stories)
 
 API surface for this domain: `GET /drawings`, `POST /drawings`, `POST /drawings/batch`, `DELETE /drawings/{drawingId}`.
