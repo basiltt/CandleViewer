@@ -86,7 +86,9 @@ from candleviewer.auth.models import (
 )
 from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
+from candleviewer.bars.limits import QUERY_TIMEOUT_S
 from candleviewer.bars.metrics import export_bars_metrics
+from candleviewer.bars.reader import BarReader, tape_time_bar_reader
 from candleviewer.bars.service import BarsService
 from candleviewer.bars_wiring import wire_bars
 from candleviewer.book.service import BookService
@@ -723,6 +725,13 @@ def create_app(
             now_us=bars_now_us or (lambda: time.time_ns() // 1000),
             tick_size=lambda sym: _catalogue_tick_size(ctx, sym),
         )
+        if bars_sink is not None and ctx.ingestion.klines is not None:
+            # E12-T05: `/market/klines` tier (1) — tape-built `bars_time` wins over klines.
+            ctx.ingestion.klines.attach_tape(
+                tape_time_bar_reader(
+                    BarReader(bars_sink.pgwire, _no_rebuild_executor), timeout_s=QUERY_TIMEOUT_S
+                )
+            )
     # E07-X02 (SR-094): supervised weekly scrub; started/stopped by the lifespan.
     app.state.scrub_task = (
         ScrubTask(
@@ -1237,6 +1246,12 @@ def wire_instrument_catalogue(
     )
     ctx.ingestion.attach_instruments(scheduler)
     return scheduler
+
+
+async def _no_rebuild_executor(symbol: str, spec_hash: str, from_us: int, to_us: int) -> None:
+    """Stale-`build_version` rebuilds have no executor yet (E12-T02 schedules, nothing runs
+    them); logged so a stale series is visible. TODO(#2017): wire the rebuild worker."""
+    structlog.get_logger("candleviewer.bars").info("bars_rebuild_unexecuted", spec_hash=spec_hash)
 
 
 def _build_bars_sink(settings: Settings) -> QuestDbRowSink | None:

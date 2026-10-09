@@ -69,6 +69,54 @@ bar_emit_sink_errors_total = Counter(
     "bar_emit_sink_errors_total", "Bar emissions a sink failed to accept.", labelnames=("reason",)
 )
 
+# --- E12-T05 (#398) `/market/klines` + `/market/bars` endpoint series -----------------------
+#: Allow-listed label values (bounded cardinality; never client text).
+ENDPOINT_ROUTES: Final = frozenset({"klines", "bars"})
+SOURCE_TIERS: Final = frozenset({"questdb", "parquet", "exchange_rest", "tape"})
+PARAM_REJECT_REASONS: Final = frozenset({"invalid", "unsupported", "out_of_range"})
+
+bars_endpoint_rows_returned_total = Counter(
+    "bars_endpoint_rows_returned_total",
+    "Bars returned by successful pages.",
+    labelnames=("endpoint_group",),
+)
+bars_endpoint_422_no_data_recorded_total = Counter(
+    "bars_endpoint_422_no_data_recorded_total",
+    "Requests refused because the window predates recording.",
+)
+bars_endpoint_param_rejected_total = Counter(
+    "bars_endpoint_param_rejected_total",
+    "bar_type/param pairs refused before any read.",
+    labelnames=("reason",),
+)
+bars_endpoint_source_tier_total = Counter(
+    "bars_endpoint_source_tier_total",
+    "Responses that served rows from a tier (one per tier per response).",
+    labelnames=("endpoint_group", "stream"),
+)
+
+bars_tape_read_degraded_total = Counter(
+    "bars_tape_read_degraded_total",
+    "Tape-tier reads for /market/klines that failed and degraded to klines-only.",
+    labelnames=("reason",),
+)
+
+
+def record_page(route: str, rows: int, tiers: list[str]) -> None:
+    """Count one served page; unknown label values are dropped, never minted."""
+    if route not in ENDPOINT_ROUTES:
+        return
+    bars_endpoint_rows_returned_total.labels(endpoint_group=route).inc(rows)
+    for tier in tiers:
+        if tier in SOURCE_TIERS:
+            bars_endpoint_source_tier_total.labels(endpoint_group=route, stream=tier).inc()
+
+
+def record_param_rejected(reason: str) -> None:
+    if reason in PARAM_REJECT_REASONS:
+        bars_endpoint_param_rejected_total.labels(reason=reason).inc()
+
+
 #: Names served by `export_bars_metrics` (the S01/S02 builder counters plus the above).
 EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
     {
@@ -89,6 +137,11 @@ EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
         "bars_restore_gap_total",
         "bars_kline_refused_total",  # bars.kline_rows (#2053)
         "kline_hot_boundary_fallback_total",  # storage.retention.kline_boundary (#2060)
+        "bars_endpoint_rows_returned_total",
+        "bars_endpoint_422_no_data_recorded_total",
+        "bars_endpoint_param_rejected_total",
+        "bars_endpoint_source_tier_total",
+        "bars_tape_read_degraded_total",
     }
 )
 

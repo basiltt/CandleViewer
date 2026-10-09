@@ -8,6 +8,7 @@ served as-is and a rebuild is scheduled **once** per `(symbol, spec_hash)` windo
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
@@ -16,6 +17,7 @@ from typing import Any, Final, Protocol
 
 import structlog
 
+from candleviewer.bars.metrics import bars_tape_read_degraded_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum
 from candleviewer.observability.metrics import Counter
@@ -214,6 +216,108 @@ class BarReader:
         more = len(raw) == limit
         cursor = int(str(raw[-1]["ts"])) if more and raw else None
         return BarPage(rows, cursor, stale, integrity_degraded=dropped > 0, dropped=dropped)
+
+
+@dataclass(frozen=True, slots=True)
+class StoredBar:
+    """A `bars_*` row in the kline-like shape `api.market_response` serialises.
+
+    Prices stay the stored DOUBLE rendered with `repr` (round-trips exactly, `bars.rows`).
+    `turnover` is not a stored column: it is `vwap * volume`, rendered the same way.
+    """
+
+    ts_us: int
+    close_ts_us: int | None
+    open: str
+    high: str
+    low: str
+    close: str
+    volume: str
+    turnover: str
+    confirmed: bool
+    trades: int
+    delta: str | None  # None on kline-sourced rows: no order flow (null, never zero, BR-07)
+    min_delta: str | None
+    max_delta: str | None
+    source: str
+
+    @property
+    def tape_built(self) -> bool:
+        """Built from recorded trades (`tape`, or `parquet` = restored tape, `SOURCE_RANK`)."""
+        return self.source in ("tape", "parquet")
+
+
+def _num(v: object) -> str:
+    return repr(float(str(v)))
+
+
+def stored_bar(row: dict[str, object]) -> StoredBar:
+    close_ts = row.get("close_ts")
+    vwap, volume = float(str(row.get("vwap") or 0)), float(str(row.get("volume") or 0))
+    source = str(row.get("source") or "tape")  # NULL = pre-0003 legacy row, tape-built
+    flow = source != "kline"
+    return StoredBar(
+        ts_us=int(str(row["ts"])),
+        close_ts_us=int(str(close_ts)) if close_ts is not None else None,
+        open=_num(row["open"]), high=_num(row["high"]), low=_num(row["low"]),
+        close=_num(row["close"]), volume=_num(volume), turnover=repr(vwap * volume),
+        confirmed=bool(row.get("is_closed")), trades=int(str(row.get("trade_count") or 0)),
+        delta=_num(row.get("delta") or 0) if flow else None,
+        min_delta=_num(row.get("min_delta") or 0) if flow else None,
+        max_delta=_num(row.get("max_delta") or 0) if flow else None, source=source,
+    )  # fmt: skip
+
+
+class _Window(Protocol):
+    @property
+    def start_us(self) -> int: ...
+    @property
+    def end_us(self) -> int: ...
+
+
+TapeTimeBars = Callable[[str, str, _Window, "int | None"], Awaitable[list[StoredBar]]]
+
+
+def tape_time_bar_reader(reader: BarReader, *, timeout_s: float) -> TapeTimeBars:
+    """`/market/klines` tier (1): tape-built `bars_time` rows for a kline interval code.
+
+    Only tape-built rows are returned (kline-sourced `bars_time` rows are not tape and must not
+    claim it). A failing or slow tape tier degrades the response to klines-only (never a 500,
+    never a false `tape` claim): `meta.sources` then honestly omits `tape`.
+
+    S2/A2 (#2087 reviews): the catch is deliberately `Exception`, not a driver class list.
+    `LazyPgWire.fetch` re-raises raw asyncpg errors (e.g. `UndefinedTableError` when `bars_time`
+    does not exist yet), and `bars` may not import `asyncpg` (ADR-0003 import contract), so it
+    cannot name `asyncpg.PostgresError`. Cancellation is a `BaseException` and still propagates.
+    Every degrade is counted (`bars_tape_read_degraded_total{reason}`) and logged WARN.
+    """
+    from candleviewer.bars.spec import TIME_INTERVALS  # cycle break: spec imports models
+
+    async def read(symbol: str, interval: str, rng: _Window, limit: int | None) -> list[StoredBar]:
+        interval_ms = TIME_INTERVALS.get(interval)
+        if interval_ms is None or rng.end_us <= rng.start_us:
+            return []
+        spec = BarSpec(kind="time", interval_ms=interval_ms)
+        try:
+            async with asyncio.timeout(timeout_s):
+                page = await reader.read_bars(
+                    symbol, spec, rng.start_us, rng.end_us, min(limit or MAX_LIMIT, MAX_LIMIT)
+                )
+        except Exception as exc:  # broad on purpose: see the S2/A2 note in the docstring
+            bars_tape_read_degraded_total.labels(reason=_degrade_reason(exc)).inc()
+            _log().warning("bars_tape_read_degraded", error=type(exc).__name__)
+            return []
+        return [b for b in map(stored_bar, page.rows) if b.tape_built]
+
+    return read
+
+
+def _degrade_reason(exc: Exception) -> str:
+    if isinstance(exc, TimeoutError):
+        return "timeout"
+    if isinstance(exc, (OSError, ConnectionError)):
+        return "connection"
+    return "query_error"
 
 
 def _integrity_failure(row: dict[str, object]) -> str | None:
