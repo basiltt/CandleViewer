@@ -23,7 +23,7 @@ No number in this file is invented.
 
 ## Chaos outcomes (`services/api/tests/chaos/auth/`, `-m "chaos and integration"`)
 
-C-13.6 mapping: scenario 2 (Postgres loss), scenario 9 (clock skew); the rest are auth-specific.
+C-13.6 mapping: #10 (datastore outage), #6 (clock drift); the rest are auth-specific.
 
 | Scenario | Local result (in-process fakes, Python 3.14) |
 |---|---|
@@ -38,5 +38,4 @@ C-13.6 mapping: scenario 2 (Postgres loss), scenario 9 (clock skew); the rest ar
 
 - Rate-limit / lockout race under load (SR-015/016) and the "skew raises a system event" check
   need the staging stack; not implemented in this PR.
-- The k6 script assumes `Server-Timing: argon2;dur=` and `/auth/_perf/argon2-params`
-  endpoints, which do not exist yet; they need a backend ticket.
+- The k6 script degrades truthfully: the Argon2 param-floor check and step timing are skipped with a logged note while the backend lacks `Server-Timing: argon2` and `/auth/_perf/argon2-params` (set `CV_ARGON2_TIMING=1` once they exist).

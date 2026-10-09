@@ -1,5 +1,5 @@
-"""E09-Q05 auth chaos (C-13.6 scenarios: 2 Postgres loss, 9 clock skew; ticket scenarios 3-5
-exercise the WS revocation / session-store paths in-process).
+"""E09-Q05 auth chaos (C-13.6 #10 datastore outage, #6 clock drift; the rest are auth-specific
+scenarios; they exercise the WS revocation and session-store paths in-process).
 
 Wall-clock rule (T14): every time-dependent assert uses an injected clock or a fixed `unix_time`;
 no sleeps and no real-time budgets here (latency budgets live in tests/load/k6/auth.js).
@@ -43,7 +43,7 @@ class _DownableRepo(FakeSessionRepository):
 
 
 async def test_s1_postgres_restart_fails_closed_then_recovers() -> None:
-    # Scenario 2 (C-13.6). Needs only the fake store; the docker variant is below.
+    # C-13.6 #10. Needs only the fake store; the docker variant is below.
     repo = _DownableRepo()
     svc = _service(repo)
     minted = await svc.mint(str(uuid.uuid4()))
@@ -64,7 +64,7 @@ async def test_s1b_postgres_restart_against_compose_stack() -> None:
 
 
 def test_s2_clock_skew_pm1_accepted_pm3_rejected() -> None:
-    # Scenario 9 (C-13.6) / SR-021: +-1 step accepted, +-3 rejected.
+    # C-13.6 #6 / SR-021: +-1 step accepted, +-3 rejected.
     secret = os.urandom(20)
     server_t = 1_800_000_000.0
     step = time_step_for(server_t)
