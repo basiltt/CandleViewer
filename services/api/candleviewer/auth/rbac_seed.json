@@ -233,7 +233,8 @@
       "workspaces:write",
       "settings:read",
       "settings:write",
-      "killswitch:write"
+      "killswitch:write",
+      "audit:read"
     ],
     "viewer": [
       "marketdata:read",
@@ -248,8 +249,7 @@
       "journal:read",
       "accounts:read",
       "workspaces:read",
-      "settings:read",
-      "audit:read"
+      "settings:read"
     ]
   }
 }

@@ -20,8 +20,10 @@ export interface paths {
      * Query the append-only audit log
      * @description The audit log is hash-chained (`entry_hash = SHA256(prev_hash || canonical_entry)`), so
      *     tampering is detectable. Entries are never updated or deleted; retention is 2 years.
-     *     Viewers have `audit:read` deliberately — a reviewer must be able to read the log without
-     *     any write capability.
+     *     Access follows `04-security-program.md` §7.2.2 row 49 and SR-067: the Owner sees every
+     *     entry with raw payloads; a Manager (`audit:read`) sees only entries where it is the actor,
+     *     with `detail`, `ip` and `user_agent` removed — the `actor_user_id` filter is forced
+     *     server-side to the caller; a Viewer holds no `audit:read` and gets `403`.
      *
      *     Every state-changing API call, every order sent, every key operation, every kill-switch
      *     transition, every login (success and failure) and every rule arm/disarm produces an entry.
@@ -66,7 +68,7 @@ export interface paths {
     put?: never;
     /**
      * Verify the audit hash chain over a range
-     * @description Recomputes the chain and reports the first divergence, if any. Run nightly by a scheduled job and on demand from the Admin screen.
+     * @description Recomputes the chain and reports the first divergence, if any. Run nightly by a scheduled job and on demand from the Admin screen. Owner only (`04-security-program.md` §7.2.2 row 49a): a Manager holding `audit:read` is refused with `403`.
      */
     post: operations["verifyAuditChain"];
     delete?: never;

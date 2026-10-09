@@ -5,15 +5,22 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from candleviewer.audit.access import AuditAccessDenied, AuditPrincipal, authorize
+from candleviewer.audit.access import (
+    AuditAccessDenied,
+    AuditPrincipal,
+    AuditView,
+    authorize,
+    redact_entry_for_view,
+)
 from candleviewer.audit.actions import AUDIT_ACTIONS, UnknownAuditAction, validate_action
-from candleviewer.audit.models import AuditOutcome, Severity
+from candleviewer.audit.models import AuditEntry, AuditOutcome, Severity
 from candleviewer.audit.redact import PII_HASH_PREFIX, REDACTION_MARKER, redact
 
 _SECRET_KEYS = [
@@ -111,13 +118,10 @@ async def test_access_manager_denied_403_and_denial_audited(op: str) -> None:
     assert kw["actor_user_id"] == principal.user_id
 
 
-async def test_access_viewer_reads_but_cannot_export() -> None:
+async def test_access_audit_read_holder_cannot_export() -> None:
     rec = _Recorder()
-    viewer = _p("audit:read")
-    await authorize(viewer, "query", rec)
-    await authorize(viewer, "verify", rec)
     with pytest.raises(AuditAccessDenied) as exc:
-        await authorize(viewer, "export", rec)
+        await authorize(_p("audit:read"), "export", rec)
     assert exc.value.permission == "audit:export"
 
 
@@ -135,3 +139,64 @@ async def test_access_unknown_operation_fails_closed() -> None:
     with pytest.raises(AuditAccessDenied) as exc:
         await authorize(_p("*"), "delete", rec)
     assert exc.value.permission == "<unknown-operation>" and len(rec.calls) == 1
+
+
+# ---- #2083: audit:read grants per 04 §7.2.2 rows 49/49a and SR-067 ----------------
+
+
+def _role(role: str, *perms: str) -> AuditPrincipal:
+    return AuditPrincipal(
+        user_id=uuid.uuid4(),
+        username=role,
+        permissions=frozenset(perms),
+        roles=frozenset({role}),
+    )
+
+
+@pytest.mark.parametrize("op", ["query", "verify", "export"])
+async def test_access_viewer_without_audit_read_denied_every_op(op: str) -> None:
+    rec = _Recorder()
+    with pytest.raises(AuditAccessDenied):
+        await authorize(_role("viewer", "orders:read", "accounts:read"), op, rec)
+    assert rec.calls[0][0] == "admin.audit_denied"
+
+
+async def test_access_manager_with_audit_read_may_query_own_scope_only() -> None:
+    rec = _Recorder()
+    view = await authorize(_role("manager", "audit:read"), "query", rec)
+    assert view is AuditView.OWN_REDACTED and rec.calls == []
+
+
+async def test_access_manager_with_audit_read_denied_verify() -> None:
+    rec = _Recorder()
+    with pytest.raises(AuditAccessDenied):
+        await authorize(_role("manager", "audit:read"), "verify", rec)
+    assert len(rec.calls) == 1
+
+
+async def test_access_owner_role_gets_raw_view() -> None:
+    rec = _Recorder()
+    assert await authorize(_role("owner", "audit:read"), "query", rec) is AuditView.RAW
+    assert await authorize(_p("*"), "query", rec) is AuditView.RAW
+
+
+def test_redact_entry_for_manager_strips_payload_and_pii() -> None:
+    entry = AuditEntry(
+        id=1,
+        ts=datetime(2026, 10, 1, tzinfo=UTC),
+        actor_user_id=uuid.uuid4(),
+        actor_username="m",
+        action="order.place",
+        outcome=AuditOutcome.SUCCESS,
+        severity=Severity.INFO,
+        ip="100.84.12.9",
+        user_agent="ua",
+        request_id="r",
+        detail={"symbol": "BTCUSDT"},
+        entry_hash="h",
+        prev_hash=None,
+    )
+    out = redact_entry_for_view(entry, AuditView.OWN_REDACTED)
+    assert out.detail == {} and out.ip is None and out.user_agent is None
+    assert out.action == "order.place" and out.entry_hash == "h"
+    assert redact_entry_for_view(entry, AuditView.RAW) == entry

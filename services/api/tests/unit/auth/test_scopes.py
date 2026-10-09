@@ -186,7 +186,10 @@ def test_missing_permission_short_circuits_before_scope_check() -> None:
         # above, not this permission-only matrix).
         ("manager", Permission.KILLSWITCH_WRITE, Allow),
         ("viewer", Permission.ORDERS_WRITE, Deny),
-        ("viewer", Permission.AUDIT_READ, Allow),
+        # 04 §7.2.1 / SR-067 (#2083): owner raw, manager own-redacted, viewer none.
+        ("owner", Permission.AUDIT_READ, Allow),
+        ("manager", Permission.AUDIT_READ, Allow),
+        ("viewer", Permission.AUDIT_READ, Deny),
     ],
 )
 def test_role_permission_matrix(
@@ -194,7 +197,7 @@ def test_role_permission_matrix(
 ) -> None:
     """Exhaustive-flavoured matrix over the seed's role_permissions grants
     (ticket "Role seeds": manager has no `users:write`/`keys:manage`/
-    `killswitch:write` beyond own scope; viewer includes audit read)."""
+    `killswitch:write` beyond own scope; viewer has no audit read, manager does)."""
     import json
     from pathlib import Path
 

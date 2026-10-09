@@ -3103,7 +3103,8 @@ role_permissions:
      "rules:read", "rules:write", "alerts:read", "alerts:write",
      "journal:read", "journal:write",
      "accounts:read",
-     "workspaces:read", "workspaces:write", "settings:read", "settings:write"]
+     "workspaces:read", "workspaces:write", "settings:read", "settings:write",
+     "audit:read"]
   viewer:
     ["marketdata:read", "instruments:read",
      "recording:read", "replay:read", "replay:write",
@@ -3118,6 +3119,7 @@ Three things in this seed are deliberate and should not be "tidied":
 
 - **`manager` excludes `keys:read` and `keys:manage` entirely.** A manager never sees credential metadata, not even a key prefix — that is what makes the "manager cannot enumerate the owner's infrastructure" property hold.
 - **`viewer` holds `workspaces:write`, `settings:write`, `alerts:write` and `replay:write`.** These are `scope: self` permissions: they let a viewer arrange their own panes, set their own preferences, manage their own alerts and run their own replays. None of them can touch an account or emit an order, so granting them does not weaken the read-only guarantee.
+- **`audit:read` is `manager`, not `viewer`** (`04-security-program.md` §7.2.1, SR-067; revision `0016`). The manager's slice is its own events with payloads redacted, applied at request time; the owner reads raw; a viewer has no audit access.
 - **`manager` holds `rules:write` but arming a rule against live is still owner-only.** The live/demo distinction is not a separate permission; it is the environment leg of the 4-tuple check plus the `live_trading` flag (`04-security-program.md` §7.2.2 row 23a). Splitting it into `rules:arm_live` was rejected because it would put the same decision in two places.
 
 Row-level scoping (`✔(g)`, `✔(own)`) is **not** expressed in `role_permissions`; it is enforced at request time from `user_account_access` via the `x-rbac.scope` field, exactly as §7.2.0 describes.

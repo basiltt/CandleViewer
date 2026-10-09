@@ -15,7 +15,15 @@ from fastapi.testclient import TestClient
 
 from candleviewer.api.audit import make_audit_router
 from candleviewer.audit.access import AuditPrincipal
-from candleviewer.audit.models import AuditPage, AuditQueryRequest, ExportResult, VerifyResult
+from candleviewer.audit.models import (
+    AuditEntry,
+    AuditOutcome,
+    AuditPage,
+    AuditQueryRequest,
+    ExportResult,
+    Severity,
+    VerifyResult,
+)
 
 
 class _FakeQuery:
@@ -84,7 +92,19 @@ def _owner() -> AuditPrincipal:
 
 def _viewer_no_export() -> AuditPrincipal:
     return AuditPrincipal(
-        user_id=uuid.uuid4(), username="viewer", permissions=frozenset({"audit:read"})
+        user_id=uuid.uuid4(),
+        username="viewer",
+        permissions=frozenset({"orders:read", "accounts:read"}),
+        roles=frozenset({"viewer"}),
+    )
+
+
+def _manager_with_read() -> AuditPrincipal:
+    return AuditPrincipal(
+        user_id=uuid.uuid4(),
+        username="manager",
+        permissions=frozenset({"orders:read", "audit:read"}),
+        roles=frozenset({"manager"}),
     )
 
 
@@ -300,3 +320,87 @@ def test_query_audit_log_ignores_python_name_from_underscore() -> None:
     assert response.status_code == 200
     [call] = service.query_service.query_calls
     assert call["from_ts"] is None
+
+
+# ---- #2083: audit:read grants per 04 §7.2.2 rows 49/49a and SR-067 ----------------
+
+
+def _entry(i: int, actor: uuid.UUID) -> AuditEntry:
+    return AuditEntry(
+        id=i,
+        ts=datetime(2026, 10, 1, tzinfo=UTC),
+        actor_user_id=actor,
+        actor_username="x",
+        action="order.place",
+        outcome=AuditOutcome.SUCCESS,
+        severity=Severity.INFO,
+        ip="100.84.12.9",
+        user_agent="ua",
+        request_id="r",
+        detail={"symbol": "BTCUSDT", "environment": "live"},
+        entry_hash=f"h{i}",
+        prev_hash=None,
+    )
+
+
+class _RowsQuery(_FakeQuery):
+    def __init__(self, items: list[AuditEntry]) -> None:
+        super().__init__()
+        self.items = items
+
+    async def query(self, **kwargs: Any) -> AuditPage:
+        self.query_calls.append(kwargs)
+        actor = kwargs.get("actor_user_id")
+        rows = [e for e in self.items if actor is None or str(e.actor_user_id) == actor]
+        return AuditPage(items=rows, chain_verified=True, count=len(rows))
+
+
+def _service_with(items: list[AuditEntry]) -> _FakeAuditService:
+    service = _FakeAuditService()
+    service.query_service = _RowsQuery(items)
+    return service
+
+
+def test_viewer_query_audit_log_returns_403_problem() -> None:
+    service = _FakeAuditService()
+    response = TestClient(_app(service, _FakeResolver(_viewer_no_export()))).get("/admin/audit")
+    assert response.status_code == 403
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert service.query_service.query_calls == []
+
+
+def test_viewer_verify_audit_chain_returns_403() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_viewer_no_export())))
+    assert client.post("/admin/audit/verify", json={}).status_code == 403
+    assert service.query_service.verify_calls == []
+
+
+def test_manager_verify_audit_chain_returns_403() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_manager_with_read())))
+    assert client.post("/admin/audit/verify", json={}).status_code == 403
+
+
+def test_manager_query_sees_only_own_events_redacted() -> None:
+    me = _manager_with_read()
+    other = uuid.uuid4()
+    service = _service_with([_entry(1, me.user_id), _entry(2, other)])
+    client = TestClient(_app(service, _FakeResolver(me)))
+    response = client.get("/admin/audit", params={"actor_user_id": str(other)})
+    assert response.status_code == 200
+    items = response.json()["items"]
+    assert [i["id"] for i in items] == [1]
+    assert items[0]["detail"] == {} and items[0]["ip"] is None
+    assert items[0]["user_agent"] is None
+    assert service.query_service.query_calls[0]["actor_user_id"] == str(me.user_id)
+
+
+def test_owner_query_sees_all_events_raw() -> None:
+    owner = _owner()
+    service = _service_with([_entry(1, owner.user_id), _entry(2, uuid.uuid4())])
+    response = TestClient(_app(service, _FakeResolver(owner))).get("/admin/audit")
+    items = response.json()["items"]
+    assert [i["id"] for i in items] == [1, 2]
+    assert items[1]["detail"] == {"symbol": "BTCUSDT", "environment": "live"}
+    assert items[1]["ip"] == "100.84.12.9"

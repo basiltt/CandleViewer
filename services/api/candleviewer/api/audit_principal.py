@@ -60,6 +60,7 @@ class SessionAuditPrincipalResolver:
             user_id=record.user_id,
             username=str(user["username"]),
             permissions=frozenset(str(p) for p in info.get("permissions", ())),
+            roles=frozenset(str(r) for r in user.get("roles") or ()),
             session_id=record.id,
             ip=request.client.host if request.client is not None else None,
             request_id=request_id,
