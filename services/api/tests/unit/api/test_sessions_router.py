@@ -60,6 +60,7 @@ class _Env:
         origins: frozenset[str] = frozenset(),
         throttle_max: int = 10,
         audit: Any = None,
+        csrf: Any = None,
     ) -> None:
         self.repo = FakeSessionRepository()
         self.svc = SessionService(
@@ -73,6 +74,7 @@ class _Env:
             self.revoked.append((sid, reason))
 
         app = FastAPI()
+        self.app = app
         app.include_router(
             make_session_router(
                 _Auth(self.svc),
@@ -86,6 +88,7 @@ class _Env:
                 session_throttle=PerIpLoginThrottle(
                     max_attempts=throttle_max, window_s=60.0, clock=lambda: self.t
                 ),
+                csrf=csrf,
             ),
             prefix="/api/v1",
         )

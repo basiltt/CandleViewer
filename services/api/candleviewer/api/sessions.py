@@ -34,7 +34,9 @@ from typing import Annotated, Any, Protocol
 from fastapi import APIRouter, Path, Query, Request
 from fastapi.responses import JSONResponse, Response
 
+from candleviewer.api.csrf import clear_csrf_cookie, set_csrf_cookie
 from candleviewer.audit.models import AuditOutcome, Severity
+from candleviewer.auth.csrf import CsrfTokens
 from candleviewer.auth.errors import (
     RefreshReuseDetected,
     SessionIdleLocked,
@@ -237,6 +239,7 @@ def make_session_router(
     allowed_origins: frozenset[str] = frozenset(),
     ip_throttle: PerIpLoginThrottle | None = None,
     session_throttle: PerIpLoginThrottle | None = None,
+    csrf: CsrfTokens | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["auth"])
     by_ip = ip_throttle or PerIpLoginThrottle(
@@ -391,6 +394,10 @@ def make_session_router(
             },
         )
         _set_refresh_cookie(response, minted.refresh_token, max_age=REFRESH_EXPIRES_IN_S)
+        if csrf is not None:  # SR-041: the CSRF token rotates with the session
+            set_csrf_cookie(
+                response, csrf.issue(str(minted.session_id)), max_age=REFRESH_EXPIRES_IN_S
+            )
         return response
 
     @router.get("/auth/session")
@@ -506,6 +513,7 @@ def make_session_router(
             await _propagate(r.id, "session_revoked")
         response = Response(status_code=204)
         _clear_refresh_cookie(response)
+        clear_csrf_cookie(response)
         return response
 
     @router.delete("/me/sessions/{sessionId}")
@@ -542,6 +550,7 @@ def make_session_router(
         response = Response(status_code=204)
         if session_id == record.id:
             _clear_refresh_cookie(response)
+            clear_csrf_cookie(response)
         return response
 
     return router

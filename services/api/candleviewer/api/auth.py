@@ -60,6 +60,7 @@ from typing import Any, Protocol
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
+from candleviewer.api.csrf import set_csrf_cookie
 from candleviewer.api.sessions import (
     REFRESH_EXPIRES_IN_S,
     IdentityProvider,
@@ -67,6 +68,7 @@ from candleviewer.api.sessions import (
     _tokens,
 )
 from candleviewer.audit.models import AuditOutcome, Severity
+from candleviewer.auth.csrf import CsrfTokens
 from candleviewer.auth.errors import (
     AccountDisabled,
     AccountLocked,
@@ -216,6 +218,7 @@ def make_auth_router(
     audit_service: AuditServiceLike | None = None,
     *,
     identity: IdentityProvider | None = None,
+    csrf: CsrfTokens | None = None,
 ) -> APIRouter:
     """Bind `/auth/login` to a concrete `AuthService` instance."""
     router = APIRouter(tags=["auth"])
@@ -346,6 +349,10 @@ def make_auth_router(
             },
         )
         _set_refresh_cookie(response, minted.refresh_token, max_age=REFRESH_EXPIRES_IN_S)
+        if csrf is not None:  # SR-041: a new session gets a new CSRF token
+            set_csrf_cookie(
+                response, csrf.issue(str(minted.session_id)), max_age=REFRESH_EXPIRES_IN_S
+            )
         return response
 
     @router.post("/auth/mfa/recovery")

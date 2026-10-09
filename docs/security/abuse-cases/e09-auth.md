@@ -21,6 +21,7 @@ Each control was disabled on the scratch worktree and the named case failed, the
 | refresh-reuse branch (`revoked_reason == "rotated"`) | AC-SES-03 |
 | TOTP `record_time_step` replay guard | AC-MFA-01 |
 | `_origin_ok` allow-list check | AC-CSRF-01 |
+| CSRF `tokens_match` / `bound_to` compare (#2090, monkeypatched always-true) | AC-CSRF-07 (`test_mutation_disabling_compare_is_caught`) |
 | `grant is None or not can_view` account check | AC-AUTHZ-02 |
 
 ## Cases
@@ -47,6 +48,10 @@ Each control was disabled on the scratch worktree and the named case failed, the
 | AC-CSRF-03 | SR-012 | Header spoof | `X-Forwarded-Proto: http` | Cookie stays HttpOnly+Secure+SameSite=Strict | Flags present | DEFENDED |
 | AC-CSRF-04 | TB-4 | Cookie only, no bearer | logout / revoke session | 401 | 401 | DEFENDED |
 | AC-CSRF-05 | O1/O7 | Attacker session | Revoke / list victim session | 403/404, not listed | Refused | DEFENDED |
+| AC-CSRF-06 | O2 SR-041/SR-152 | Cross-site page, no `X-CSRF-Token` | Any state-changing request (cookie or bearer) | 403 `csrf_token_invalid`, `auth.csrf_refused` audited, no state change | 403, session intact | DEFENDED — fixed by PR #TBD (#2090) |
+| AC-CSRF-07 | O2 SR-041/SR-152 | Header ≠ `cv_csrf` cookie | State-changing request | 403, audited | 403 | DEFENDED — fixed by PR #TBD (#2090) |
+| AC-CSRF-08 | O2 SR-041 | Token minted for another session | Present it with own bearer | 403 (token bound to session) | 403 | DEFENDED — fixed by PR #TBD (#2090) |
+| AC-CSRF-09 | SR-041 rotation | Valid session | Login / refresh | New `cv_csrf` (not HttpOnly, Secure, SameSite=Strict); old token refused | Rotated, old refused | DEFENDED — fixed by PR #TBD (#2090) |
 | AC-MFA-01 | U11 SR-021 | Captured code | Replay same step; older step in skew | Rejected | MfaCodeReused | DEFENDED |
 | AC-MFA-02 | U2 SR-015 | Brute force | Wrong codes | Locked at cap (5), even right code refused | Locked | DEFENDED |
 | AC-MFA-03 | U9 SR-022 | Used recovery code | Reuse | Rejected | Rejected | DEFENDED |
@@ -86,5 +91,9 @@ Each control was disabled on the scratch worktree and the named case failed, the
   CSRF controls are SameSite=Strict plus the Origin allow-list on cookie refresh (AC-CSRF-01/02/04).
   State-changing routes require a bearer header, which is not ambient. Residual risk acceptable only if
   that stays true; needs confirmation. Maps to TB-4.
+  **Status: fixed by PR #TBD (#2090)** — SR-041 double-submit token (`cv_csrf` cookie +
+  `X-CSRF-Token` header, session-bound, rotated at login/refresh) enforced on every state-changing
+  request, with the Origin allow-list kept (AC-CSRF-06..09). Live once the middleware is wired in
+  `app.py` (pending shared-hotspot ack).
 - **F-2 (design decision, Low-Medium):** AC-SES-06 above.
 - No P0/P1 finding. `docs/plan/32-risk-register.md` and sign-off comment are not done in this PR.
