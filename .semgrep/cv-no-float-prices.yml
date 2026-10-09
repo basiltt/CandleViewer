@@ -20,11 +20,11 @@ rules:
         - docs/security/threat-models/E12-bars.md
         - docs/plan/security/ci-gates-e12.md
     patterns:
-      # TODO(E12-X03 follow-up, true positives on main at merge — NOT false positives): two
+      # TODO(#2137, #2138) E12-X03 follow-up: true positives on main at merge, NOT false positives. Two
       # float-arithmetic sites predate this rule and need a code fix in their owning module
-      # (tracked as a separate fix ticket, see ci-gates-e12.md "Known findings"):
-      #   storage/questdb/repository.py QuestDbRepository.write_trades: float(price) * float(qty)
-      #   bars/reader.py stored_bar: turnover=repr(vwap * volume) on floats
+      # (fix tickets #2137 and #2138, see ci-gates-e12.md "Known findings"):
+      #   TODO(#2137) storage/questdb/repository.py QuestDbRepository.write_trades: float(price) * float(qty)
+      #   TODO(#2138) bars/reader.py stored_bar: turnover=repr(vwap * volume) on floats
       # Exempted by enclosing function only, so the rest of each file stays covered. Delete
       # both pattern-not-inside entries in the fix PR.
       - pattern-not-inside: |
