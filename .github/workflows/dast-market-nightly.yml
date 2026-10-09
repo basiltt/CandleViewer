@@ -1,0 +1,48 @@
+name: dast-market-nightly
+
+# E12-X03: nightly (never per-PR) authenticated low-privilege OWASP ZAP scan of the market-data
+# read surface (/market/klines, /market/bars). Plan: .zap/market-data.yaml. Gate: any High/Medium
+# alert not in .zap/market-data-baseline.json fails the job (security/zap/baseline_gate.py);
+# expected 400/422 problem responses are tuned out in the plan, never in this file.
+# Target: the locally-started compose stack (same as dast-rules-nightly / dast-storage-nightly);
+# never a live exchange. ZAP_LOWPRIV_TOKEN is a repository secret for the seeded read-only demo
+# user (never committed); rotation: docs/plan/security/ci-gates-e12.md "DAST".
+on:
+  schedule:
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap-market:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Require low-privilege token
+        env:
+          ZAP_LOWPRIV_TOKEN: ${{ secrets.ZAP_LOWPRIV_TOKEN }}
+        # An unauthenticated scan is a failed scan, not a clean one.
+        run: test -n "$ZAP_LOWPRIV_TOKEN" || { echo "ZAP_LOWPRIV_TOKEN secret missing"; exit 1; }
+      - name: Start stack
+        run: docker compose -f infra/compose/docker-compose.yml up -d --wait
+      - name: ZAP automation plan (low-privilege /market/klines + /market/bars)
+        env:
+          ZAP_LOWPRIV_TOKEN: ${{ secrets.ZAP_LOWPRIV_TOKEN }}
+        run: |
+          docker run --rm --network host -e ZAP_LOWPRIV_TOKEN -v "$PWD:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:2.16.1 zap.sh -cmd -autorun /zap/wrk/.zap/market-data.yaml
+      - name: Block on new medium+ alerts above the baseline
+        run: python security/zap/baseline_gate.py zap-reports/market-data.json .zap/market-data-baseline.json
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: zap-market-data
+          path: zap-reports/
+          retention-days: 14
+      - name: Tear down
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml down -v

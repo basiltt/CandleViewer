@@ -82,7 +82,7 @@ def build_range_query(
         raise ValueError(f"limit must be between 1 and {MAX_LIMIT}")
     start = from_us if after_us is None else max(from_us, after_us + 1)
     sql = (
-        f"SELECT * FROM bars_{kind} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 - table from closed allowlist
+        f"SELECT * FROM bars_{kind} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 reason=table-from-closed-allowlist owner=@CandleViewer/backend
         "AND ts >= $3 AND ts < $4 ORDER BY ts LIMIT $5"
     )
     return sql, (symbol, bar_param, start, to_us, limit)

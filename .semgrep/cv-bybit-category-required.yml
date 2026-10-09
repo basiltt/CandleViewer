@@ -1,0 +1,60 @@
+rules:
+  - id: cv-bybit-category-required
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-054: Bybit v5 call without an explicit `"category": "linear"`. Several
+      v5 endpoints silently default the category when it is omitted; relying on
+      that default means a future default change, or a call copy-pasted from
+      another product, routes the request to an unintended market (USDT linear
+      perpetuals only, CONSTITUTION C-1.2). Fix: pass `params={"category":
+      "linear", ...}` (or `body=`) literally at the call site. Rule doc:
+      docs/plan/security/ci-gates-e12.md#cv-bybit-category-required.
+    metadata:
+      rule-id: cv-bybit-category-required
+      sr: SR-054
+      references:
+        - docs/plan/04-security-program.md SR-054
+        - docs/plan/security/ci-gates-e12.md
+    patterns:
+      - pattern-either:
+          # A literal query/body dict handed to the REST client without category=linear.
+          - patterns:
+              - pattern-either:
+                  - pattern: '$C.get_public($P, ..., params={...}, ...)'
+                  - pattern: '$C.signed_request($M, $P, ..., params={...}, ...)'
+                  - pattern: '$C.signed_request($M, $P, ..., body={...}, ...)'
+              - pattern-not: '$C.get_public($P, ..., params={..., "category": "linear", ...}, ...)'
+              - pattern-not: '$C.signed_request($M, $P, ..., params={..., "category": "linear", ...}, ...)'
+              - pattern-not: '$C.signed_request($M, $P, ..., body={..., "category": "linear", ...}, ...)'
+          # A dict built first, then handed to the REST client as params=/body=.
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      $D = {...}
+                      ...
+                      $C.get_public(..., params=$D, ...)
+                  - pattern-inside: |
+                      $D = {...}
+                      ...
+                      get_public(..., params=$D, ...)
+                  - pattern-inside: |
+                      $D = {...}
+                      ...
+                      $C.signed_request(..., params=$D, ...)
+                  - pattern-inside: |
+                      $D = {...}
+                      ...
+                      $C.signed_request(..., body=$D, ...)
+              - pattern: '$D = {...}'
+              - pattern-not: '$D = {..., "category": "linear", ...}'
+          # A categorised v5 endpoint called with no params at all.
+          - patterns:
+              - pattern: '$C.get_public("$PATH")'
+              - metavariable-regex:
+                  metavariable: $PATH
+                  regex: '^/v5/(market/(kline|mark-price-kline|index-price-kline|premium-index-price-kline|instruments-info|orderbook|tickers|recent-trade|funding/history|open-interest)|order/|position/|execution/)'
+    paths:
+      include:
+        - "services/api/candleviewer/**"
+        - "**/cv-bybit-category-required*"

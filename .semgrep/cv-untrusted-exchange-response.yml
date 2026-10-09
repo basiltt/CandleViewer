@@ -1,0 +1,56 @@
+rules:
+  - id: cv-untrusted-exchange-response
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-040: a raw exchange payload field is consumed outside the adapter's
+      validation layer. Every exchange response is untrusted input and must be
+      parsed by the adapter (`exchange/bybit/` models + `exchange/base/boundary.py`)
+      into a normalised domain type before any other module reads it; reaching into
+      the wire envelope (`result`, `list`, `retCode`, `nextPageCursor`, ...) or calling
+      `.json()` on an exchange HTTP response elsewhere skips the schema, bounds and
+      `confirm` checks (SR-040/SR-040b; C-2.2/C-2.3). Fix: add or reuse an adapter
+      parser that returns a domain model and consume that. Rule doc:
+      docs/plan/security/ci-gates-e12.md#cv-untrusted-exchange-response.
+    metadata:
+      rule-id: cv-untrusted-exchange-response
+      sr: SR-040
+      references:
+        - docs/plan/04-security-program.md SR-040, SR-040b
+        - CONSTITUTION.md C-2.2, C-2.3
+        - docs/plan/security/ci-gates-e12.md
+    patterns:
+      # TODO(E12-X03 follow-up, TRUE POSITIVE on main at merge — not a false positive):
+      # ingestion/clock.py rest_client_fetcher reads the raw `/v5/market/time` envelope
+      # (`result`, `timeNano`, `timeSecond`) outside the adapter. It needs an adapter-side
+      # parser returning a domain server-time value (separate fix ticket, see
+      # ci-gates-e12.md "Known findings"). Exempted by enclosing function only; delete this
+      # pattern-not-inside in the fix PR.
+      - pattern-not-inside: |
+          def rest_client_fetcher(...):
+              ...
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $P["$K"]
+                  - pattern: $P.get("$K", ...)
+              - metavariable-regex:
+                  metavariable: $K
+                  regex: '^(result|retCode|retMsg|retExtInfo|nextPageCursor|timeNano|timeSecond)$'
+          - patterns:
+              - pattern: $RESP.json()
+              - metavariable-regex:
+                  metavariable: $RESP
+                  regex: '(?i)^(resp|response|r|res|payload|reply)$'
+    paths:
+      # Same boundary as cv-adapter-isolation / cv-bybit-vocabulary-leak: the adapter is
+      # the validation layer; everything else in the backend consumes domain types.
+      include:
+        - "services/api/candleviewer/**"
+        - "**/cv-untrusted-exchange-response*"
+      exclude:
+        - "services/api/candleviewer/exchange/bybit/**"
+        - "services/api/candleviewer/exchange/base/**"
+        - "**/conftest.py"
+        - "**/test_*.py"
+        - "**/*_test.py"

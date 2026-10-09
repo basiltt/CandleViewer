@@ -1256,6 +1256,10 @@ review=YYYY-MM-DD`, the finding's rule id is an exact member of the list, and th
 today and today + 180 days. The grammar is owned by `tools/ci/suppressions.py`, shared with the auth-pack
 checker. Anything else keeps blocking as `CI-SEC-006`. Other tools are unaffected.
 
+The E12 market-data gates (seven `.semgrep/cv-*` rules incl. the SR-054 category rule, the `# nosec`
+reason/owner rule, and the nightly ZAP profile for `/market/klines` + `/market/bars`) are explained in
+[`security/ci-gates-e12.md`](security/ci-gates-e12.md).
+
 ### 12.3 Required status checks on `main`
 
 The exact required-check names are owned solely by `CONSTITUTION.md` §9 (C-16.5) — do not restate them
