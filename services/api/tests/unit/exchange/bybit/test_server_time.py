@@ -39,8 +39,10 @@ async def test_server_time_recorded_payload_yields_microseconds() -> None:
 
 
 def test_server_time_prefers_nano_then_second_then_ms() -> None:
-    assert ServerTime(timeSecond="5", timeNano="5000000123").time_us == 5_000_000
-    assert ServerTime(timeSecond="5").time_us == 5_000_000
+    assert ServerTime(timeSecond="1700000000", timeNano="1700000000123456789").time_us == (
+        1_700_000_000_123_456
+    )
+    assert ServerTime(timeSecond="1700000000").time_us == 1_700_000_000_000_000
     assert ServerTime(time="1700000000000").time_us == 1_700_000_000_000_000
     assert ServerTime(time=1700000000000).time_us == 1_700_000_000_000_000
 
@@ -54,6 +56,18 @@ def test_server_time_prefers_nano_then_second_then_ms() -> None:
         {"retCode": 0, "result": {"timeNano": "not-a-number"}},
         {"retCode": 0, "result": {"timeNano": "1", "surprise": 1}},  # extra="forbid"
         {"retCode": 0, "result": {"timeNano": ["1"]}},  # wrong type
+        {"retCode": 0, "result": {"timeNano": "-1"}},  # negative
+        {"retCode": 0, "result": {"time": -1}},
+        {"retCode": 0, "result": {"timeNano": str(2**63)}},  # >= 2**63
+        {"retCode": 0, "result": {"timeSecond": "+5"}},
+        {"retCode": 0, "result": {"timeSecond": " 5 "}},
+        {"retCode": 0, "result": {"timeSecond": "1_0"}},
+        {"retCode": 0, "result": {"timeSecond": "1700000000\n"}},  # trailing newline
+        {"retCode": 0, "result": {"timeSecond": "١٢"}},  # non-ASCII digits
+        {"retCode": 0, "result": {"timeSecond": "5"}},  # before 2020
+        {"retCode": 0, "result": {"timeSecond": "7258118400"}},  # year 2200
+        {"retCode": 0, "result": {"time": True}},  # bool is not a number here
+        {"retCode": 0, "result": {"time": "1" * 20}},  # > 19 digits
     ],
 )
 def test_server_time_malformed_payload_raises_typed_error(payload: dict[str, object]) -> None:
