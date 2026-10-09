@@ -32,7 +32,7 @@ import random
 import sys
 import time
 from collections.abc import Awaitable, Callable
-from typing import Any, Protocol
+from typing import Protocol
 
 import structlog
 
@@ -447,14 +447,20 @@ class ClockGuard:
             clock_offset_age_seconds.set(self.offset_age_s())
 
 
-class _PublicRestClient(Protocol):
-    """Structural shape this module needs from an exchange adapter's REST
-    client: an unsigned public `GET`. Declared here (not imported from a
-    concrete adapter) so this module never depends on the exchange adapter
-    (C-2.2, C-3.1) — any adapter's REST client that exposes `get_public`
-    satisfies this protocol."""
+class _NormalisedServerTime(Protocol):
+    """Normalised server time as exposed by the adapter's validated response model."""
 
-    async def get_public(self, path: str) -> dict[str, Any]: ...
+    @property
+    def time_us(self) -> int: ...
+
+
+class _PublicRestClient(Protocol):
+    """Structural shape this module needs from an exchange adapter's REST client: a
+    `server_time()` that returns a validated, normalised value. Declared here (not imported
+    from a concrete adapter) so this module never depends on the exchange adapter
+    (C-2.2, C-3.1); payload parsing lives in the adapter (C-2.3)."""
+
+    async def server_time(self) -> _NormalisedServerTime: ...
 
 
 def rest_client_fetcher(
@@ -463,7 +469,7 @@ def rest_client_fetcher(
     wall_clock: Callable[[], float] = time.time,
     monotonic: Callable[[], float] = time.monotonic,
 ) -> ServerTimeFetcher:
-    """Adapt an exchange adapter's `get_public("/v5/market/time")` REST
+    """Adapt an exchange adapter's `server_time()` REST
     call to `ServerTimeFetcher`. Kept as a factory function (not a method
     on the client) so the REST client itself never depends on this module —
     the dependency direction is `ClockGuard` -> REST client, matching the
@@ -473,24 +479,9 @@ def rest_client_fetcher(
     async def _fetch() -> tuple[int, float, float]:
         sent_epoch_s = wall_clock()
         sent_monotonic_s = monotonic()
-        response = await client.get_public("/v5/market/time")
+        server_time = await client.server_time()
         rtt_s = monotonic() - sent_monotonic_s
-        result = response.get("result", {})
-        # The exchange's server-time endpoint returns both a
-        # second-resolution and a nanosecond-resolution field (`timeSecond`,
-        # `timeNano`); prefer the nanosecond one for sub-millisecond
-        # precision, falling back to milliseconds (`time`) when a fixture
-        # or an older API surface omits it.
-        if "timeNano" in result:
-            server_time_us = int(result["timeNano"]) // 1_000
-        elif "timeSecond" in result:
-            server_time_us = int(result["timeSecond"]) * 1_000_000
-        elif "time" in result:
-            server_time_us = int(result["time"]) * 1_000
-        else:
-            raise ClockMeasurementUnavailableError(
-                f"/v5/market/time response had no usable time field: {result!r}"
-            )
+        server_time_us = server_time.time_us
         return server_time_us, sent_epoch_s, rtt_s
 
     return _fetch
