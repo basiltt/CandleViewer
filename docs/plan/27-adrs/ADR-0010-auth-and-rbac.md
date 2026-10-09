@@ -64,3 +64,54 @@ Negative / risks:
 - Contract tests: for every route and every WS topic, a Manager outside scope receives 403 and an audit entry, with no adapter call made.
 - Session tests: absolute/idle expiry, rotation on privilege change, revoke-all on credential change, CSRF rejection, `Origin` validation on the WS handshake.
 - DAST (OWASP ZAP) in CI against the authenticated surface; pen-test before Live enablement (R4).
+
+## Implementation notes (2026-10-09)
+
+Added by E09-K02. Additive: the decision above stands and is not reopened. This section records what
+the code on `main` (`d9143fb`) does, so a reader can tell decision from detail. Facts come from the
+code and from `docs/security/reviews/e09-auth-review.md` (E09-X04). Items marked *pending owner
+decision* are not settled here. Paths are under `services/api/candleviewer/`.
+
+### As implemented
+
+- **Argon2id** (`auth/hashing.py`): `m=65536` KiB, `t=3`, `p=4`, via `argon2-cffi`; the parameters
+  are stored per user in `users.password_algo_params`, and `needs_rehash` upgrades a hash at the next
+  login (`auth/login_service.py`). The pepper (`settings.auth_pepper`) is appended to the password
+  before hashing. A fixed dummy hash is verified for unknown identifiers so timing is uniform. The
+  reference host these were calibrated on, and the on-host cost, are **not recorded**: the ≥100 ms
+  check is open as #2097.
+- **Session lifetimes** (`auth/session_service.py`): 12 h absolute; 12 min opaque access token
+  (ADR-0020); idle lock 15 min by default, per-session `idle_timeout_s`, clamped to 5–60 min. The
+  decision text above says 60 min idle; the code is stricter.
+- **Lockout** (`auth/login_service.py`): 5 failures, 15 min.
+- **Step-up** (`auth/step_up.py`): action classes `keys`, `users`, `live_enablement`, `killswitch`,
+  `risk_caps`; 5 min grace, none for `live_enablement` and `killswitch`; 3 wrong codes make the
+  session read-only for 5 min.
+- **Rotation points that exist**: refresh (new session row, old marked `rotated`, reuse revokes the
+  whole family), and the session minted on MFA completion. **Not present**: rotation on role change
+  and on step-up (#2101), and on password change (route missing, #2110). The decision text says
+  "rotation on any privilege change"; that is not yet true.
+- **Session cache**: the decision text mentions a short-lived in-process cache with explicit
+  invalidation. The review found no such cache in `auth/`; every request reads the session
+  (`authenticate_access_token`). Revocation reaches live sockets through `ws/revocation.py`.
+  Role changes push a `permission_change` to sockets (`api/users.py`).
+- **Permission vocabulary**: `x-rbac` blocks in `22-api-openapi.yaml` are the source;
+  `tools/rbac/generate.py` writes `auth/generated_permissions.py` and the `permissions` list of
+  `auth/rbac_seed.json`; CI `generated-code` runs it with `--check`. Role-to-permission mapping is
+  hand-authored in `rbac_seed.json`.
+- **Two-layer authorisation**: deny-by-default plus `x-rbac` (`api/deny_by_default.py`), then
+  `auth/scopes.py` (`decide`, `enforce`). The last active Owner cannot be demoted
+  (`auth/owner_floor.py`).
+- **Audit read grants** were aligned with `04-security-program.md` §7.2 / SR-067 in #2083 (fixed in
+  #2095). Verify and export are Owner only (`audit/access.py`).
+
+### Deviations from the decision or from the security programme
+
+| Id | Fact | Status |
+|---|---|---|
+| D-1 | Recovery codes are stored as a keyed HMAC-SHA256 of the normalised code (`auth/recovery_codes.py`; about 138 bits of entropy), not Argon2id as SR-022 states. | pending owner decision (#1778 item AD) |
+| D-2 | Step-up verifies a TOTP code only (`auth/step_up.py`); SR-025 asks for password plus TOTP. | pending owner decision (#1778 item AE) |
+| F-1 | No CSRF double-submit token. Decision 3 above calls for one. The code relies on `SameSite=Strict`, the Origin allow-list and the bearer-header model. | open, fix or Owner-signed acceptance (#2090) |
+| F-2 | Access tokens are not bound to IP or user-agent; theft is detected only on refresh-token reuse. | design decision, pending owner decision |
+
+Both decision and code remain as stated until the owner decides; this section does not choose.
