@@ -175,7 +175,16 @@ def make_invites_router(
         try:
             parsed = InviteCreateRequest.model_validate(body)
         except ValidationError:
-            # Covers owner-role invites, account_access grants and malformed fields.
+            # Covers non-viewer roles, account_access grants and malformed fields.
+            await emitter.emit(
+                "users.invite_refused",
+                actor_label=str(got.user_id),
+                actor_user_id=got.user_id,
+                actor_ip=request.client.host if request.client else None,
+                outcome=AuditOutcome.DENIED,
+                severity=Severity.WARNING,
+                reason="invalid_invite_request",
+            )
             return _problem(422, "Unprocessable entity", "invalid invite request")
         try:
             invite = await auth.invites.create(parsed, invited_by=got.user_id)
@@ -249,7 +258,7 @@ def make_invites_router(
             status_code=200,
             content={
                 "display_name": view.display_name,
-                "role": view.role,
+                "role": "viewer",
                 "expires_at": view.expires_at.isoformat(),
             },
         )
@@ -323,6 +332,18 @@ def make_invites_router(
             if exc.reason == "enrollment_invalid":
                 return _problem(422, "Unprocessable entity", "invalid code", code="invalid_code")
             return _uniform_not_found()
+        if record.downgraded_from is not None:
+            await emitter.emit(
+                "users.invite_role_downgraded",
+                actor_label=record.username,
+                actor_user_id=record.user_id,
+                actor_ip=request.client.host if request.client else None,
+                object_kind="user",
+                object_id=str(record.user_id),
+                severity=Severity.WARNING,
+                before_state={"role": record.downgraded_from},
+                after_state={"role": record.role},
+            )
         await emitter.emit(
             "users.invite_redeemed",
             actor_label=record.username,

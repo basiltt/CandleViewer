@@ -14,7 +14,8 @@ unusable rather than half-open:
 2. `complete_redemption` verifies the first TOTP code, then activates the user
    and moves the password hash across.
 
-The role is read from the stored invite only; callers cannot pass one. The raw
+The role is always `viewer` (#2109); a legacy stored non-viewer role is downgraded at
+redemption. Callers cannot pass one. The raw
 token is never logged, stored, or put in an exception message. Unknown /
 expired / redeemed / revoked tokens raise `InviteRejected` (distinct `reason`
 for audit only) so the edge can render one uniform error.
@@ -51,6 +52,7 @@ from candleviewer.auth.models import (
     EnrollmentStart,
     InviteCreateRequest,
     InviteRecord,
+    InviteRole,
     InviteView,
     MfaEnrollRequest,
     MfaEnrollResult,
@@ -271,9 +273,16 @@ class InviteService:
             self._throttle.record_failure(source_ip)
             users_invites_rejected_total.labels("enrollment_invalid").inc()
             raise InviteRejected("enrollment_invalid") from exc
+        pending_hash = record.pending_password_hash
+        if record.role != InviteRole.VIEWER.value:
+            # Legacy invite minted before #2109: never grant more than viewer.
+            await self._repo.downgrade_to_viewer(record.user_id)
+            record = record.model_copy(
+                update={"role": InviteRole.VIEWER.value, "downgraded_from": record.role}
+            )
         activated = await self._repo.activate_user(
             record.user_id,
-            password_hash=record.pending_password_hash,
+            password_hash=pending_hash,
             algo_params=DEFAULT_ARGON2_PARAMS,
             now=now,
         )

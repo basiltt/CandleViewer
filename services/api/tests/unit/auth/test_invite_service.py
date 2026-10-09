@@ -80,6 +80,11 @@ class FakeRepo:
                 return True
         return False
 
+    async def downgrade_to_viewer(self, user_id: uuid.UUID) -> None:
+        for h, r in list(self.rows.items()):
+            if r.user_id == user_id:
+                self.rows[h] = r.model_copy(update={"role": "viewer"})
+
     async def reissue(self, user_id: uuid.UUID, **kw: Any) -> InviteRecord | None:
         return None
 
@@ -153,6 +158,38 @@ async def test_create_duplicate_email_conflicts() -> None:
 def test_owner_role_cannot_be_invited() -> None:
     with pytest.raises(ValueError):
         _req(role="owner")
+
+
+def test_manager_invite_refused() -> None:
+    with pytest.raises(ValueError):
+        _req(role="manager")
+
+
+def test_viewer_invite_accepted_by_model() -> None:
+    assert _req(role="viewer").roles[0].value == "viewer"
+
+
+async def test_legacy_manager_invite_is_accepted_as_viewer() -> None:
+    svc, repo, _ = _make()
+    inv = await svc.create(_req(), invited_by=uuid.uuid4())
+    h = hash_token(inv.token)
+    repo.rows[h] = repo.rows[h].model_copy(update={"role": "manager"})  # legacy row
+    await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
+    rec, _ = await svc.complete_redemption(
+        inv.token, method_id="m", code="123456", source_ip="1.1.1.1"
+    )
+    assert rec.role == "viewer" and rec.downgraded_from == "manager"
+    assert repo.rows[h].role == "viewer"
+
+
+async def test_viewer_invite_redemption_is_not_flagged_downgraded() -> None:
+    svc, _, _ = _make()
+    inv = await svc.create(_req(), invited_by=uuid.uuid4())
+    await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
+    rec, _ = await svc.complete_redemption(
+        inv.token, method_id="m", code="123456", source_ip="1.1.1.1"
+    )
+    assert rec.downgraded_from is None
 
 
 async def test_invite_accepted_end_to_end_activates_user() -> None:

@@ -57,6 +57,10 @@ class InviteRepository(Protocol):
         the user is still `invited`; returns whether this call did it."""
         ...
 
+    async def downgrade_to_viewer(self, user_id: uuid.UUID) -> None:
+        """Rewrite the invite role and the user's role row to `viewer` (legacy invites)."""
+        ...
+
     async def reissue(
         self,
         user_id: uuid.UUID,

@@ -337,10 +337,10 @@ class RefreshOutcome(BaseModel):
 
 
 class InviteRole(StrEnum):
-    """Roles an invite may carry. `owner` is deliberately absent: an owner is
-    never created by invitation (E09-S05 "Role immutability")."""
+    """Roles an invite may carry: `viewer` only (owner decision #1778 AC, #2109).
+    `owner` and `manager` are never granted by invitation; the owner promotes
+    after activation."""
 
-    MANAGER = "manager"
     VIEWER = "viewer"
 
 
@@ -377,6 +377,8 @@ class InviteRecord(BaseModel):
     revoked_at: datetime | None = None
     created_at: datetime
     pending_password_hash: str | None = Field(default=None, repr=False)
+    #: Set only when a legacy invite's non-viewer role was downgraded at redemption.
+    downgraded_from: str | None = None
 
 
 class InviteView(BaseModel):

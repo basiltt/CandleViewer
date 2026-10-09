@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from candleviewer.api.invites import make_invites_router
 from candleviewer.auth.generated_permissions import Permission
-from candleviewer.auth.invite_service import INVITE_TTL, InviteService
+from candleviewer.auth.invite_service import INVITE_TTL, InviteService, hash_token
 from candleviewer.auth.scopes import PrincipalSnapshot
 from tests.unit.api.test_step_up_router import _H, _build, _code, _Emitter
 from tests.unit.auth.test_invite_service import (
@@ -85,6 +85,28 @@ async def test_create_rejects_owner_role_and_duplicate() -> None:
     assert c.post("/users", headers=_H, json=bad).status_code == 422
     assert c.post("/users", headers=_H, json=_BODY).status_code == 201
     assert c.post("/users", headers=_H, json=_BODY).status_code == 409
+
+
+async def test_create_rejects_manager_role_with_generic_422_and_audit() -> None:
+    c, em, seed, clock, repo, _ = await _setup()
+    _elevate(c, seed, clock)
+    r = c.post("/users", headers=_H, json={**_BODY, "roles": ["manager"]})
+    assert r.status_code == 422 and r.json()["detail"] == "invalid invite request"
+    assert not repo.rows and "users.invite_refused" in em.actions()
+
+
+async def test_legacy_manager_invite_redeems_as_viewer_and_audits_downgrade() -> None:
+    c, em, seed, clock, repo, _ = await _setup()
+    tok = await _invite(c, seed, clock)
+    h = hash_token(tok)
+    repo.rows[h] = repo.rows[h].model_copy(update={"role": "manager"})
+    start = c.post(f"/invites/{tok}", json={"password": GOOD_PW})
+    done = c.post(
+        f"/invites/{tok}/confirm", json={"method_id": start.json()["method_id"], "code": "123456"}
+    )
+    assert done.status_code == 200 and done.json()["role"] == "viewer"
+    assert "users.invite_role_downgraded" in em.actions()
+    assert "users.invite_redeemed" in em.actions()
 
 
 async def _invite(c: TestClient, seed: bytes, clock: Any) -> str:
