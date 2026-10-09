@@ -9,12 +9,43 @@ row; it raises `SyntheticBarPersistError` instead of writing.
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 from decimal import Decimal
+from typing import Literal
 
 from candleviewer.bars.errors import BarsError, SyntheticBarPersistError
 from candleviewer.bars.models import Bar, BarSpec
 
 _ZERO = Decimal(0)
+
+
+@dataclass(frozen=True, slots=True)
+class SeriesLayout:
+    """Series metadata for renderers and indicators (24 §3.3c, E12-S04).
+
+    `is_time_aligned=False` with `spacing="index"`: the x-axis is the bar index, not time, so the
+    renderer spaces bars by index and time-based indicators are refused (`require_time_aligned`).
+    Serialised as `isTimeAligned` / `spacing` by the wire layer.
+    """
+
+    is_time_aligned: bool
+    spacing: Literal["time", "index"]
+
+
+def layout(spec: BarSpec) -> SeriesLayout:
+    """Only time bars are time-aligned; renko alone is spaced by index (others by open time)."""
+    if spec.kind == "renko":
+        return SeriesLayout(is_time_aligned=False, spacing="index")
+    return SeriesLayout(is_time_aligned=spec.kind == "time", spacing="time")
+
+
+def require_time_aligned(spec: BarSpec, indicator: str) -> None:
+    """Refuse a time-based indicator over a series without a fixed time width."""
+    if not layout(spec).is_time_aligned:
+        raise BarsError(
+            f"{indicator[:64]} needs bars of a fixed time width; {spec.kind} bars have no fixed "
+            "time width, so it is not available on this series."
+        )
 
 
 def assert_persistable(bar: Bar) -> Bar:

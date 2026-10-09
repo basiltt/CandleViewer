@@ -65,6 +65,21 @@ bars_kline_refused_total = Counter(
     "Kline rows refused before queueing (reason: precedence_unknown = tape lookup failed).",
     labelnames=("reason",),
 )
+#: E12-S04 renko builder series (S03's `bar_build_latency_seconds{kind}`, first emitted here).
+bar_renko_multi_brick_total = Counter(
+    "bar_renko_multi_brick_total",
+    "Trades that completed more than one renko brick.",
+    labelnames=("symbol",),
+)
+bar_renko_reversals_total = Counter(
+    "bar_renko_reversals_total", "Renko direction reversals.", labelnames=("symbol",)
+)
+bar_build_latency_seconds = Histogram(
+    "bar_build_latency_seconds",
+    "Trade-to-bar-update latency inside one builder.",
+    labelnames=("kind",),
+    buckets=(0.000001, 0.000005, 0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.01),
+)
 bar_emit_sink_errors_total = Counter(
     "bar_emit_sink_errors_total", "Bar emissions a sink failed to accept.", labelnames=("reason",)
 )
@@ -142,6 +157,9 @@ EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
         "bars_endpoint_param_rejected_total",
         "bars_endpoint_source_tier_total",
         "bars_tape_read_degraded_total",
+        "bar_renko_multi_brick_total",
+        "bar_renko_reversals_total",
+        "bar_build_latency_seconds",
     }
 )
 

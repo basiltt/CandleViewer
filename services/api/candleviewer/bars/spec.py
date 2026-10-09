@@ -47,6 +47,10 @@ TIME_INTERVALS: Final[dict[str, int]] = {
 _INTERVAL_CODES: Final[dict[int, str]] = {v: k for k, v in TIME_INTERVALS.items()}
 
 _UINT = re.compile(r"^[1-9][0-9]{0,17}$")
+#: ADR-0033: `atr` is reserved (R2); strict whitelist, bounded period 2..100 and optional mult.
+_ATR = re.compile(r"^atr:(?:[2-9]|[1-9][0-9]|100)(?::[1-9][0-9]{0,3})?$")
+#: ADR-0033 Decision 1: the exact 422 detail, naming the reason and the supported alternative.
+RENKO_ATR_DEFERRED: Final = "ATR bricks are not available yet. Enter a brick size in ticks."
 
 bar_specs_registered_total = Counter(
     "bar_specs_registered_total", "Distinct bar specs registered (spec_hash -> BarSpec)."
@@ -112,8 +116,8 @@ def from_wire(bar_type: str, param: str) -> BarSpec:
                 f"The param '{param}' is not a supported time interval for bar_type 'time'."
             )
         return BarSpec(kind="time", interval_ms=TIME_INTERVALS[param])
-    if bar_type == "renko" and param.startswith("atr:"):
-        raise BarSpecError("ATR-sized renko bricks ('atr:N') are not available yet.")
+    if bar_type == "renko" and _ATR.match(param):
+        raise BarSpecError(RENKO_ATR_DEFERRED)
     n = _uint(bar_type, param)
     if bar_type == "tick":
         return BarSpec(kind="tick", tick_count=n)

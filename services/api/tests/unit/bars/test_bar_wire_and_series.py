@@ -65,7 +65,7 @@ def test_wire_param_with_dot_rejected(param: str) -> None:
         ("candles", "5", "not a supported bar type"),
         ("time", "M", "not a supported time interval"),
         ("time", "7", "not a supported time interval"),
-        ("renko", "atr:14", "ATR-sized"),
+        ("renko", "atr:14", "ATR bricks are not available yet"),
         ("tick", "0", "positive whole number"),
         ("tick", "01", "positive whole number"),
         ("tick", "-5", "positive whole number"),

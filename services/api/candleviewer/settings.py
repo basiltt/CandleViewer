@@ -192,6 +192,9 @@ class Settings(BaseSettings):
     # symlink; it is normalised with expanduser().resolve() at settings load.
     bars_enabled: bool = False
     bars_state_root: str = ""
+    # E12-S04: renko builders (`bars.renko`, C-4.13: off by default; on in staging; the
+    # descoping switch, removal at R2). Never gates a safety invariant (C-4.14).
+    bars_renko_enabled: bool = False
     # E35-S02-B1 (#1809): run the deterministic rule evaluator in the app (C-4.13: off by
     # default). Never gates a safety invariant (C-4.14): native SL / scope checks stay on.
     rules_evaluator_enabled: bool = False
