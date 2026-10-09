@@ -30,10 +30,10 @@ Run result: 69 passed, 1 skipped (S1b).
 ## Not probed
 - True concurrency of three browser contexts; cookie jars in a real browser.
 - Idle-lock and absolute-expiry screens (SCR-005/112): #1640. Server clock for E2E expiry: #2086.
-- Concurrent role revocation during a step-up-gated action as a single atomic scenario (AC edge case in the ticket): covered only in parts (step-up needs elevation per session; role change refuses next request); no one test asserts both audit rows in order. **Gap, see Follow-ups.**
+- Concurrent role revocation during a step-up-gated action as a single atomic scenario (AC edge case in the ticket): covered only in parts (step-up needs elevation per session; role change refuses next request); no one test asserts both audit rows in order. Tracked as #2100.
 
 ## Anomalies
 None observed in-process.
 
-## Follow-ups (recommend)
-1. Add a deterministic interleaving test: manager mid step-up, owner revokes role, action refused, audit order preserved, no partial effect.
+## Follow-ups
+1. #2100: add a deterministic interleaving test: manager mid step-up, owner revokes role, action refused, audit order preserved, no partial effect.

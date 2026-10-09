@@ -47,7 +47,7 @@ Time budget: automated about 10 min including setup; manual items below about 2 
 | E06/E07 | Viewer and cross-account denial | `tests/contract/rbac/test_scope_and_ws.py::test_valid_capability_but_non_granted_account_is_403_nothing_mutated_and_audited`; `tests/security/auth/test_authz_abuse.py::test_ac_authz_02_account_id_tampering_denied_without_grant`; `apps/web/e2e/auth/denied.spec.ts` |
 | E08 | Tailscale-only reachability | manual M5 (deployment level; no automated test) |
 | E09 | Every route has a capability declaration | `tests/contract/rbac/test_route_matrix.py::test_undeclared_served_route_fails_the_build`; `tests/unit/api/test_deny_by_default.py` |
-| Audit | Append-only, chain, redaction, never drops | `tests/unit/audit/test_wal.py`, `test_writer_never_drops.py`, `test_query_verify.py`, `test_redact_credentials.py`; every denial audited: `tests/security/auth/test_authz_abuse.py::test_ac_authz_07_every_denial_is_audited` |
+| Audit | Append-only, chain, redaction, never drops | `tests/unit/audit/test_wal.py`, `tests/unit/audit/test_writer_never_drops.py`, `tests/unit/audit/test_query_verify.py`, `tests/unit/audit/test_redact_credentials.py`; every denial audited: `tests/security/auth/test_authz_abuse.py::test_ac_authz_07_every_denial_is_audited` |
 | Fail closed | Postgres outage, gateway restart, session expiry under load | `tests/chaos/auth/test_auth_chaos.py` S1, S3, S5 (S1b real restart: needs docker, skipped without) |
 
 ## B. Manual steps (run on a staging deploy)
@@ -60,12 +60,37 @@ Time budget: automated about 10 min including setup; manual items below about 2 
 | M5 | From outside the tailnet, try to reach the API (E08) | Connection refused or timeout |
 | M6 | Keyboard-only pass of login, step-up dialog, invite wizard | Every control reachable with visible focus; no trap |
 | M7 | Re-run the four charters in `docs/qa/charters/` against staging with a browser and record real debriefs | Debriefs updated; anomalies filed |
+| M8 | Log scan after one login, MFA and refresh on staging for session id, token, cookie and TOTP values (SR-122) | No match in API or web logs |
 
-## C. Gaps and deferrals (each cites an open issue)
+## B2. Security controls (SR-xxx) not covered by a case row above
+| Control | Evidence |
+|---|---|
+| SR-012 cookie flags | `tests/security/auth/test_csrf_cookie_abuse.py::test_ac_csrf_03_refresh_cookie_flags_not_downgradable` (HttpOnly, Secure, SameSite=Strict on refresh cookie); `apps/web/e2e/auth/session.spec.ts` (no secrets readable by page script) |
+| SR-112 CSP | Desktop shell: `apps/desktop/test/csp.test.ts` ("matches the SR-112 policy verbatim", "never allows unsafe-eval"); `apps/desktop/e2e/hardening.spec.ts`. Web-served CSP and CI enforcement: tracked gap #1230 |
+| SR-013 session rotation | Refresh and fixation: `tests/security/auth/test_session_abuse.py::test_ac_ses_01_fixation_preauth_id_never_becomes_session`, `::test_ac_ses_02_every_refresh_issues_new_id_and_token`. Password change: #2099. **Role change: untracked, needs issue** (no test asserts the session id rotates on role change; #2100 covers only the mid step-up revoke interleaving) |
+| SR-122 no session ids/tokens in logs | `tests/unit/observability/test_redaction.py::test_redacts_session_key`, `::test_redacts_csrf_key`, `::test_redacts_cookie_key`, `::test_redacts_authorization_key`, `::test_redacts_totp_key`, `::test_redacts_recovery_code_key`; audit side `tests/unit/audit/test_redact_credentials.py`. Key-name redaction only; an end-to-end "no token in captured logs during a login" test does not exist: manual M8 |
+| SR-015 per-IP throttle | `tests/unit/auth/test_login_service.py::test_per_ip_throttle_blocks_independent_of_username`; `tests/unit/auth/test_throttle.py::test_throttle_is_per_source_ip`; `tests/security/auth/test_credential_abuse.py::test_ac_cred_03_stuffing_one_ip_throttled_without_argon2_amplification`; `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_02_six_digit_bruteforce_locked_at_cap`. Review ticket: #1233 |
+| SR-016 lockout audit | `tests/unit/api/test_auth_router.py::test_account_locked_emits_auth_account_locked_audit_action_with_warning_severity`. **Owner notification: no test found and no implementation located in `candleviewer/auth`; untracked, needs issue** (review ticket #1233 covers lockout review only) |
+| SR-011 Argon2id parameters | `tests/security/auth/test_credential_abuse.py::test_ac_cred_01_hash_params_in_force_come_from_stored_hash_not_config` (m>=65536, t>=3, parsed from the hash); `tests/unit/auth/test_login_service.py::test_stale_argon2_params_trigger_rehash_on_login`; `tests/unit/auth/test_hashing.py::test_hasher_needs_rehash_true_for_stale_params`. The >=100 ms per-verify cost on the target host is not asserted: #2097 / E09-Q05 report |
+| Audit append-only DB grants | `tests/integration/audit/test_audit_repository.py::test_app_role_cannot_update_or_delete` and `::test_truncate_refused_even_for_owner` (**integration, need the docker Postgres stack; not run by the pack author**); unit: `tests/unit/migrations/test_0003_audit_log.py::test_0003_audit_checkpoints_are_append_only` |
+
+U11 (same-counter TOTP replay): `tests/security/auth/test_mfa_abuse.py::test_ac_mfa_01_totp_replay_inside_skew_window_rejected` was read and does assert `MfaCodeReused` for the same code on two fresh challenges; `::test_ac_mfa_01b_older_step_than_last_accepted_rejected` asserts the older-step case. Citation confirmed.
+
+Added manual step: M8 grep the API and web logs from one full login, MFA and refresh on staging for the session id, token, cookie and TOTP values; pass when none appear.
+
+## CSRF position
+CSRF protection currently relies on SameSite=Strict cookies, the Origin allow-list on cookie refresh, and bearer-header auth on state-changing routes (`test_ac_csrf_01`, `_02`, `_04`). There is **no double-submit CSRF token**; that is deferred to #2090 and the SR-152 "CSRF token absent/invalid" negative test is blocked by it.
+
+## C. Gaps and deferrals (each cites an open issue unless marked untracked)
 - Server-side E2E clock for step-up and session expiry: #2086.
 - Session screens RTL/axe/Playwright, SCR-002/003/005/112 cases: #1640.
-- CSRF double-submit token negative test: #2090.
+- CSRF double-submit token and its negative test: #2090.
 - Rules-manager grant isolation test: #2094; owner check shape: #2096.
 - k6 Argon2 timing header: #2097.
-- No pytest marker/tag for this pack yet, no `e2e-auth` CI lane, no cold execution by a second person: not done.
-- No explicit test for "role revoked during an in-flight step-up-gated action, audit order preserved" and none for "password change during live step-up": recommend follow-up tickets (not filed by this PR).
+- Password change during a live step-up: #2099.
+- Role revoked mid step-up-gated action, audit order preserved: #2100.
+- Frontend auth slice coverage (>=80% floor): **not measured**, open rollup item.
+- No pytest marker/tag for this pack and no `e2e-auth` CI lane: open.
+- No cold execution of this pack by a second person: open.
+- Untracked, needs issue: (a) session id rotation on role change (SR-013), (b) Owner notification on lockout (SR-016).
+- Web-served CSP enforcement: #1230.

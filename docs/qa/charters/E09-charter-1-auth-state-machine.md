@@ -29,13 +29,13 @@ Run result: 81 tests passed across the MFA / step-up / recovery / MFA-abuse / st
 ## Not probed (needs a human, a browser or staging)
 - Closing the tab mid-MFA, browser back/forward during MFA: SCR-002 is not built; tracked in #1640.
 - Server-side expiry of a step-up under a moving clock end to end: needs the server test clock, #2086.
-- Password change during an active step-up: no existing test combines them; **gap, see Follow-ups**.
+- Password change during an active step-up: no existing test combines them; tracked as #2099.
 - Re-enrolling TOTP while an old authenticator is still configured (real device flow).
 - Keyboard-only segment: login and step-up have Playwright keyboard cases (`login.spec.ts`, `stepup.spec.ts`); a manual screen-reader pass is not done here.
 
 ## Anomalies
 None observed in-process. Dismissal reason for the absence of findings: scope was limited to existing coverage; absence of anomalies is not evidence of absence.
 
-## Follow-ups (recommend, not filed)
-1. Add an interaction test: password change while a step-up elevation is live must revoke or void the elevation (needs a decision from the auth owner on intended behaviour).
+## Follow-ups
+1. #2099: add an interaction test: password change while a step-up elevation is live must revoke or void the elevation (needs a decision from the auth owner on intended behaviour).
 2. E2E for A02/A05/A06/A09/A10/A11 once SCR-002 exists (#1640).
