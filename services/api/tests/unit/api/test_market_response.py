@@ -95,3 +95,11 @@ def test_limits_are_the_threat_model_numbers() -> None:
     assert limits.MAX_WINDOW_BARS == 250_000
     assert limits.TICK_PARAM_RANGE == (100, 1_000_000)
     assert limits.RANGE_TICKS_RANGE == (2, 100_000) and limits.QTY_PARAM_MAX == 10**12
+
+
+def test_decode_cursor_rejects_position_before_from() -> None:
+    """#2087 adversarial LOW: a valid on-grid cursor before `from` is rejected, never clamped."""
+    c = mr.encode_cursor(_SCOPE, _LO + 60_000_000)
+    with pytest.raises(mr.InvalidCursor):
+        mr.decode_cursor(c, scope=_SCOPE, end_us=_HI, start_us=_LO + 120_000_000)
+    assert mr.decode_cursor(c, scope=_SCOPE, end_us=_HI, start_us=_LO) == _LO + 60_000_000
