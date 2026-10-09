@@ -3384,8 +3384,8 @@ class Session(BaseModel):
     user_id: UserId
     issued_at: TsUs
     expires_at: TsUs                 # 12 h absolute
-    idle_expires_at: TsUs            # 30 min idle
-    refresh_expires_at: TsUs         # 7 d
+    idle_expires_at: TsUs            # 15 min idle by default (5-60 min per session)
+    refresh_expires_at: TsUs         # 12 h (bounded by the absolute session lifetime)
     ip: str
     user_agent_hash: str
     device_label: str | None

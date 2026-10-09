@@ -494,7 +494,7 @@ CREATE INDEX ix_uaa_frozen  ON user_account_access (exchange_account_id) WHERE f
 | `refresh_token_hash` | sha256_hex  | no   | —       | UNIQUE; **SECRET** (raw token never stored)                                    |
 | `access_token_jti`   | uuid        | yes  | NULL    | Latest access token id for revocation                                          |
 | `issued_at`          | timestamptz | no   | `now()` |                                                                                |
-| `last_seen_at`       | timestamptz | no   | `now()` | Idle timeout 30 min                                                            |
+| `last_seen_at`       | timestamptz | no   | `now()` | Idle timeout 15 min default (per-session `idle_timeout_s`, 5–60 min, §3.1 `0007`) |
 | `expires_at`         | timestamptz | no   | —       | Absolute 12 h                                                                  |
 | `revoked_at`         | timestamptz | yes  | NULL    |                                                                                |
 | `revoked_reason`     | text        | yes  | NULL    | logout / rotated / password_change / admin_revoke / mfa_reset / rotation_reuse |
@@ -585,7 +585,7 @@ CREATE INDEX ix_mfa_ch_user_open ON mfa_challenges (user_id, expires_at) WHERE s
 CREATE TABLE recovery_codes (
   id         uuid PRIMARY KEY,
   user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  code_hash  sha256_hex NOT NULL,   -- SECRET
+  code_hash  sha256_hex NOT NULL,   -- SECRET; HMAC-SHA256(key, code), not Argon2id (ADR-0010 notes D-1)
   used_at    timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (user_id, code_hash)
