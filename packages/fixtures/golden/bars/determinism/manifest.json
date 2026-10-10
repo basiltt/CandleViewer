@@ -1,0 +1,24 @@
+{
+  "fixture": "packages/fixtures/bybit/2026-10-05/ws/clean_publicTrade_BTCUSDT.jsonl",
+  "fixture_sha256": "e7ba4ff2c4cc374d50f5a542441ae62a7b68ba4d8dc561c165d0ddd15281d816",
+  "build_versions": {
+    "delta": 1,
+    "range": 1,
+    "renko": 1,
+    "tick": 1,
+    "time": 1,
+    "volume": 1
+  },
+  "specs": {
+    "time-1m": "a273d446aff40bd5a18ab5314ed605dbf48161e615518ef5e6637c570d791be1",
+    "time-5m": "243a2e966460a213138db11e49fe6b6b2ca7f7c8d994e8f05384c0f6c5bfd88f",
+    "tick-50": "74ae982bf3adf9d12ade0e70a6c2911e66af7642a79500d78a8547183e31a95d",
+    "volume-5": "f6da68e12d7710ca4888a7d8ff58f4f6f0c0e2d4a9081c8c69c15c48a3cecc1e",
+    "volume-0.25": "ad4325adb3ef3433e92fcdd1980ec44966d0aec44919265a03582f83e84fc6fb",
+    "range-20": "ff07093c077060fa4d6d658721d715f4230d3d3cd0750294fd649a98351b7eff",
+    "delta-1": "6c7637be1aea3d063186f43a646e0d83a7e92b8c44faa436c3cbb06902d3171e",
+    "renko-10": "6dee7cb455756dbeb9355e1e4465e9f0c6bbfda67751ada472a11f8328411fac",
+    "renko-10-wick-rev3": "f3319fa9d63afbd11e7f3ecfec4a3d20ec56da74a84c514df58a6142e9ddf054"
+  },
+  "reason": "initial E12-T04 golden set: recorded fixture day x 9 specs"
+}

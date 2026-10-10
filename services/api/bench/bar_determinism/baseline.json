@@ -1,0 +1,19 @@
+{
+  "n": 1000000,
+  "seed": 12004,
+  "python": "3.12.3",
+  "machine": "Windows-11-10.0.26300-SP0",
+  "system": "Windows",
+  "rows_per_s": {
+    "time:1m": 34381,
+    "time:5m": 35449,
+    "tick:100": 34302,
+    "tick:1000": 29658,
+    "volume:5": 26306,
+    "volume:0.25": 25792,
+    "range:20": 25471,
+    "delta:2": 30215,
+    "renko:10": 26142,
+    "renko:10:wick:rev3": 26973
+  }
+}
