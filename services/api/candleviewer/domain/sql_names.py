@@ -32,14 +32,16 @@ def column_identifier(name: str) -> str:
 
 
 EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+EPOCH_NAIVE = datetime(1970, 1, 1)
 
 
 def ts_param(us: int) -> datetime:
-    """Epoch microseconds -> tz-aware UTC datetime for a `TIMESTAMP` bind (asyncpg refuses ints).
+    """Epoch microseconds -> NAIVE datetime for a `TIMESTAMP` bind: naive, interpreted as UTC by
+    QuestDB's PGWire (its TIMESTAMP is tz-less, so asyncpg's codec rejects an aware datetime).
 
-    Exact to the microsecond (`EPOCH + timedelta`, never a float division).
+    Exact to the microsecond (`EPOCH_NAIVE + timedelta`, never a float division).
     """
-    return EPOCH + timedelta(microseconds=us)
+    return EPOCH_NAIVE + timedelta(microseconds=us)
 
 
 def ts_us_from_row(value: object) -> int:

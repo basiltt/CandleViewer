@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -161,7 +161,7 @@ def test_range_query_bind_count_matches_placeholders() -> None:
         sql, params = build_range_query("volume", SYM, "vol:1500", 0, 10, after, 5)
         assert sorted(set(re.findall(r"\$(\d+)", sql))) == [str(i + 1) for i in range(len(params))]
         assert sql.endswith("LIMIT 5")
-        assert all(isinstance(p, datetime) and p.tzinfo is not None for p in params[2:])
+        assert all(isinstance(p, datetime) and p.tzinfo is None for p in params[2:])
 
 
 def test_ts_param_is_microsecond_exact_and_round_trips() -> None:
@@ -169,9 +169,9 @@ def test_ts_param_is_microsecond_exact_and_round_trips() -> None:
 
     us = 1_700_000_000_123_457  # float division would round this
     dt = ts_param(us)
-    assert dt.microsecond == 123_457 and dt.tzinfo is not None
+    assert dt.microsecond == 123_457 and dt.tzinfo is None  # naive, UTC by convention
     assert ts_us_from_row(dt) == us and ts_us_from_row(us) == us and ts_param(0).year == 1970
-    assert ts_us_from_row(dt.replace(tzinfo=None)) == us  # naive is taken as UTC
+    assert ts_us_from_row(dt.replace(tzinfo=UTC)) == us  # aware UTC accepted too
 
 
 @pytest.mark.asyncio
