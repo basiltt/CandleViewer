@@ -110,13 +110,15 @@ jobs:
         env:
           HYPOTHESIS_PROFILE: ci
         run: >
-          uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration) and not roundtrip and not fuzz and not harness"
-          --ignore=tests/unit/ws/test_cvwb_perf.py
+          uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration) and not roundtrip and not fuzz and not harness and not perf"
           --durations=10
           --cov --cov-report=xml:coverage.xml --cov-report=term
 
-      - name: pytest CVWB decode perf (E17-T02, no coverage tracing)
-        run: uv run pytest tests/unit/ws/test_cvwb_perf.py -m perf --no-cov -p no:cacheprovider
+      # C-13.9 wall-clock budgets are measured here, alone and without coverage tracing: under the
+      # covered 7k-test run they fail on shared runners (test_create_app_under_200ms measured 766 ms
+      # on four unrelated PRs this week, passing alone every time). Still a blocking step (#2185).
+      - name: pytest perf budgets (C-13.9, no coverage tracing, isolated)
+        run: uv run pytest -m perf --no-cov -p no:cacheprovider -p no:randomly --durations=0
 
       - name: uv build
         run: uv build
