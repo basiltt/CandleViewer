@@ -27,11 +27,12 @@ from candleviewer.observability.metrics_runtime import (
 )
 
 #: `_ms`/`_mb`: frontend-pushed names fixed by 20-architecture.md §12.1 (E04-T06).
-_UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|ms|mb)$")
+#: `_rows`: `recorder_write_backlog_rows`, named by E16-T03 (a gauge of queued rows).
+_UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|ms|mb|rows)$")
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "d8a8c14f8dac94e2bbf246da4a0d3a15ff11990ec76668aefae2fe5da1396ae5"
+GOLDEN_CATALOGUE_SHA256 = "3428f9b5adec3295f501d31dee9130ff3a74aed4f4d8ae89846129f8fcbf6131"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -171,9 +172,10 @@ def test_exported_bars_metrics_served_on_app_registry_with_env() -> None:
     import candleviewer.bars.builder_set  # noqa: F401 - owns metric families (via its imports)
     from candleviewer.bars.metrics import EXPORTED_NAMES, export_bars_metrics
     from candleviewer.bars.time_builder import bars_built_total
+    from candleviewer.recorder.metrics import EXPORTED_NAMES as RECORDER_NAMES
     from candleviewer.ws.metrics import EXPORTED_NAMES as CVWB_NAMES
 
-    exported = {s.name for s in live_specs() if s.exported} - CVWB_NAMES
+    exported = {s.name for s in live_specs() if s.exported} - CVWB_NAMES - RECORDER_NAMES
     assert exported == EXPORTED_NAMES
     m = Metrics("demo")
     register_r0(m)
@@ -205,5 +207,27 @@ def test_cvwb_encode_metrics_served_with_bounded_body_kind() -> None:
         text = generate_latest(m.registry).decode()
         assert 'cvwb_frames_encoded_total{env="demo",kind="bars"}' in text
         assert 'cvwb_bytes_encoded_total{env="demo",kind="bars"}' in text
+    finally:
+        collector.close()
+
+
+def test_exported_recorder_metrics_served_with_env() -> None:
+    """E16-T03: the StreamWriter series are `live`, served via `export_recorder_metrics`."""
+    from candleviewer.recorder.metrics import (
+        EXPORTED_NAMES,
+        export_recorder_metrics,
+        recorder_rows_total,
+    )
+
+    assert EXPORTED_NAMES <= {s.name for s in live_specs() if s.exported}
+    m = Metrics("demo")
+    register_r0(m)
+    collector = export_recorder_metrics(m.registry, env="demo")
+    try:
+        recorder_rows_total.labels(stream="trades").inc()
+        text = generate_latest(m.registry).decode()
+        assert 'recorder_rows_total{env="demo",stream="trades"}' in text
+        for name in EXPORTED_NAMES:
+            assert f"# HELP {name} " in text, name
     finally:
         collector.close()

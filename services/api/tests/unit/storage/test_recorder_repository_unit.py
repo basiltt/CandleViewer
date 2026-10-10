@@ -153,3 +153,29 @@ async def test_resolve_policy_sql_orders_pinned_then_symbol_then_default() -> No
     await repo.resolve_policy("ETHUSDT", "trades")
     sql = rel.calls[0][0]
     assert "pinned" in sql and "ORDER BY ord LIMIT 1" in sql
+
+
+async def test_add_session_counters_targets_live_session_as_deltas() -> None:
+    repo, rel = _repo([{"?column?": 1}])
+    ok = await repo.add_session_counters(
+        "BTCUSDT", messages_received=5, messages_dropped=1, bytes_written=900, reconnect_count=0
+    )
+    sql, params = rel.calls[0]
+    assert ok and "messages_received = messages_received + :rx" in sql
+    assert "state IN ('starting','recording','degraded')" in sql
+    assert params == {"symbol": "BTCUSDT", "rx": 5, "dropped": 1, "bytes": 900, "reconnects": 0}
+
+
+async def test_record_live_gap_false_without_live_session() -> None:
+    repo, rel = _repo([])
+    start = datetime(2026, 10, 1, tzinfo=UTC)
+    ok = await repo.record_live_gap(
+        symbol="BTCUSDT",
+        stream="trades",
+        gap_start=start,
+        gap_end=start.replace(second=1),
+        cause="backpressure_drop",
+    )
+    sql, params = rel.calls[0]
+    assert not ok and "INSERT INTO recording_gaps" in sql and "CAST(:stream AS stream_kind)" in sql
+    assert params["cause"] == "backpressure_drop"

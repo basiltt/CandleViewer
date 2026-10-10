@@ -36,6 +36,11 @@ TICKERS_SCHEMA = TableSchema(
     timestamp_field_columns=("next_funding_ts",),
 )
 
+LIQUIDATIONS_SCHEMA = TableSchema(
+    name="liquidations",
+    tag_columns=("symbol", "side", "stream"),
+)
+
 KLINES_SCHEMA = TableSchema(
     name="klines",
     tag_columns=("symbol", "interval", "source"),
@@ -93,6 +98,7 @@ ALL_SCHEMAS: dict[str, TableSchema] = {
     "orderbook_deltas": ORDERBOOK_DELTAS_SCHEMA,
     "orderbook_snapshots": ORDERBOOK_SNAPSHOTS_SCHEMA,
     "tickers": TICKERS_SCHEMA,
+    "liquidations": LIQUIDATIONS_SCHEMA,
     "klines": KLINES_SCHEMA,
     "footprint_cells": FOOTPRINT_CELLS_SCHEMA,
     "orderflow_metrics": ORDERFLOW_METRICS_SCHEMA,

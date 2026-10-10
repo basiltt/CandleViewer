@@ -176,6 +176,9 @@ class Settings(BaseSettings):
     book_depth: int = 200
     recorder_retention_days: int = 30
     recorder_hot_days: int = 7
+    # E16-T03: StreamWriter spill WAL (bounded; SR-096 — a volume separate from the backend).
+    recorder_wal_dir: str = "/data/recorder-wal"
+    recorder_wal_max_bytes: int = Field(default=1 << 30, ge=1 << 20)
     # #2048: max concurrent DuckDB scans for the /market/klines cold tier (C-2.18).
     cold_kline_concurrency: int = 2
     # #2060: seconds between reloads of the klines hot-retention rule (rules are editable).
