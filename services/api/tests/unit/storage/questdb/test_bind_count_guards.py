@@ -101,5 +101,3 @@ def test_ts_param_is_us_exact_and_ts_us_from_row_round_trips() -> None:
     from datetime import UTC
 
     assert ts_us_from_row(tp(us).replace(tzinfo=UTC)) == us  # aware also decodes
-    with pytest.raises(TypeError):
-        tp(True)

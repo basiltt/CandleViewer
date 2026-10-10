@@ -60,7 +60,7 @@ def ts_us_from_row(value: object) -> int:
 _PLACEHOLDER = re.compile(r"\$(\d+)")
 
 
-class SqlBindMismatch(ValueError):  # noqa: N818 - domain error name mirrors the failure
+class SqlBindMismatch(ValueError):
     """The SQL's `$n` placeholders and the bind list disagree (caught before the server)."""
 
 
