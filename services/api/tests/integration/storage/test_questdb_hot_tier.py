@@ -181,6 +181,7 @@ async def test_ddl_runner_applies_all_tables_idempotently(
             "0001_core_tables.sql",
             "0002_footprint_cells.sql",
             "0003_bars_integrity_columns.sql",
+            "0004_bars_key_by_index.sql",
         ]
         await assert_no_schema_drift(executor, DDL_DIR)
 
