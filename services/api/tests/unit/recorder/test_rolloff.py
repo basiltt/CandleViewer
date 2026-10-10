@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import ClassVar
 
 import pytest
 from hypothesis import HealthCheck, given, settings
@@ -46,6 +47,9 @@ class FakeHot:
 
     async def symbols_in(self, stream: StreamKind, rng: TimeRange) -> list[str]:
         return list(self.days[stream][rng.start_us])
+
+    async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
+        return dict.fromkeys(self.days[stream][rng.start_us], 10)
 
     async def drop_day(self, stream: StreamKind, day_start_us: int) -> None:
         self.dropped.append((stream, day_start_us))
@@ -353,3 +357,193 @@ async def test_chaos_kill_between_verify_and_drop_loses_nothing_and_rerun_conver
     await _job(hot, FakeArchiver(), marks, audit=audit).run()
     assert hot.dropped == [(T, day(10))]
     assert (await marks.get("BTCUSDT", T)).archived_through_us == day(10) + US_PER_DAY
+
+
+class LateRowHot(FakeHot):
+    """A row (or a new symbol) lands after the verified export, before the drop."""
+
+    def __init__(self, days: dict[StreamKind, dict[int, list[str]]], *, new_symbol: bool) -> None:
+        super().__init__(days)
+        self.calls = 0
+        self.new_symbol = new_symbol
+
+    async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
+        self.calls += 1
+        counts = await super().row_counts(stream, rng)
+        if self.calls > 1:
+            if self.new_symbol:
+                counts["SOLUSDT"] = 1
+            else:
+                counts["BTCUSDT"] += 1
+        return counts
+
+
+@pytest.mark.parametrize("new_symbol", [False, True])
+async def test_rolloff_late_row_between_export_and_drop_aborts_drop(new_symbol: bool) -> None:
+    hot = LateRowHot({T: {day(10): ["BTCUSDT"]}}, new_symbol=new_symbol)
+    emitted: list[str] = []
+
+    class Ev:
+        async def emit(self, severity: str, code: str, detail: dict[str, str | int]) -> None:
+            emitted.append(code)
+
+    marks, audit = FakeMarks(), Audit()
+    report = await _job(hot, FakeArchiver(), marks, audit=audit, events=Ev()).run()
+    assert hot.dropped == [] and audit.rows == []
+    assert report.retained == [(T, day(10), "archive_verification_failed")]
+    assert "archive.verification_failed" in emitted
+    assert (await marks.get("BTCUSDT", T)).archived_through_us == 0
+
+
+async def test_rolloff_day_just_past_window_waits_for_safety_margin() -> None:
+    hot = FakeHot({T: {day(8): ["BTCUSDT"]}})  # ends 7 d ago: past 7 d, inside 7+1 d margin
+    await _job(hot, FakeArchiver(), FakeMarks()).run()
+    assert hot.dropped == []
+
+
+async def test_system_audit_adapter_writes_as_system_rolloff() -> None:
+    from candleviewer.recorder.rolloff import ROLLOFF_ACTOR, SystemAuditAdapter
+
+    seen: list[tuple[str, dict[str, object]]] = []
+
+    class Em:
+        async def emit(self, action: str, **kw: object) -> None:
+            seen.append((action, kw))
+
+    await SystemAuditAdapter(Em()).write("retention.purge", {"stream": "trades", "rows": 3})
+    action, kw = seen[0]
+    assert action == "retention.purge" and kw["actor_label"] == ROLLOFF_ACTOR == "system:rolloff"
+    assert kw["after_state"] == {"stream": "trades", "rows": 3}
+
+
+async def test_rolloff_day_with_no_symbols_is_never_dropped() -> None:
+    hot = FakeHot({T: {day(20): []}})
+    await _job(hot, FakeArchiver(), FakeMarks()).run()
+    assert hot.dropped == []
+
+
+async def test_downsample_holds_stream_lock_and_audits_before_rewrite() -> None:
+    order: list[str] = []
+
+    class A(Audit):
+        async def write(self, action: str, detail: dict[str, str | int]) -> None:
+            order.append(action)
+
+    class D(FakeDown):
+        async def downsample_before(self, symbol: str, stream: StreamKind, before_us: int) -> int:
+            order.append("downsample")
+            return await super().downsample_before(symbol, stream, before_us)
+
+    job = _job(
+        FakeHot({T: {}}),
+        FakeArchiver(),
+        FakeMarks(),
+        audit=A(),
+        downsampler=D(),
+        cold_symbols=ColdSyms(),
+        lock=Lock({"rolloff:heatmap_cells"}),
+    )
+    report = await job.run()
+    assert order == ["retention.downsample", "downsample"]  # orderbook only; heatmap locked
+    assert StreamKind.HEATMAP_CELLS in report.skipped_locked
+
+
+class PhaseCrash(BaseException):
+    """Simulated crash at a phase boundary (not swallowed by the job)."""
+
+
+@settings(max_examples=80, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@given(
+    nights=st.lists(
+        st.lists(
+            st.sampled_from(
+                [
+                    "ok",
+                    "verify_fail",
+                    "write_fail",
+                    "late_row",
+                    "crash_archive",
+                    "crash_audit",
+                    "crash_drop",
+                    "crash_advance",
+                ]
+            ),
+            min_size=4,
+            max_size=4,
+        ),
+        min_size=1,
+        max_size=5,
+    )
+)
+async def test_property_phase_crashes_write_failures_late_rows_never_lose_data(
+    nights: list[list[str]],
+) -> None:
+    days = [day(9 + i) for i in range(4)]
+    hot = FakeHot({T: {d: ["BTCUSDT"] for d in days}})
+    verified: set[int] = set()
+    plan: dict[int, str] = {}
+
+    class Arch:
+        async def archive_day(
+            self, symbol: str, stream: StreamKind, d: TimeRange
+        ) -> ArchiveOutcome:
+            mode = plan.get(d.start_us, "ok")
+            if mode == "crash_archive":
+                raise PhaseCrash
+            if mode in ("verify_fail", "write_fail"):
+                code = (
+                    "archive_verification_failed"
+                    if mode == "verify_fail"
+                    else "archive_write_failed"
+                )
+                return ArchiveOutcome(symbol, stream, d.start_us, d.end_us, False, reason=code)
+            verified.add(d.start_us)
+            return ArchiveOutcome(symbol, stream, d.start_us, d.end_us, True, rows=10, bytes=1)
+
+    class Hot(FakeHot):
+        seen: ClassVar[dict[int, int]] = {}
+
+        async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
+            n = self.seen.get(rng.start_us, 0)
+            self.seen[rng.start_us] = n + 1
+            late = plan.get(rng.start_us) == "late_row" and n % 2 == 1
+            return {"BTCUSDT": 11 if late else 10}
+
+        async def drop_day(self, stream: StreamKind, day_start_us: int) -> None:
+            if plan.get(day_start_us) == "crash_drop":
+                raise PhaseCrash
+            assert day_start_us in verified, "dropped without a verified cold copy"
+            await super().drop_day(stream, day_start_us)
+
+    class Aud(Audit):
+        async def write(self, action: str, detail: dict[str, str | int]) -> None:
+            if plan.get(int(detail.get("range_start_us", -1))) == "crash_audit":
+                raise PhaseCrash
+
+    class Marks(FakeMarks):
+        async def advance(
+            self, symbol: str, stream: StreamKind, through_us: int, *, now_us: int
+        ) -> RollOffWatermark:
+            if any(v == "crash_advance" for v in plan.values()):
+                raise PhaseCrash
+            return await super().advance(symbol, stream, through_us, now_us=now_us)
+
+    h = Hot(hot.days)
+    h.seen.clear()
+    marks = Marks()
+    last = 0
+    for modes in nights:
+        plan.clear()
+        plan.update(dict(zip(days, modes, strict=True)))
+        try:
+            await _job(h, Arch(), marks, audit=Aud()).run()  # type: ignore[arg-type]
+        except PhaseCrash:
+            pass
+        mark = (await marks.get("BTCUSDT", T)).archived_through_us
+        assert mark >= last
+        assert all(mark <= d for d in h.days[T])  # never covers still-hot data
+        last = mark
+    # convergence: a clean night drops everything left
+    plan.clear()
+    await _job(h, Arch(), marks).run()  # type: ignore[arg-type]
+    assert h.days[T] == {}

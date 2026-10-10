@@ -22,7 +22,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import Protocol, cast
 
 import structlog
 
@@ -30,6 +30,7 @@ from candleviewer.observability import spawn
 from candleviewer.observability.metrics import Counter, Gauge, Histogram
 from candleviewer.storage.cold.observability import SystemEventSink
 from candleviewer.storage.cold.watermarks import ArchiveOutcome, RollOffWatermark
+from candleviewer.storage.errors import StorageError
 from candleviewer.storage.models import StreamKind, TimeRange
 
 US_PER_DAY = 86_400_000_000
@@ -57,15 +58,19 @@ recorder_watermark_lag_days = Gauge(
 )
 
 
-def logger() -> Any:
+def logger() -> structlog.stdlib.BoundLogger:
     """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
-    return structlog.get_logger(__name__)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(__name__))
 
 
 class HotPartitions(Protocol):
     async def closed_days(self, stream: StreamKind, before_us: int) -> list[int]: ...
 
     async def symbols_in(self, stream: StreamKind, rng: TimeRange) -> list[str]: ...
+
+    async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
+        """`COUNT(*)` per symbol for the day — the pre/post snapshot around the drop."""
+        ...
 
     async def drop_day(self, stream: StreamKind, day_start_us: int) -> None: ...
 
@@ -106,6 +111,30 @@ class AuditPort(Protocol):
     async def write(self, action: str, detail: dict[str, str | int]) -> None: ...
 
 
+#: Audit actor for every roll-off purge (C-2.9): a system principal, never a user.
+ROLLOFF_ACTOR = "system:rolloff"
+
+
+class AuditEmitter(Protocol):
+    async def emit(self, action: str, **kwargs: object) -> None: ...
+
+
+class SystemAuditAdapter:
+    """`AuditPort` over the hash-chained `AuditWriter.emit`, as `system:rolloff`."""
+
+    def __init__(self, emitter: AuditEmitter) -> None:
+        self._emitter = emitter
+
+    async def write(self, action: str, detail: dict[str, str | int]) -> None:
+        await self._emitter.emit(
+            action,
+            actor_label=ROLLOFF_ACTOR,
+            object_kind="hot_partition",
+            object_label=f"{detail.get('stream', '')}:{detail.get('range_start_us', '')}",
+            after_state=dict(detail),
+        )
+
+
 class RunLock(Protocol):
     def hold(self, volume: str) -> AbstractAsyncContextManager[bool]: ...
 
@@ -118,6 +147,9 @@ class RollOffConfig:
     downsample_after_days: int = DOWNSAMPLE_AFTER_DAYS
     #: Bound on one archive attempt (C-2.18); the exporter has its own inner bound.
     attempt_timeout_s: float = 3600.0
+    #: Extra days beyond `retain_days` before a day is eligible, so it is far past any
+    #: plausible ingest/WAL-apply lag or late backfill (late-row race, review #2213).
+    safety_margin_days: int = 1
     streams: tuple[StreamKind, ...] = ROLLOFF_STREAMS
 
 
@@ -200,7 +232,8 @@ class RollOffJob:
         now_us = self._now_us()
         for symbol in symbols:
             days = await self._hot_days(symbol, stream)
-            if days is None or day_end > now_us - days * US_PER_DAY:
+            margin = days + self._cfg.safety_margin_days if days is not None else None
+            if margin is None or day_end > now_us - margin * US_PER_DAY:
                 return False
         return True
 
@@ -237,7 +270,10 @@ class RollOffJob:
         retained: dict[str, list[int]] = {}
         for day_start in await self._eligible_days(stream):
             day = TimeRange(start_us=day_start, end_us=day_start + US_PER_DAY)
-            symbols = await self._hot.symbols_in(stream, day)
+            before = await self._hot.row_counts(stream, day)
+            symbols = sorted(before)
+            if not symbols:  # nothing verified -> never drop (review #2213 E)
+                continue
             if not await self._window_ok(symbols, stream, day.end_us):
                 continue
             outcomes = [await self._archive_with_retry(s, stream, day) for s in symbols]
@@ -246,6 +282,13 @@ class RollOffJob:
                 for o in failed:
                     retained.setdefault(o.symbol, []).append(day_start)
                 report.retained.append((stream, day_start, failed[0].reason))
+                continue
+            # Critical section: re-snapshot immediately before the drop. Any row or
+            # symbol that landed after the verified export -> abort, keep hot, alert.
+            after = await self._hot.row_counts(stream, day)
+            exported = {o.symbol: o.rows for o in outcomes}
+            if after != before or after != exported:
+                await self._late_rows(stream, day, symbols, report, retained)
                 continue
             rows = sum(o.rows for o in outcomes)
             # Write-ahead audit (C-2.9), then the irreversible drop.
@@ -268,6 +311,23 @@ class RollOffJob:
             await asyncio.sleep(0)  # yield between partitions (live ingestion first)
         await self._advance(stream, dropped, retained)
 
+    async def _late_rows(
+        self,
+        stream: StreamKind,
+        day: TimeRange,
+        symbols: Sequence[str],
+        report: RollOffReport,
+        retained: dict[str, list[int]],
+    ) -> None:
+        recorder_rolloff_failures_total.labels(reason="late_rows").inc()
+        detail: dict[str, str | int] = {"stream": stream.value, "range_start_us": day.start_us}
+        detail["reason"] = "late_rows"
+        await self._events.emit("CRITICAL", "archive.verification_failed", detail)
+        for symbol in symbols:
+            retained.setdefault(symbol, []).append(day.start_us)
+        retained.setdefault("", []).append(day.start_us)
+        report.retained.append((stream, day.start_us, "archive_verification_failed"))
+
     async def _advance(
         self, stream: StreamKind, dropped: dict[str, list[int]], retained: dict[str, list[int]]
     ) -> None:
@@ -284,22 +344,38 @@ class RollOffJob:
             recorder_watermark_lag_days.labels(stream=stream.value).set(lag)
 
     async def _downsample(self, report: RollOffReport) -> None:
+        """Same discipline as the compactor: stream lock, replay lease (inside the
+        downsampler), and a write-ahead audit record before any cold file is replaced."""
         if self._downsampler is None or self._cold_symbols is None:
             return
         before = self._now_us() - self._cfg.downsample_after_days * US_PER_DAY
         for stream in DOWNSAMPLE_STREAMS:
-            for symbol in await self._cold_symbols.symbols(stream):
-                try:
-                    through = await self._downsampler.downsample_before(symbol, stream, before)
-                except Exception as exc:  # one bad partition never stops the pass
-                    recorder_rolloff_failures_total.labels(reason="downsample_failed").inc()
-                    logger().warning("rolloff_downsample_failed", error=type(exc).__name__)
+            async with self._lock.hold(f"rolloff:{stream.value}") as got:
+                if not got:
+                    report.skipped_locked.append(stream)
                     continue
-                if through:
-                    await self._marks.mark_downsampled(
-                        symbol, stream, through, now_us=self._now_us()
+                for symbol in await self._cold_symbols.symbols(stream):
+                    await self._audit.write(
+                        "retention.downsample",
+                        {
+                            "tier": "cold",
+                            "stream": stream.value,
+                            "symbol": symbol,
+                            "before_us": before,
+                            "phase": "intent",
+                        },
                     )
-                    report.downsampled.append((symbol, stream, through))
+                    try:
+                        through = await self._downsampler.downsample_before(symbol, stream, before)
+                    except (StorageError, OSError, ValueError) as exc:
+                        recorder_rolloff_failures_total.labels(reason="downsample_failed").inc()
+                        logger().warning("rolloff_downsample_failed", error=type(exc).__name__)
+                        continue
+                    if through:
+                        await self._marks.mark_downsampled(
+                            symbol, stream, through, now_us=self._now_us()
+                        )
+                        report.downsampled.append((symbol, stream, through))
 
 
 ROLLOFF_INTERVAL_S = 24 * 3600.0

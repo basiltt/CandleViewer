@@ -28,6 +28,7 @@ from candleviewer.storage.cold.rolloff_ops import (
     _downsample_table,
 )
 from candleviewer.storage.cold.watermarks import FileWatermarkStore
+from candleviewer.storage.errors import StorageExportVerifyFailed
 from candleviewer.storage.models import StreamKind, TimeRange
 from tests.unit.storage.cold._helpers import (
     DAY_START_US,
@@ -170,9 +171,11 @@ async def test_hot_partitions_closed_days_parses_and_filters() -> None:
 
 
 async def test_hot_partitions_symbols_bind_naive_utc_ts_params() -> None:
-    pg = FakePg([{"symbol": "ETHUSDT"}, {"symbol": "BTCUSDT"}])
+    pg = FakePg([{"symbol": "ETHUSDT", "n": 4}, {"symbol": "BTCUSDT", "n": 7}])
     syms = await QuestDbHotPartitions(pg).symbols_in(T, day_range())
     assert syms == ["BTCUSDT", "ETHUSDT"]
+    counts = await QuestDbHotPartitions(pg).row_counts(T, day_range())
+    assert counts == {"BTCUSDT": 7, "ETHUSDT": 4}
     sql, params = pg.calls[0]
     assert "$1" in sql and "$2" in sql and "trades" in sql
     assert all(isinstance(p, datetime) and p.tzinfo is None for p in params)
@@ -298,3 +301,129 @@ async def test_compaction_filters_by_symbol_and_age(tmp_path: Path) -> None:
     assert (await compact_all(reg, Compactor(), symbols=["ETHUSDT"])).compacted == 0
     s = await compact_all(reg, Compactor(), older_than_days=30, clock=fixed_clock)
     assert s.compacted == 0  # partition is 1 day old
+
+
+async def _book_partition(root: Path) -> Path:
+    reg = DatasetRegistry(root)
+    rows = 50
+    table = pa.table(
+        {
+            "ts": pa.array([DAY_START_US + i * 100_000 for i in range(rows)], pa.int64()),
+            "symbol": ["BTCUSDT"] * rows,
+            "depth": [200] * rows,
+            "side": ["bid"] * rows,
+            "price": [1.0] * rows,
+            "size": [float(i) for i in range(rows)],
+        }
+    )
+    rng = TimeRange(start_us=DAY_START_US, end_us=DAY_START_US + 3_600_000_000)
+    await ColdExporter(reg, FakeHotSource(table), clock=fixed_clock).export_partition(
+        "BTCUSDT", StreamKind.ORDERBOOK_DELTA, rng, partition_extra={"hour": "00"}
+    )
+    return root / "orderbook_deltas" / "symbol=BTCUSDT" / "dt=2026-10-17" / "hour=00"
+
+
+async def test_downsample_corrupt_source_is_quarantined_not_laundered(tmp_path: Path) -> None:
+    from candleviewer.storage.cold.rolloff_ops import DownsampleSourceCorrupt
+
+    part = await _book_partition(tmp_path)
+    f = part / "part-0000.parquet"
+    f.write_bytes(f.read_bytes()[:-16] + b"\0" * 16)
+    with pytest.raises(DownsampleSourceCorrupt):
+        await ColdDownsampler(DatasetRegistry(tmp_path)).downsample_before(
+            "BTCUSDT", StreamKind.ORDERBOOK_DELTA, DAY_START_US + 2 * 86_400_000_000
+        )
+    q = tmp_path / "_quarantine" / part.relative_to(tmp_path)
+    assert (q / "part-0000.parquet").is_file()
+    assert json.loads((q / "part-0000.reason.json").read_text("utf-8"))["reason"] == "sha256"
+    entries = ManifestStore(tmp_path / "_manifests").read(part, tmp_path)
+    assert all(e.export_run_id != DOWNSAMPLE_RUN_ID for e in entries)
+
+
+async def test_downsample_bad_derivation_keeps_originals(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from candleviewer.storage.cold import rolloff_ops
+
+    part = await _book_partition(tmp_path)
+    real = rolloff_ops._downsample_table
+
+    def lossy(table: pa.Table, key: tuple[str, ...]) -> pa.Table:
+        out = real(table, key)
+        return out.slice(0, out.num_rows - 1)  # drops one second: count-only check misses shape
+
+    monkeypatch.setattr(rolloff_ops, "_downsample_table", lossy)
+    with pytest.raises(StorageExportVerifyFailed):
+        rolloff_ops.downsample_partition_sync(
+            DatasetRegistry(tmp_path).resolve_partition(
+                StreamKind.ORDERBOOK_DELTA,
+                partition_values={"symbol": "BTCUSDT", "dt": "2026-10-17", "hour": "00"},
+            ),
+            StreamKind.ORDERBOOK_DELTA,
+        )
+    assert sorted(p.name for p in part.glob("*.parquet")) == ["part-0000.parquet"]
+    entries = ManifestStore(tmp_path / "_manifests").read(part, tmp_path)
+    assert [e.file for e in entries] == ["part-0000.parquet"]
+
+
+async def test_quarantine_sidecar_is_atomic_and_metric_counts(tmp_path: Path) -> None:
+    from candleviewer.storage.cold.rolloff_ops import storage_rolloff_quarantined_total
+
+    before = storage_rolloff_quarantined_total.labels(reason="checksum")._value.get()
+    await _archiver(tmp_path, TamperingSource(trades_table(50)), RecordingSink()).archive_day(
+        "BTCUSDT", T, day_range()
+    )
+    after = storage_rolloff_quarantined_total.labels(reason="checksum")._value.get()
+    assert after == before + 1
+    q = tmp_path / "_quarantine" / PART
+    assert not [p for p in _walk(q) if p.suffix == ".tmp"]
+
+
+async def test_corrupt_watermark_fails_closed_with_critical_event(tmp_path: Path) -> None:
+    sink = RecordingSink()
+    store = FileWatermarkStore(DatasetRegistry(tmp_path), events=sink)
+    await store.advance("BTCUSDT", T, 500, now_us=1)
+    doc = tmp_path / "_manifests" / "_watermarks" / "trades" / "symbol=BTCUSDT.json"
+    doc.write_text("{not json", "utf-8")
+    mark = await store.get("BTCUSDT", T)
+    assert mark.archived_through_us == 0  # fail-closed: nothing assumed rolled off
+    assert ("CRITICAL", "recorder.watermark_corrupt") in [(s, c) for s, c, _ in sink.events]
+    healed = await store.advance("BTCUSDT", T, 600, now_us=2)  # next run repairs the doc
+    assert healed.archived_through_us == 600
+    assert (await store.get("BTCUSDT", T)).archived_through_us == 600
+
+
+async def test_watermark_concurrent_advance_and_downsample_lose_no_update(tmp_path: Path) -> None:
+    import asyncio
+
+    store = FileWatermarkStore(DatasetRegistry(tmp_path))
+    await asyncio.gather(
+        *(store.advance("BTCUSDT", T, 100 + i, now_us=i) for i in range(10)),
+        *(store.mark_downsampled("BTCUSDT", T, 50 + i, now_us=i) for i in range(10)),
+    )
+    mark = await store.get("BTCUSDT", T)
+    assert (mark.archived_through_us, mark.downsampled_through_us) == (109, 59)
+    assert mark.version == 20
+
+
+async def test_watermark_cas_rejects_foreign_writer(tmp_path: Path) -> None:
+    from candleviewer.storage.cold.watermarks import RollOffWatermark, WatermarkConflict
+
+    store = FileWatermarkStore(DatasetRegistry(tmp_path))
+    await store.advance("BTCUSDT", T, 100, now_us=1)  # version 1 on disk
+    with pytest.raises(WatermarkConflict):
+        store._write_sync(RollOffWatermark("BTCUSDT", T, 200, version=1), expected=0)
+
+
+async def test_downsampler_defers_partition_under_replay_lease(tmp_path: Path) -> None:
+    part = await _book_partition(tmp_path)
+
+    async def busy(_p: Path) -> str | None:
+        return "replay-1"
+
+    through = await ColdDownsampler(DatasetRegistry(tmp_path), busy).downsample_before(
+        "BTCUSDT", StreamKind.ORDERBOOK_DELTA, DAY_START_US + 2 * 86_400_000_000
+    )
+    assert through == 0
+    entries = ManifestStore(tmp_path / "_manifests").read(part, tmp_path)
+    assert all(e.export_run_id != DOWNSAMPLE_RUN_ID for e in entries)

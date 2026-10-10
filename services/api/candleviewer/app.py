@@ -162,6 +162,7 @@ from candleviewer.paper.service import PaperService
 from candleviewer.recorder.service import RecorderService
 from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
+from candleviewer.rolloff_wiring import build_rolloff_job
 from candleviewer.rules.service import RulesService
 from candleviewer.rules_store_pg import PostgresRuleStore
 from candleviewer.settings import Environment, Settings, get_settings
@@ -985,10 +986,18 @@ def create_app(
         )
         return summary.as_result()
 
+    admin_jobs = AdminJobStore()
+    app.state.admin_jobs = admin_jobs  # cancelled by the lifespan at shutdown
     app.include_router(
         make_recorder_admin_router(
-            AdminJobStore(), _compact, _LazyAuditEmitter(ctx.audit), audit_resolver
+            admin_jobs, _compact, _LazyAuditEmitter(ctx.audit), audit_resolver
         )
+    )
+    # E16-T05: nightly roll-off composition (constructed only; scheduling is flag-gated).
+    app.state.rolloff_job = build_rolloff_job(
+        resolved,
+        _LazyAuditEmitter(ctx.audit),
+        SqlAlchemyRecorderRepository(_kb_pg) if _kb_pg is not None else None,
     )
     # QA defect #1622 blocker: `/market/klines` (E08-S06 core deliverable)
     # was missing entirely — cache-only reads today (`ctx.storage.

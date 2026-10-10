@@ -201,7 +201,67 @@ async def test_job_store_stop_cancels_running_jobs() -> None:
     async def done(job: object) -> None:
         return None
 
-    job = store.submit("retention_sweep", "k", forever, done)
+    job = store.submit("retention_sweep", ("a", "k", "h"), forever, done)
     await asyncio.sleep(0)
     await store.stop()
     assert job.status == "cancelled"
+
+
+async def test_compact_audit_failure_is_503_and_no_job_starts() -> None:
+    class BrokenAudit(_Audit):
+        async def emit(self, action: str, **kw: Any) -> None:
+            raise RuntimeError("wal down")
+
+    run = _Runner()
+    store = AdminJobStore()
+    app = FastAPI()
+    app.include_router(make_recorder_admin_router(store, run, BrokenAudit(), _Resolver(OWNER)))
+    c = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t")
+    r = await c.post("/admin/recorder/compact", headers=_hdr())
+    assert r.status_code == 503 and r.json()["code"] == "audit_unavailable"
+    await asyncio.sleep(0)
+    assert run.calls == [] and store._jobs == {}
+
+
+async def test_compact_accepted_audit_is_written_before_job_runs() -> None:
+    order: list[str] = []
+
+    class OrderAudit(_Audit):
+        async def emit(self, action: str, **kw: Any) -> None:
+            order.append("audit" if kw.get("outcome") is None else "done")
+
+    class OrderRunner(_Runner):
+        async def __call__(self, s, d, p):  # type: ignore[no-untyped-def]  # test override
+            order.append("run")
+            return {}
+
+    app = FastAPI()
+    app.include_router(
+        make_recorder_admin_router(AdminJobStore(), OrderRunner(), OrderAudit(), _Resolver(OWNER))
+    )
+    c = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t")
+    assert (await c.post("/admin/recorder/compact", headers=_hdr())).status_code == 202
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert order[:2] == ["audit", "run"]
+
+
+async def test_idempotency_key_is_bound_to_actor_and_body() -> None:
+    store, run = AdminJobStore(), _Runner()
+    audit = _Audit()
+
+    def client(res: _Resolver) -> httpx.AsyncClient:
+        app = FastAPI()
+        app.include_router(make_recorder_admin_router(store, run, audit, res))
+        return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t")
+
+    alice, bob = client(_Resolver(OWNER)), client(_Resolver(OWNER))
+    h = _hdr()
+    a = await alice.post("/admin/recorder/compact", json={"older_than_days": 7}, headers=h)
+    assert a.status_code == 202
+    other_body = await alice.post("/admin/recorder/compact", json={"older_than_days": 9}, headers=h)
+    assert other_body.status_code == 422
+    stolen = await bob.post("/admin/recorder/compact", json={"older_than_days": 7}, headers=h)
+    assert stolen.status_code == 409  # bob's own key namespace: not alice's job id
+    assert stolen.json().get("job_id") is None
+    run.gate.set()

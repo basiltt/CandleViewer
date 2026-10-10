@@ -19,11 +19,13 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import re
+import tempfile
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import cast
 
 import pyarrow as pa
 import pyarrow.compute as pc
@@ -31,6 +33,8 @@ import pyarrow.parquet as pq
 import structlog
 
 from candleviewer.domain.sql_names import ts_param
+from candleviewer.observability.metrics import Counter, Gauge
+from candleviewer.storage.cold.compactor import IdleGuard
 from candleviewer.storage.cold.exporter import ColdExporter, HotTierSource
 from candleviewer.storage.cold.layout import (
     ColdPaths,
@@ -38,7 +42,12 @@ from candleviewer.storage.cold.layout import (
     DatasetRegistry,
     partition_template,
 )
-from candleviewer.storage.cold.manifest import ManifestEntry, ManifestStore, sha256_of
+from candleviewer.storage.cold.manifest import (
+    QUARANTINE_DIR,
+    ManifestEntry,
+    ManifestStore,
+    sha256_of,
+)
 from candleviewer.storage.cold.observability import LoggingSystemEventSink, SystemEventSink
 from candleviewer.storage.cold.scrub import verify_partition
 from candleviewer.storage.cold.watermarks import ArchiveOutcome
@@ -62,9 +71,33 @@ VERIFICATION_FAILED = "archive_verification_failed"
 WRITE_FAILED = "archive_write_failed"
 
 
-def logger() -> Any:
+def logger() -> structlog.stdlib.BoundLogger:
     """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
-    return structlog.get_logger(__name__)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(__name__))
+
+
+storage_rolloff_quarantined_total = Counter(
+    "storage_rolloff_quarantined_total", "Roll-off files quarantined.", ["reason"]
+)
+storage_quarantine_bytes = Gauge("storage_quarantine_bytes", "Bytes under the cold _quarantine/.")
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def _tree_bytes(root: Path) -> int:
+    return sum(p.stat().st_size for p in root.rglob("*") if p.is_file()) if root.is_dir() else 0
 
 
 def day_name(day_start_us: int) -> str:
@@ -127,7 +160,7 @@ class QuestDbHotPartitions:
         """Start (UTC µs) of every DAY partition that ends at or before `before_us`."""
         # Table from the TABLE_BY_STREAM allowlist, emitted as an escaped literal.
         literal = sql_string_literal(_hot_table(stream))
-        sql = f"SELECT name FROM table_partitions({literal})"  # noqa: S608  # nosec B608
+        sql = f"SELECT name FROM table_partitions({literal})"  # noqa: S608  # nosec B608 - allowlisted
         days: list[int] = []
         for row in await self._fetch(sql):
             name = str(row.get("name", ""))
@@ -140,10 +173,13 @@ class QuestDbHotPartitions:
         return sorted(days)
 
     async def symbols_in(self, stream: StreamKind, rng: TimeRange) -> list[str]:
+        return sorted(await self.row_counts(stream, rng))
+
+    async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
         table = _hot_table(stream)
-        sql = f"SELECT DISTINCT symbol FROM {table} WHERE ts >= $1 AND ts < $2"  # noqa: S608  # nosec B608 - table from TABLE_BY_STREAM allowlist via checked_identifier
+        sql = f"SELECT symbol, count() AS n FROM {table} WHERE ts >= $1 AND ts < $2"  # noqa: S608  # nosec B608 - table from TABLE_BY_STREAM allowlist via checked_identifier
         rows = await self._fetch(sql, ts_param(rng.start_us), ts_param(rng.end_us))
-        return sorted({str(r["symbol"]) for r in rows if r.get("symbol")})
+        return {str(r["symbol"]): int(str(r["n"])) for r in rows if r.get("symbol")}
 
     async def drop_day(self, stream: StreamKind, day_start_us: int) -> None:
         table = _hot_table(stream)
@@ -257,10 +293,13 @@ class ColdArchiver:
         def _move() -> Path:
             rel = store.quarantine(paths.partition_dir, paths.root, file_name)
             sidecar = (paths.root / rel).with_suffix(".reason.json")
-            sidecar.write_text(json.dumps({"reason": reason, "file": file_name}), "utf-8")
+            _atomic_write_text(sidecar, json.dumps({"reason": reason, "file": file_name}))
             return rel
 
         rel = await asyncio.shield(asyncio.to_thread(_move))
+        storage_rolloff_quarantined_total.labels(reason=reason).inc()
+        size = await asyncio.to_thread(_tree_bytes, paths.root / QUARANTINE_DIR)
+        storage_quarantine_bytes.set(size)
         logger().warning("rolloff_quarantined", file=rel.as_posix(), reason=reason)
 
     async def _fail(
@@ -309,36 +348,76 @@ def _downsample_table(table: pa.Table, level_key: tuple[str, ...]) -> pa.Table:
     return out.append_column("_downsample", pa.repeat(pa.scalar("1s"), out.num_rows))
 
 
+class DownsampleSourceCorrupt(StorageExportVerifyFailed):
+    """A raw cold file failed its manifest SHA-256/row count; it was quarantined
+    and the partition was NOT downsampled (corruption is never laundered)."""
+
+
+def _verify_sources(store: ManifestStore, paths: ColdPaths, entries: list[ManifestEntry]) -> None:
+    for e in entries:
+        f = paths.partition_dir / e.file
+        bad = ""
+        if not f.is_file():
+            bad = "missing"
+        elif sha256_of(f) != e.sha256:
+            bad = "sha256"
+        elif pq.ParquetFile(f).metadata.num_rows != e.row_count:
+            bad = "row_count"
+        if bad:
+            rel = store.quarantine(paths.partition_dir, paths.root, e.file)
+            sidecar = (paths.root / rel).with_suffix(".reason.json")
+            _atomic_write_text(sidecar, json.dumps({"reason": bad, "file": e.file}))
+            storage_rolloff_quarantined_total.labels(reason=f"downsample_{bad}").inc()
+            raise DownsampleSourceCorrupt(f"{e.file}: {bad} mismatch; quarantined")
+
+
+def _bucket_keys(table: pa.Table, level_key: tuple[str, ...]) -> set[tuple[object, ...]]:
+    """Distinct `(1 s bucket, level)` pairs — the exact row set a correct rollup has."""
+    ts = pc.cast(pc.cast(table.column("ts"), pa.timestamp("us", tz="UTC")), pa.int64())
+    sec = pc.divide(ts, _US_PER_SECOND).to_pylist()
+    cols = [table.column(k).to_pylist() for k in level_key]
+    return {(b, *vals) for b, *vals in zip(sec, *cols, strict=True)}
+
+
 def downsample_partition_sync(paths: ColdPaths, stream: StreamKind) -> tuple[bool, int]:
     """Blocking: replace one cold partition's files with its 1 s downsample.
 
-    Same crash discipline as the compactor: write a fresh part file, verify its
-    row count and SHA-256, switch the manifest to it, then delete the
-    originals. Idempotent (a partition already downsampled is a no-op).
-    Returns `(changed, rows_out)`.
+    1. Every source file is verified against its manifest (SHA-256 + row count);
+       a mismatch quarantines it and aborts (`DownsampleSourceCorrupt`).
+    2. The derived file is re-read and must contain exactly one row per distinct
+       `(second, level)` of the source, the same min/max second, and a SHA-256
+       that is recorded and re-checked before any original is unlinked.
+    Idempotent (a partition already downsampled is a no-op). Returns `(changed, rows_out)`.
     """
     store = ManifestStore(paths.manifests_dir)
     entries = store.read(paths.partition_dir, paths.root)
     if not entries or all(e.export_run_id == DOWNSAMPLE_RUN_ID for e in entries):
         return False, 0
+    _verify_sources(store, paths, entries)
+    level_key = DOWNSAMPLE_STREAMS[stream]
     tables = [pq.read_table(paths.partition_dir / e.file) for e in entries]
     source = pa.concat_tables(
         [t.drop_columns([c for c in t.column_names if c in _PROVENANCE]) for t in tables],
         promote_options="default",
     )
     source = normalise_ts(source).sort_by([("ts", "ascending")])
-    out = _downsample_table(source, DOWNSAMPLE_STREAMS[stream])
+    expected = _bucket_keys(source, level_key)
+    out = _downsample_table(source, level_key)
     used = [int(m.group(1)) for e in entries if (m := re.match(r"^part-(\d{4})", e.file))]
     dest = paths.partition_dir / f"part-{max(used, default=0) + 1:04d}.parquet"
     write_parquet_file(out, dest, profile=MARKET_DATA_PROFILE)
-    written = pq.ParquetFile(dest).metadata.num_rows
-    if written != out.num_rows:
+    digest = sha256_of(dest)
+    derived = pq.read_table(dest)
+    got = _bucket_keys(derived, level_key)
+    if derived.num_rows != len(expected) or got != expected or sha256_of(dest) != digest:
         dest.unlink(missing_ok=True)
-        raise StorageExportVerifyFailed(f"downsample wrote {written} rows, expected {out.num_rows}")
+        raise StorageExportVerifyFailed(
+            f"downsample verification failed: {derived.num_rows} rows, {len(expected)} expected"
+        )
     entry = ManifestEntry(
         file=dest.name,
-        sha256=sha256_of(dest),
-        row_count=written,
+        sha256=digest,
+        row_count=derived.num_rows,
         source_table=entries[0].source_table,
         export_run_id=DOWNSAMPLE_RUN_ID,
         exported_at_us=max(e.exported_at_us for e in entries),
@@ -348,15 +427,16 @@ def downsample_partition_sync(paths: ColdPaths, stream: StreamKind) -> tuple[boo
     store.write(paths.partition_dir, paths.root, [entry])
     for old in entries:
         (paths.partition_dir / old.file).unlink(missing_ok=True)
-    return True, written
+    return True, derived.num_rows
 
 
 class ColdDownsampler:
     """Cold-cold rollup driver: downsample every manifested partition of
     `(symbol, stream)` whose day ended at or before `before_us`."""
 
-    def __init__(self, registry: DatasetRegistry) -> None:
+    def __init__(self, registry: DatasetRegistry, idle_guard: IdleGuard | None = None) -> None:
         self._registry = registry
+        self._idle_guard = idle_guard
 
     async def downsample_before(self, symbol: str, stream: StreamKind, before_us: int) -> int:
         """Returns the end (µs) of the newest partition now downsampled (0 if none)."""
@@ -370,6 +450,11 @@ class ColdDownsampler:
             day_end_us = day_start * 1_000_000 + US_PER_DAY
             if day_end_us > before_us:
                 continue
+            if self._idle_guard is not None:
+                session = await self._idle_guard(paths.partition_dir)
+                if session is not None:  # replay lease held: never rewrite data being read
+                    logger().info("downsample_deferred", code="compaction_deferred")
+                    continue
             await asyncio.shield(asyncio.to_thread(downsample_partition_sync, paths, stream))
             through = max(through, day_end_us)
         return through

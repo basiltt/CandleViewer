@@ -12,6 +12,7 @@ Jobs run as tracked tasks with a bounded store; one compaction at a time.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
 import uuid
@@ -19,8 +20,9 @@ from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Protocol, cast
 
+import structlog
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -28,6 +30,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from candleviewer.audit.access import AuditPrincipal
 from candleviewer.audit.models import AuditOutcome, Severity
 from candleviewer.observability import spawn
+
+
+def logger() -> structlog.stdlib.BoundLogger:
+    """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(__name__))
+
 
 RECORDING_WRITE = "recording:write"
 ADMIN_READ = "admin:read"
@@ -43,7 +51,7 @@ CompactionRunner = Callable[
 
 
 class _Emitter(Protocol):
-    async def emit(self, action: str, **kwargs: Any) -> None: ...
+    async def emit(self, action: str, **kwargs: object) -> None: ...
 
 
 class _PrincipalResolver(Protocol):
@@ -99,16 +107,23 @@ class AdminJobStore:
 
     def __init__(self, clock: Callable[[], datetime] = lambda: datetime.now(UTC)) -> None:
         self._jobs: OrderedDict[str, Job] = OrderedDict()
-        self._by_key: dict[str, str] = {}
+        self._by_key: dict[tuple[str, str], tuple[str, str]] = {}
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._clock = clock
 
     def get(self, job_id: str) -> Job | None:
         return self._jobs.get(job_id)
 
-    def by_idempotency_key(self, key: str) -> Job | None:
-        job_id = self._by_key.get(key)
-        return None if job_id is None else self._jobs.get(job_id)
+    def by_idempotency_key(self, actor: str, key: str) -> tuple[Job, str] | None:
+        """`(job, body_hash)` for this actor's key; keys never cross actors."""
+        hit = self._by_key.get((actor, key))
+        if hit is None or (job := self._jobs.get(hit[0])) is None:
+            return None
+        return job, hit[1]
+
+    def ensure_free(self, kind: str) -> None:
+        if any(j.kind == kind and j.status in ("queued", "running") for j in self._jobs.values()):
+            raise JobConflict(kind)
 
     def _evict(self) -> None:
         while len(self._jobs) > MAX_JOBS:
@@ -118,20 +133,21 @@ class AdminJobStore:
             if victim is None:
                 return
             del self._jobs[victim.id]
-            self._by_key = {k: v for k, v in self._by_key.items() if v != victim.id}
+            self._by_key = {k: v for k, v in self._by_key.items() if v[0] != victim.id}
 
     def submit(
         self,
         kind: str,
-        key: str,
+        key: tuple[str, str, str],
         work: Callable[[Callable[[float], None]], Awaitable[dict[str, object]]],
         on_done: Callable[[Job], Awaitable[None]],
+        job_id: str | None = None,
     ) -> Job:
-        if any(j.kind == kind and j.status in ("queued", "running") for j in self._jobs.values()):
-            raise JobConflict(kind)
-        job = Job(id=str(uuid.uuid4()), kind=kind)
+        """`key` = (actor, idempotency key, body hash)."""
+        self.ensure_free(kind)
+        job = Job(id=job_id or str(uuid.uuid4()), kind=kind)
         self._jobs[job.id] = job
-        self._by_key[key] = job.id
+        self._by_key[(key[0], key[1])] = (job.id, key[2])
         self._evict()
 
         def progress(pct: float) -> None:
@@ -194,7 +210,7 @@ def make_recorder_admin_router(
             return _problem(401, "Unauthorized", "no verified session for this request")
         if audit is None or runner is None:
             return _problem(503, "Service unavailable", "compaction backend is not wired")
-        common: dict[str, Any] = {
+        common: dict[str, object] = {
             "actor_label": principal.username,
             "actor_user_id": principal.user_id,
             "actor_ip": principal.ip,
@@ -216,15 +232,28 @@ def make_recorder_admin_router(
             key = str(uuid.UUID(key))
         except ValueError:
             return _problem(400, "Bad request", "Idempotency-Key (UUID) is required")
-        prior = jobs.by_idempotency_key(key)
-        if prior is not None:
-            return JSONResponse(status_code=202, content={"job_id": prior.id})
         try:
             raw = await request.body()
             body = CompactRequest.model_validate(json.loads(raw) if raw else {}).checked()
         except (ValidationError, ValueError):
             return _problem(400, "Bad request", "invalid compaction request")
         params = {"symbols": body.symbols or [], "older_than_days": body.older_than_days or 0}
+        body_hash = hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()
+        actor = str(principal.user_id)
+        prior = jobs.by_idempotency_key(actor, key)
+        if prior is not None:
+            if prior[1] != body_hash:
+                return _problem(
+                    422,
+                    "Unprocessable",
+                    "Idempotency-Key reused with a different body",
+                    "idempotency_key_reused",
+                )
+            return JSONResponse(status_code=202, content={"job_id": prior[0].id})
+        try:
+            jobs.ensure_free(JOB_KIND)
+        except JobConflict:
+            return _problem(409, "Conflict", "a compaction job is already running", "job_running")
 
         async def work(progress: Callable[[float], None]) -> dict[str, object]:
             return await runner(body.symbols, body.older_than_days, progress)
@@ -241,13 +270,25 @@ def make_recorder_admin_router(
                 **common,
             )
 
+        job_id = str(uuid.uuid4())
+        # Write-ahead (C-2.9): the accepted audit lands BEFORE the job exists;
+        # if it cannot be written, nothing starts and the key is not bound.
         try:
-            job = jobs.submit(JOB_KIND, key, work, done)
+            await audit.emit(
+                "recorder.compact", object_id=job_id, before_state={"params": params}, **common
+            )
+        except Exception as exc:
+            logger().error("recorder_compact_audit_failed", error=type(exc).__name__)
+            return _problem(
+                503,
+                "Service unavailable",
+                "audit write failed; job not started",
+                "audit_unavailable",
+            )
+        try:
+            job = jobs.submit(JOB_KIND, (actor, key, body_hash), work, done, job_id=job_id)
         except JobConflict:
             return _problem(409, "Conflict", "a compaction job is already running", "job_running")
-        await audit.emit(
-            "recorder.compact", object_id=job.id, before_state={"params": params}, **common
-        )
         return JSONResponse(status_code=202, content={"job_id": job.id})
 
     @router.get("/jobs/{jobId}")

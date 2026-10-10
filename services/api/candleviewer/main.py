@@ -136,6 +136,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await t.stop()
         if scrub_task is not None:
             await scrub_task.stop()
+        admin_jobs = getattr(app.state, "admin_jobs", None)
+        if admin_jobs is not None:
+            await admin_jobs.stop()  # E16-T05: tracked compaction tasks never outlive the app
         if bars_runtime is not None:
             await bars_runtime.stop()  # set before writer; both before storage stops
         await ctx.mesh_self_check.stop()
