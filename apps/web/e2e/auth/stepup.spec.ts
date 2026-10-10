@@ -40,10 +40,11 @@ test("E09-TC-C05 step-up with a TOTP code succeeds and the grace window is shown
   });
   await page.goto("/admin/users");
   const code = totp(OTP_SEED, T0.getTime());
+  await page.getByLabel("Password", { exact: true }).fill("e2e-step-up-pw");
   await page.getByLabel("Authenticator code").fill(code);
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByText(/Grace window/u)).toContainText("Grace window: 5:00 remaining");
-  expect(JSON.parse(sent)).toEqual({ code });
+  expect(JSON.parse(sent)).toEqual({ code, password: "e2e-step-up-pw" });
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
   await assertNoClientSecrets(page, [code, "step-up-marker-x"]);
   await guard.flush();
@@ -63,6 +64,7 @@ test("E09-TC-C06 after the window the grace countdown reaches zero (fake clock)"
     ),
   );
   await page.goto("/admin/users");
+  await page.getByLabel("Password", { exact: true }).fill("e2e-step-up-pw");
   await page.getByLabel("Authenticator code").fill("123456");
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByText(/Grace window/u)).toContainText("remaining");

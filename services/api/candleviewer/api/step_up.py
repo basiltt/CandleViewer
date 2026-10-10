@@ -256,6 +256,11 @@ def make_step_up_router(
             body = None
         code = body.get("code") if isinstance(body, dict) else None
         action_class = body.get("action_class") if isinstance(body, dict) else None
+        password = body.get("password") if isinstance(body, dict) else None
+        if not isinstance(password, str) or not password:
+            return _problem(
+                422, "validation_failed", "Unprocessable entity", "password is required"
+            )
         if not isinstance(code, str) or (
             action_class is not None and not isinstance(action_class, str)
         ):
@@ -273,7 +278,7 @@ def make_step_up_router(
             return _problem(400, "validation_failed", "Bad request", "no pending step-up challenge")
         try:
             grant = await auth.step_up.step_up(
-                str(record.user_id), str(record.id), action_class, code
+                str(record.user_id), str(record.id), action_class, code, password
             )
         except UnknownActionClass:
             return _problem(
@@ -288,8 +293,8 @@ def make_step_up_router(
             return _problem(
                 401,
                 "mfa_invalid",
-                "MFA code rejected",
-                "Invalid code.",
+                "Step-up rejected",
+                "Invalid password or code.",
                 failures_remaining=exc.failures_remaining,
             )
         except SessionReadOnly as exc:

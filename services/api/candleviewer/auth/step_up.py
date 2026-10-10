@@ -30,6 +30,8 @@ from candleviewer.auth.errors import (
     StepUpRequired,
     UnknownActionClass,
 )
+from candleviewer.auth.hashing import Hasher
+from candleviewer.auth.login_service import LOCKOUT_DURATION, LOCKOUT_THRESHOLD
 from candleviewer.auth.metrics import (
     auth_mfa_resets_total,
     auth_readonly_downgrades_total,
@@ -37,7 +39,8 @@ from candleviewer.auth.metrics import (
     auth_step_up_total,
 )
 from candleviewer.auth.mfa_repository import MfaRepository
-from candleviewer.auth.models import SessionRecord
+from candleviewer.auth.models import SessionRecord, UserRecord
+from candleviewer.auth.repository import UserRepository
 from candleviewer.auth.session_chart import SessionChart, to_us
 from candleviewer.auth.session_repository import SessionRepository
 from candleviewer.auth.totp import verify_code
@@ -125,6 +128,8 @@ class StepUpService:
         mfa_repository: MfaRepository,
         session_repository: SessionRepository,
         encryptor: Decrypter,
+        user_repository: UserRepository,
+        hasher: Hasher,
         *,
         clock: Clock = _utc_now,
         chart: SessionChart | None = None,
@@ -133,6 +138,8 @@ class StepUpService:
         self._mfa = mfa_repository
         self._sessions = session_repository
         self._encryptor = encryptor
+        self._users = user_repository
+        self._hasher = hasher
         self._clock = clock
 
     @property
@@ -194,8 +201,12 @@ class StepUpService:
     # -- step-up -----------------------------------------------------------
 
     async def step_up(
-        self, user_id: str, session_id: str, action_class: str, code: str
+        self, user_id: str, session_id: str, action_class: str, code: str, password: str
     ) -> StepUpGrant:
+        """Re-authenticate with password **and** TOTP (owner decision #1778 AE).
+
+        Every failure - wrong password, locked account, wrong/replayed code -
+        raises the same `StepUpCodeInvalid` and is counted identically."""
         if action_class not in ACTION_CLASSES:
             raise UnknownActionClass(action_class)
         await self.assert_writable(session_id)
@@ -204,7 +215,7 @@ class StepUpService:
             raise StepUpRequired(action_class)
         now = self._clock()
         elevations = {k: v for k, v in record.step_up_elevations.items() if v > now}
-        if not await self._verify(user_id, code, now):
+        if not await self._verify_both(user_id, code, password, now):
             auth_step_up_failures_total.labels(action_class=action_class).inc()
             failures = record.step_up_failures + 1
             if failures >= FAILURE_CAP:
@@ -275,6 +286,32 @@ class StepUpService:
             if key.startswith(_PENDING) and until > now:
                 return key[len(_PENDING) :]
         return None
+
+    async def _verify_both(self, user_id: str, code: str, password: str, now: datetime) -> bool:
+        """Password first (login's hasher + lockout counters), then TOTP.
+
+        The TOTP step (and its replay guard) is only reached with a correct
+        password, so a wrong password never burns a valid time step."""
+        user = await self._users.find_by_id(user_id)
+        if not await self._password_ok(user, password, now):
+            return False
+        return await self._verify(user_id, code, now)
+
+    async def _password_ok(self, user: UserRecord | None, password: str, now: datetime) -> bool:
+        if user is None:
+            await self._hasher.verify_dummy(password)  # same Argon2id work as a real user
+            return False
+        ok = await self._hasher.verify(user.password_hash, password)  # always, even if locked
+        if user.locked_until is not None and user.locked_until > now:
+            return False  # locked accounts are refused like any other failure
+        if not ok:
+            await self._users.record_login_failure(
+                str(user.id),
+                lockout_threshold=LOCKOUT_THRESHOLD,
+                lock_duration=LOCKOUT_DURATION,
+                now=now,
+            )
+        return ok
 
     async def _verify(self, user_id: str, code: str, now: datetime) -> bool:
         for method in await self._mfa.find_active_totp_methods(user_id):

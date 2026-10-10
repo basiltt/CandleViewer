@@ -20,13 +20,14 @@ export interface StepUpGateProps {
 }
 
 /**
- * M-020 step-up modal contract: re-enter a TOTP code, `POST
+ * M-020 step-up modal contract: re-enter your password and a TOTP code, `POST
  * /api/v1/auth/step-up`, and on success navigate back to the original
  * destination without a full page reload (`docs/plan/22-api-openapi.yaml`
  * `/auth/step-up`; `docs/plan/12-sitemap.md` §4).
  */
 export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
   const navigate = useNavigate();
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -50,13 +51,15 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
       const response = await fetch("/api/v1/auth/step-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, password }),
       });
       if (!response.ok) {
-        setError("That code did not work. Try again.");
+        // One generic message: never reveal which factor failed.
+        setError("That password or code did not work. Try again.");
+        setPassword("");
         return;
       }
-      // Server elevates the class its last 403 challenged; the body carries only the code.
+      // Server elevates the class its last 403 challenged; the body carries the password and code.
       const body: { elevated_until: string; step_up_expires_at?: string | null } =
         await response.json();
       const expires = body.step_up_expires_at ?? null;
@@ -73,7 +76,7 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="step-up-title">
       <h1 id="step-up-title">Confirm it&apos;s you</h1>
-      <p>Enter your authenticator code to continue to the Admin area.</p>
+      <p>Enter your password and authenticator code to continue to the Admin area.</p>
       <p aria-live="polite" data-testid="step-up-grace">
         {remaining > 0
           ? `Grace window: ${formatRemaining(remaining)} remaining`
@@ -87,6 +90,16 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
         </button>
       ) : null}
       <form onSubmit={(event) => void onSubmit(event)}>
+        <label htmlFor="step-up-password">Password</label>
+        <input
+          id="step-up-password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
         <label htmlFor="step-up-code">Authenticator code</label>
         <input
           id="step-up-code"
@@ -97,7 +110,10 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
           onChange={(event) => setCode(event.target.value)}
         />
         {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={submitting || granted || code.length === 0}>
+        <button
+          type="submit"
+          disabled={submitting || granted || code.length === 0 || password.length === 0}
+        >
           Confirm
         </button>
       </form>

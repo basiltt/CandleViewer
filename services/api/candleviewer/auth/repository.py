@@ -29,6 +29,11 @@ class UserRepository(Protocol):
         Argon2id verification and take the identical code path."""
         ...
 
+    async def find_by_id(self, user_id: str) -> UserRecord | None:
+        """Look up a live user by id (step-up password re-verification,
+        #1778 AE), or `None` if absent."""
+        ...
+
     async def record_login_success(self, user_id: str) -> None:
         """Reset `failed_login_count` to 0, clear `locked_until`, stamp
         `last_login_at`/`last_login_ip`. Called only after a real password

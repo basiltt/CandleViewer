@@ -34,7 +34,7 @@ CandleViewer serves one owner plus a few account managers and reviewers. Manager
 3. **CSRF** — `SameSite=Strict` plus a double-submit token on every state-changing request; the WS handshake validates `Origin`.
 4. **Roles** — `Owner` (full administration, all accounts, global kill-switch), `Manager` (trade and view only their assigned accounts), `Viewer` (read-only over a granted scope, including the audit log and journal). Roles are coarse by design; the fine-grained dimension is the **account scope**.
 5. **Central scope resolver** — a single `ScopeResolver` maps user → role → allowed account ids → allowed key ids. **Every** REST route and **every** WS subscription passes through it. There is exactly one implementation, so there is exactly one place isolation can be wrong, and it is covered by a contract test that asserts 403 for every cross-scope route and topic.
-6. **Admin inside the app** — admin routes live under `/admin/*` in `apps/web`, gated by role at the router level *and* independently at every API endpoint. The client-side gate is a UX affordance only; the server gate is the security control.
+6. **Admin inside the app** — admin routes live under `/admin/*` in `apps/web`, gated by role at the router level _and_ independently at every API endpoint. The client-side gate is a UX affordance only; the server gate is the security control.
 7. **Environment as an authorisation dimension** — every trading request carries its environment and is rejected server-side on mismatch. Demo→Live switching requires typed confirmation, is never hotkey-driven, and is audited.
 8. **Kill-switch** — Owner-only FREEZE per manager or globally, enforced in the OMS `Validator` before any adapter call, so it cannot be bypassed by a modified client or a stale session.
 9. **Audit** — hash-chained, append-only (`INSERT`-only role; `UPDATE`/`DELETE` revoked): auth events, key events, order actions, rule firings, admin changes, environment switches, kill-switch activations. Owner and Viewer may read; nobody may mutate.
@@ -43,12 +43,14 @@ CandleViewer serves one owner plus a few account managers and reviewers. Manager
 ### Consequences
 
 Positive:
+
 - Sessions are revocable instantly and centrally — important when a manager relationship ends.
 - One resolver means isolation is testable exhaustively rather than reviewed hopefully.
 - One application to build, style, test and accessibility-audit, per the planning brief.
 - Mandatory TOTP meaningfully raises the bar even if a password leaks.
 
 Negative / risks:
+
 - Server-side sessions require a database round-trip per request (mitigated by a short-lived in-process cache with explicit invalidation on revoke) and mean Postgres downtime blocks login — acceptable, since Postgres downtime already blocks order entry.
 - Admin screens inside the trading app widen the SPA's blast radius if an XSS bug appears. Mitigated by a strict CSP, no `dangerouslySetInnerHTML` (lint-enforced), `HttpOnly` cookies, Electron context isolation, and a pen-test before Live enablement.
 - Bespoke RBAC means no off-the-shelf audit of the model. Mitigated by the contract test suite and an explicit STRIDE threat model per epic.
@@ -69,8 +71,8 @@ Negative / risks:
 
 Added by E09-K02. Additive: the decision above stands and is not reopened. This section records what
 the code on `main` (`d9143fb`) does, so a reader can tell decision from detail. Facts come from the
-code and from `docs/security/reviews/e09-auth-review.md` (E09-X04). Items marked *pending owner
-decision* are not settled here. Paths are under `services/api/candleviewer/`.
+code and from `docs/security/reviews/e09-auth-review.md` (E09-X04). Items marked _pending owner
+decision_ are not settled here. Paths are under `services/api/candleviewer/`.
 
 ### As implemented
 
@@ -107,11 +109,11 @@ decision* are not settled here. Paths are under `services/api/candleviewer/`.
 
 ### Deviations from the decision or from the security programme
 
-| Id | Fact | Status |
-|---|---|---|
-| D-1 | Recovery codes are stored as a keyed HMAC-SHA256 of the normalised code (`auth/recovery_codes.py`; about 138 bits of entropy), not Argon2id as SR-022 states. | **Resolved** — owner decision #1778 AD (2026-10-09): keep HMAC-SHA256 with a server-side pepper; codes are high-entropy random so a slow KDF is unnecessary. SR-022 text amended in `04-security-program.md`. |
-| D-2 | Step-up verifies a TOTP code only (`auth/step_up.py`); SR-025 asks for password plus TOTP. | pending owner decision (#1778 item AE) |
-| F-1 | No CSRF double-submit token. Decision 3 above calls for one. The code relies on `SameSite=Strict`, the Origin allow-list and the bearer-header model. | open, fix or Owner-signed acceptance (#2090) |
-| F-2 | Access tokens are not bound to IP or user-agent; theft is detected only on refresh-token reuse. | design decision, pending owner decision |
+| Id  | Fact                                                                                                                                                          | Status                                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-1 | Recovery codes are stored as a keyed HMAC-SHA256 of the normalised code (`auth/recovery_codes.py`; about 138 bits of entropy), not Argon2id as SR-022 states. | **Resolved** — owner decision #1778 AD (2026-10-09): keep HMAC-SHA256 with a server-side pepper; codes are high-entropy random so a slow KDF is unnecessary. SR-022 text amended in `04-security-program.md`.                   |
+| D-2 | Step-up verifies a TOTP code only (`auth/step_up.py`); SR-025 asks for password plus TOTP.                                                                    | **resolved** — owner decision #1778 AE: step-up requires password + TOTP; implemented by #2120 (`POST /auth/step-up` takes a required `password`, verified first on the login hasher and lockout counters, one generic refusal) |
+| F-1 | No CSRF double-submit token. Decision 3 above calls for one. The code relies on `SameSite=Strict`, the Origin allow-list and the bearer-header model.         | open, fix or Owner-signed acceptance (#2090)                                                                                                                                                                                    |
+| F-2 | Access tokens are not bound to IP or user-agent; theft is detected only on refresh-token reuse.                                                               | design decision, pending owner decision                                                                                                                                                                                         |
 
 Both decision and code remain as stated until the owner decides; this section does not choose.

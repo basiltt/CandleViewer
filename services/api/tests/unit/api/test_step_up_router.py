@@ -15,15 +15,18 @@ from candleviewer.audit.models import Severity
 from candleviewer.auth.envelope import TotpEncryptor
 from candleviewer.auth.errors import SessionNotFound
 from candleviewer.auth.generated_permissions import Permission
+from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.mfa_service import MfaService
 from candleviewer.auth.models import MfaEnrollRequest, MfaMethodKind, SessionRecord
 from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.step_up import StepUpService
 from candleviewer.auth.totp import generate_code, time_step_for
 from candleviewer.statechart.bindings import b16_session
+from tests.unit.auth.auth_fakes import FakeUserRepository, make_user
 from tests.unit.auth.mfa_fakes import FakeMfaRepository
 from tests.unit.auth.session_fakes import FakeSessionRepository
 
+_PW = "correct horse battery staple"
 _T0 = datetime(2026, 9, 30, 12, 0, 0, tzinfo=UTC)
 
 
@@ -121,7 +124,10 @@ async def _build(
     )  # fmt: skip
     record, rows = _record(user), FakeSessionRepository()
     await rows.create_session(record)  # step-up state persists on this row
-    svc = StepUpService(repo, rows, enc, clock=clock)
+    hasher = Hasher()
+    users = FakeUserRepository()
+    users.add(make_user(password_hash=await hasher.hash(_PW)).model_copy(update={"id": user}))
+    svc = StepUpService(repo, rows, enc, users, hasher, clock=clock)
     auth = _Auth(svc, _Sessions({"tok": record}))
     emitter = _Emitter()
     b16_session.set_audit_sink(emitter)  # B16 chart audits land with the router's
@@ -182,7 +188,9 @@ async def test_reset_without_step_up_is_403_and_audited() -> None:
 async def test_step_up_then_owner_reset_reveals_nothing_and_audits() -> None:
     c, em, seed, clock, _ = await _build()
     ok = c.post(
-        "/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"}
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "users"},
     )
     assert ok.status_code == 200 and ok.json()["single_use"] is False
     target = uuid.uuid4()
@@ -203,7 +211,7 @@ async def test_non_owner_cannot_reset() -> None:
 
 async def test_three_failures_make_session_read_only_on_write_routes() -> None:
     c, em, _seed, clock, _ = await _build()
-    body = {"code": "000000", "action_class": "keys"}
+    body = {"code": "000000", "password": _PW, "action_class": "keys"}
     assert c.post("/auth/step-up", headers=_H, json=body).status_code == 401
     assert c.post("/auth/step-up", headers=_H, json=body).status_code == 401
     r = c.post("/auth/step-up", headers=_H, json=body)
@@ -223,7 +231,9 @@ async def test_step_up_rejects_unauthenticated_and_bad_class() -> None:
     c, *_ = await _build()
     assert c.post("/auth/step-up", json={}).status_code == 401
     assert (
-        c.post("/auth/step-up", headers=_H, json={"code": "1", "action_class": "x"}).status_code
+        c.post(
+            "/auth/step-up", headers=_H, json={"code": "1", "password": _PW, "action_class": "x"}
+        ).status_code
         == 400
     )
 
@@ -234,7 +244,11 @@ async def test_dangerous_route_is_403_without_elevation_then_passes() -> None:
     r = c.put(f"/users/{uid}/roles", headers=_H)
     assert r.status_code == 403 and r.json()["code"] == "step_up_required"
     assert "auth.step_up_required" in em.actions()
-    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "users"},
+    )
     assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 200
     clock.now += timedelta(minutes=5, seconds=1)
     assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 403
@@ -242,7 +256,11 @@ async def test_dangerous_route_is_403_without_elevation_then_passes() -> None:
 
 async def test_preview_without_position_store_is_unavailable_and_reset_needs_ack() -> None:
     c, em, seed, clock, _ = await _build(positions=_NoStore())
-    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "users"},
+    )
     target = uuid.uuid4()
     prev = c.get(f"/users/{target}/mfa/reset-preview", headers=_H).json()
     assert prev["open_position_count"] is None and prev["positions"] == "unavailable"
@@ -259,7 +277,11 @@ async def test_preview_without_position_store_is_unavailable_and_reset_needs_ack
 
 async def test_preview_with_position_store_needs_no_ack() -> None:
     c, _em, seed, clock, _ = await _build()
-    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "users"},
+    )
     prev = c.get(f"/users/{uuid.uuid4()}/mfa/reset-preview", headers=_H).json()
     assert prev["positions"] == "known" and prev["position_source"] == "oms"
     assert prev["requires_acknowledge_unknown_positions"] is False
@@ -267,7 +289,7 @@ async def test_preview_with_position_store_needs_no_ack() -> None:
 
 #: Exactly what the merged M-020 modal (apps/web/src/routes/StepUpGate.tsx) posts.
 def _modal_body(code: str) -> dict[str, str]:
-    return {"code": code}
+    return {"code": code, "password": _PW}
 
 
 async def test_real_modal_payload_elevates_challenged_class_end_to_end() -> None:
@@ -293,7 +315,9 @@ async def test_client_action_class_mismatching_challenge_is_400() -> None:
     c, _em, seed, clock, _ = await _build()
     c.put(f"/users/{uuid.uuid4()}/roles", headers=_H)
     r = c.post(
-        "/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "keys"}
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "keys"},
     )
     assert r.status_code == 400
 
@@ -303,7 +327,11 @@ async def test_client_action_class_mismatching_challenge_is_400() -> None:
 
 async def test_reset_unknown_user_is_404_not_200() -> None:
     c, em, seed, clock, _ = await _build()
-    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "users"},
+    )
     r = c.post(
         f"/users/{_MISSING}/mfa/reset", headers=_H, json={"acknowledge_unknown_positions": True}
     )
@@ -327,7 +355,7 @@ async def test_rotate_revoke_reveal_scope_need_step_up_then_share_grace_window()
         r = c.request(method, path, headers=_H)
         assert r.status_code == 403 and r.json()["code"] == "step_up_required", path
         assert r.json()["action_class"] == "keys"
-    ok = c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock)})
+    ok = c.post("/auth/step-up", headers=_H, json=_modal_body(_code(seed, clock)))
     assert ok.status_code == 200 and ok.json()["step_up_expires_at"] is not None
     clock.now += timedelta(minutes=3)
     for method, path in _KEY_ACTIONS:
@@ -348,9 +376,62 @@ async def test_reset_never_calls_oms_cancel_or_flatten() -> None:
         oms = _StrictOms()
 
     c, _em, seed, clock, _ = await _build(positions=_CountOnly())
-    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": _PW, "action_class": "users"},
+    )
     target = uuid.uuid4()
     assert (
         c.get(f"/users/{target}/mfa/reset-preview", headers=_H).json()["open_position_count"] == 2
     )
     assert c.post(f"/users/{target}/mfa/reset", headers=_H).status_code == 200
+
+
+# -- #1778 AE (D-2): step-up requires password + TOTP -----------------------------
+
+
+async def test_step_up_missing_password_is_422() -> None:
+    c, _em, seed, clock, _ = await _build()
+    r = c.post(
+        "/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"}
+    )
+    assert r.status_code == 422
+
+
+async def test_step_up_wrong_password_and_wrong_totp_return_identical_refusal() -> None:
+    c, _em, seed, clock, _ = await _build()
+    wrong_pw = c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": "nope", "action_class": "users"},
+    )
+    wrong_code = c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": "000000", "password": _PW, "action_class": "users"},
+    )
+    assert wrong_pw.status_code == wrong_code.status_code == 401
+    keep = ("type", "title", "status", "code", "detail")
+    assert {k: wrong_pw.json()[k] for k in keep} == {k: wrong_code.json()[k] for k in keep}
+
+
+async def test_step_up_both_factors_correct_is_granted_and_audited() -> None:
+    c, em, seed, clock, _ = await _build()
+    ok = c.post(
+        "/auth/step-up",
+        headers=_H,
+        json=_modal_body(_code(seed, clock)) | {"action_class": "users"},
+    )
+    assert ok.status_code == 200
+    assert "auth.step_up_granted" in em.actions()
+
+
+async def test_step_up_failure_is_audited() -> None:
+    c, em, seed, clock, _ = await _build()
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": "nope", "action_class": "users"},
+    )
+    assert "auth.step_up_failed" in em.actions()

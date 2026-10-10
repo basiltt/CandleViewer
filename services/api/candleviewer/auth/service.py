@@ -186,13 +186,15 @@ class AuthService:
                     self._mfa,
                     clock=self._clock,
                 )
-            if self._session_repository is not None:
+            if self._session_repository is not None and self._repository is not None:
                 # E09-S04: one process-wide instance (per-session state is
                 # in-memory, matching the B16 per-process interpreter).
                 self._step_up = StepUpService(
                     self._mfa_repository,
                     self._session_repository,
                     encryptor,
+                    self._repository,
+                    Hasher(pepper=self._pepper),
                     clock=self._clock,
                 )
         self._started = True

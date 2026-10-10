@@ -24,6 +24,9 @@ class FakeUserRepository(UserRepository):
                 return user
         return None
 
+    async def find_by_id(self, user_id: str) -> UserRecord | None:
+        return self.users.get(user_id)
+
     async def record_login_success(self, user_id: str) -> None:
         user = self.users[user_id]
         self.users[user_id] = user.model_copy(

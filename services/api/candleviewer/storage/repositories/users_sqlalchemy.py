@@ -31,6 +31,17 @@ _FIND_SQL = sa.text("""
     WHERE u.deleted_at IS NULL AND (u.username = :ident OR u.email = :ident)
     LIMIT 1
     """)
+_FIND_BY_ID_SQL = sa.text("""
+    SELECT u.id::text AS id, u.username::text AS username, u.email::text AS email,
+           u.password_hash, u.password_algo_params, u.status::text AS status,
+           u.mfa_required, u.failed_login_count, u.locked_until,
+           COALESCE((SELECT array_agg(DISTINCT m.kind::text) FROM mfa_methods m
+                     WHERE m.user_id = u.id AND m.confirmed_at IS NOT NULL
+                       AND m.revoked_at IS NULL), ARRAY[]::text[]) AS mfa_methods
+    FROM users u
+    WHERE u.deleted_at IS NULL AND u.id = CAST(:ident AS uuid)
+    LIMIT 1
+    """)
 _SUCCESS_SQL = sa.text(
     "UPDATE users SET failed_login_count = 0, locked_until = NULL, last_login_at = :now "
     "WHERE id = CAST(:id AS uuid)"
@@ -62,8 +73,14 @@ class SqlAlchemyUserRepository:
         self._clock = clock
 
     async def find_by_identifier(self, identifier: str) -> Any:
+        return await self._find(_FIND_SQL, identifier)
+
+    async def find_by_id(self, user_id: str) -> Any:
+        return await self._find(_FIND_BY_ID_SQL, user_id)
+
+    async def _find(self, stmt: sa.TextClause, ident: str) -> Any:
         async with self._relational.unit_of_work() as uow:
-            row = (await uow.session.execute(_FIND_SQL, {"ident": identifier})).first()
+            row = (await uow.session.execute(stmt, {"ident": ident})).first()
             await uow.commit()
         if row is None:
             return None

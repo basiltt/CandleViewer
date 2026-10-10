@@ -16,7 +16,7 @@ from candleviewer.auth.step_up import StepUpService
 from candleviewer.statechart.bindings import b16_session
 from tests.conftest import RecordingAuditSink
 
-from .test_step_up import _code, _Positions, _session, _setup
+from .test_step_up import PASSWORD, _code, _Positions, _session, _setup
 
 
 def _sid(svc: StepUpService, sessions: object, alias: str = "s1") -> str:
@@ -42,7 +42,7 @@ async def test_step_up_ok_elevates_chart_and_audits_granted(
     b16_audit: RecordingAuditSink,
 ) -> None:
     svc, clock, seed, user, sessions = await _setup()
-    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock), PASSWORD)
     sid = _sid(svc, sessions)
     assert svc.chart.in_state(sid, "elevated")
     (call,) = b16_audit.calls
@@ -53,7 +53,7 @@ async def test_step_up_ok_elevates_chart_and_audits_granted(
 
 async def test_grace_use_audits_grace_used(b16_audit: RecordingAuditSink) -> None:
     svc, clock, seed, user, sessions = await _setup()
-    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock), PASSWORD)
     clock.now += timedelta(minutes=1)
     await svc.require_elevation("s1", "keys")
     assert b16_audit.actions()[-1] == "auth.step_up_grace_used"
@@ -64,7 +64,7 @@ async def test_grace_expiry_sends_elevation_deadline_back_to_normal(
     b16_audit: RecordingAuditSink,
 ) -> None:
     svc, clock, seed, user, sessions = await _setup()
-    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock), PASSWORD)
     clock.now += timedelta(minutes=5, seconds=1)
     with pytest.raises(StepUpRequired):
         await svc.require_elevation("s1", "keys")
@@ -81,11 +81,11 @@ async def test_strikes_then_readonly_downgrade_then_expiry(
     sid = _sid(svc, sessions)
     for remaining in (2, 1):
         with pytest.raises(StepUpCodeInvalid):
-            await svc.step_up(str(user), "s1", "keys", "000000")
+            await svc.step_up(str(user), "s1", "keys", "000000", PASSWORD)
         assert b16_audit.calls[-1]["reason"] == f"keys:remaining={remaining}"
     assert svc.chart.in_state(sid, "normal")
     with pytest.raises(SessionReadOnly):
-        await svc.step_up(str(user), "s1", "keys", "000000")
+        await svc.step_up(str(user), "s1", "keys", "000000", PASSWORD)
     assert svc.chart.in_state(sid, "readonly_downgrade")
     assert b16_audit.actions() == [
         "auth.step_up_failed",
@@ -111,7 +111,7 @@ async def test_owner_reset_revokes_target_charts_and_audits_revocation(
     target_sid = _sid(svc, sessions, "t1")
     chart = svc.chart.interpreter(target_sid)
     assert chart is not None
-    await svc.step_up(str(user), "o1", "users", _code(seed, clock))
+    await svc.step_up(str(user), "o1", "users", _code(seed, clock), PASSWORD)
     await svc.preview_reset(str(target), _Positions(0))
     await svc.reset_totp(actor_session_id="o1", actor_user_id=str(user), target_user_id=str(target))
     assert svc.chart.interpreter(target_sid) is None  # dropped after REVOKE
@@ -122,8 +122,10 @@ async def test_owner_reset_revokes_target_charts_and_audits_revocation(
 
 async def test_hydration_from_row_is_not_re_audited(b16_audit: RecordingAuditSink) -> None:
     svc, clock, seed, user, sessions = await _setup()
-    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
-    rebuilt = StepUpService(svc._mfa, sessions, svc._encryptor, clock=clock)
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock), PASSWORD)
+    rebuilt = StepUpService(
+        svc._mfa, sessions, svc._encryptor, svc._users, svc._hasher, clock=clock
+    )
     before = len(b16_audit.calls)
     await rebuilt.require_elevation("s1", "keys")  # chart rebuilt from the row
     assert rebuilt.chart.in_state(_sid(svc, sessions), "elevated")
@@ -135,6 +137,6 @@ async def test_audit_sink_missing_fails_loud_after_enforcement() -> None:
     svc, clock, seed, user, sessions = await _setup()
     b16_session.set_audit_sink(None)
     with pytest.raises(SessionChartError):
-        await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+        await svc.step_up(str(user), "s1", "keys", _code(seed, clock), PASSWORD)
     # Enforcement already happened and persisted (sync code enforces, C-2.21).
     assert "keys" in sessions.sessions["s1"].step_up_elevations

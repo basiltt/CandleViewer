@@ -31,6 +31,7 @@ from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.session_service import SessionService
 from candleviewer.auth.step_up import StepUpService
 from candleviewer.ws.revocation import CLOSE_TOKEN_EXPIRED, RevocationHub
+from tests.unit.auth.auth_fakes import FakeUserRepository
 from tests.unit.auth.mfa_fakes import FakeMfaRepository
 from tests.unit.auth.session_fakes import FakeSessionRepository
 
@@ -64,7 +65,12 @@ class _Env:
             self.repo, Hasher(pepper=os.urandom(16).hex()), clock=self.clock
         )
         self.step_up = StepUpService(
-            FakeMfaRepository(), self.repo, TotpEncryptor(os.urandom(32)), clock=self.clock
+            FakeMfaRepository(),
+            self.repo,
+            TotpEncryptor(os.urandom(32)),
+            FakeUserRepository(),
+            Hasher(),
+            clock=self.clock,
         )
         # The composition root wires these only with a real database; same seams, fake storage.
         auth._sessions = self.sessions

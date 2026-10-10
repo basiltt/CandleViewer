@@ -24,6 +24,46 @@ describe("StepUpGate", () => {
     expect(screen.getByLabelText("Authenticator code")).toBeInTheDocument();
   });
 
+  it("renders a masked password field with an accessible label", () => {
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    const field = screen.getByLabelText("Password");
+    expect(field).toHaveAttribute("type", "password");
+    expect(field).toHaveAttribute("autocomplete", "current-password");
+  });
+
+  it("keeps Confirm disabled until both password and code are entered", () => {
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    const confirm = screen.getByRole("button", { name: "Confirm" });
+    fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
+    expect(confirm).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
+    expect(confirm).toBeEnabled();
+  });
+
+  it("shows one generic error and clears the password on refusal", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
+    fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "That password or code did not work. Try again.",
+    );
+    expect(screen.getByLabelText("Password")).toHaveValue("");
+  });
+
   it("shows an error and does not record step-up on a failed code", async () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
     render(
@@ -31,6 +71,7 @@ describe("StepUpGate", () => {
         <StepUpGate redirectTo="/admin" />
       </MemoryRouter>,
     );
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
     fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "000000" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
@@ -47,12 +88,13 @@ describe("StepUpGate", () => {
         <StepUpGate redirectTo="/admin" />
       </MemoryRouter>,
     );
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
     fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(getMeClaims().elevatedAt).toBe("2026-09-29T12:00:00Z"));
   });
 
-  it("posts only the code (server derives the challenged action class)", async () => {
+  it("posts password and code only (server derives the challenged action class)", async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValue({ ok: false });
     render(
@@ -60,11 +102,12 @@ describe("StepUpGate", () => {
         <StepUpGate redirectTo="/admin" />
       </MemoryRouter>,
     );
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
     fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
-    expect(JSON.parse(init.body as string)).toEqual({ code: "123456" });
+    expect(JSON.parse(init.body as string)).toEqual({ code: "123456", password: "pw" });
   });
 
   it("renders the remaining grace window from step_up_expires_at and counts down", async () => {
@@ -83,6 +126,7 @@ describe("StepUpGate", () => {
           <StepUpGate redirectTo="/admin" />
         </MemoryRouter>,
       );
+      fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
       fireEvent.change(screen.getByLabelText("Authenticator code"), {
         target: { value: "123456" },
       });
