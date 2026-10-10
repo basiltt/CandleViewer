@@ -2939,6 +2939,19 @@ class RecordingState(BaseModel):
 
 **Auto-record lifecycle.** Opening a chart adds `chart_open` to `reasons` and starts recording within 2 s. Closing the last chart for that symbol removes the reason; if `reasons` becomes empty, recording continues for a `linger_minutes` grace period (default 15) before stopping, so a quick chart close/reopen does not punch a hole in the data. A symbol with an open position **cannot** stop recording while the position is open, regardless of chart state.
 
+**`RecorderSetChanged`** (E16-T02, bus topic `{env}.recorder.set_changed`, consumed by `StreamWriter` E16-T03). Published by `recorder.policy.RecordingPolicy` whenever a symbol enters or leaves the effective set or its top reason changes. A symbol in the stop grace window (B11 `lingering`) is still in the set. Timings now follow ADR-0015 and E16-T02: chart-open start delay `CV_RECORDER_AUTOSTART_DELAY_S` (60 s), linger `CV_RECORDER_AUTOSTOP_GRACE_S` (1800 s). These override the "2 s" and "15 min" figures above.
+
+```python
+class RecorderSetChanged(BaseModel):          # frozen, extra="forbid"
+    symbol: Symbol
+    change: Literal["added", "removed", "reason_changed"]
+    reason: Literal["manual", "position_open", "chart_open"]   # precedence, highest first
+    reasons: tuple[Literal["manual", "position_open", "chart_open"], ...]
+    priority: int            # manual 300 > position_open 200 > chart_open 100 (E16-T07 ladder)
+    auto_evictable: bool     # False for manual: exempt from auto-eviction
+    ts_event: TsUs
+```
+
 ### 13.2 What is recorded
 
 | Stream               | Storage                                    | Format                      | Notes                                                                                            |
