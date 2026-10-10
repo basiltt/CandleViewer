@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from candleviewer.audit.writer import AuditUnavailable, AuditWriterStopped
 from candleviewer.auth.errors import (
     InviteConflict,
     InviteNotFound,
@@ -127,6 +128,10 @@ class Clock:
         return self.now
 
 
+async def _noop_audit(rec: Any, stored_role: str) -> None:
+    return None
+
+
 def _make() -> tuple[InviteService, FakeRepo, Clock]:
     repo, clock = FakeRepo(), Clock()
     svc = InviteService(repo, FakeHasher(), FakeMfa(), clock=clock)  # type: ignore[arg-type]  # fakes
@@ -176,7 +181,7 @@ async def test_legacy_manager_invite_is_accepted_as_viewer() -> None:
     repo.rows[h] = repo.rows[h].model_copy(update={"role": "manager"})  # legacy row
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
     rec, _ = await svc.complete_redemption(
-        inv.token, method_id="m", code="123456", source_ip="1.1.1.1"
+        inv.token, method_id="m", code="123456", source_ip="1.1.1.1", audit_downgrade=_noop_audit
     )
     assert rec.role == "viewer" and rec.downgraded_from == "manager"
     assert repo.rows[h].role == "viewer"
@@ -187,7 +192,7 @@ async def test_viewer_invite_redemption_is_not_flagged_downgraded() -> None:
     inv = await svc.create(_req(), invited_by=uuid.uuid4())
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
     rec, _ = await svc.complete_redemption(
-        inv.token, method_id="m", code="123456", source_ip="1.1.1.1"
+        inv.token, method_id="m", code="123456", source_ip="1.1.1.1", audit_downgrade=_noop_audit
     )
     assert rec.downgraded_from is None
 
@@ -197,7 +202,7 @@ async def test_invite_accepted_end_to_end_activates_user() -> None:
     inv = await svc.create(_req(), invited_by=uuid.uuid4())
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
     rec, codes = await svc.complete_redemption(
-        inv.token, method_id="m", code="123456", source_ip="1.1.1.1"
+        inv.token, method_id="m", code="123456", source_ip="1.1.1.1", audit_downgrade=_noop_audit
     )
     assert rec.role == "viewer" and codes == ("rc-1", "rc-2")
 
@@ -233,7 +238,13 @@ async def test_abandoned_enrolment_leaves_user_invited() -> None:
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
     clock.now = T0 + ENROLL_WINDOW + timedelta(seconds=1)
     with pytest.raises(InviteRejected):
-        await svc.complete_redemption(inv.token, method_id="m", code="123456", source_ip="1.1.1.1")
+        await svc.complete_redemption(
+            inv.token,
+            method_id="m",
+            code="123456",
+            source_ip="1.1.1.1",
+            audit_downgrade=_noop_audit,
+        )
     assert repo.rows[hash_token(inv.token)].user_status is UserStatus.INVITED
 
 
@@ -242,7 +253,13 @@ async def test_wrong_totp_code_does_not_activate() -> None:
     inv = await svc.create(_req(), invited_by=uuid.uuid4())
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
     with pytest.raises(InviteRejected) as e:
-        await svc.complete_redemption(inv.token, method_id="m", code="000000", source_ip="1.1.1.1")
+        await svc.complete_redemption(
+            inv.token,
+            method_id="m",
+            code="000000",
+            source_ip="1.1.1.1",
+            audit_downgrade=_noop_audit,
+        )
     assert e.value.reason == "enrollment_invalid"
     assert repo.rows[hash_token(inv.token)].user_status is UserStatus.INVITED
 
@@ -310,7 +327,13 @@ async def test_abandoned_enrolment_cannot_sign_in_through_real_login() -> None:
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
     clock.now = T0 + ENROLL_WINDOW + timedelta(seconds=1)
     with pytest.raises(InviteRejected):
-        await svc.complete_redemption(inv.token, method_id="m", code="123456", source_ip="1.1.1.1")
+        await svc.complete_redemption(
+            inv.token,
+            method_id="m",
+            code="123456",
+            source_ip="1.1.1.1",
+            audit_downgrade=_noop_audit,
+        )
     row = repo.rows[hash_token(inv.token)]
     assert row.user_status is UserStatus.INVITED
 
@@ -348,8 +371,46 @@ async def test_invite_metrics_count_created_redeemed_rejected() -> None:
     inv = await svc.create(_req(), invited_by=uuid.uuid4())
     assert _sample(m.users_invites_created_total, role="viewer") == created0 + 1
     await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="2.2.2.2")
-    await svc.complete_redemption(inv.token, method_id="m", code="123456", source_ip="2.2.2.2")
+    await svc.complete_redemption(
+        inv.token, method_id="m", code="123456", source_ip="2.2.2.2", audit_downgrade=_noop_audit
+    )
     assert _sample(m.users_invites_redeemed_total) == redeemed0 + 1
     with pytest.raises(InviteRejected):
         await svc.inspect("z" * 40, source_ip="2.2.2.2")
     assert _sample(m.users_invites_rejected_total, reason="unknown") == rejected0 + 1
+
+
+@pytest.mark.parametrize("exc", [AuditUnavailable("wal full"), AuditWriterStopped()])
+async def test_legacy_downgrade_aborted_when_audit_write_fails(exc: Exception) -> None:
+    svc, repo, _ = _make()
+    inv = await svc.create(_req(), invited_by=uuid.uuid4())
+    h = hash_token(inv.token)
+    repo.rows[h] = repo.rows[h].model_copy(update={"role": "manager"})
+    await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
+
+    async def failing(rec: Any, stored_role: str) -> None:
+        raise exc
+
+    with pytest.raises(type(exc)):
+        await svc.complete_redemption(
+            inv.token, method_id="m", code="123456", source_ip="1.1.1.1", audit_downgrade=failing
+        )
+    assert repo.rows[h].role == "manager"  # no role change persisted
+    assert repo.rows[h].user_status is UserStatus.INVITED  # not activated
+
+
+async def test_legacy_downgrade_without_hook_fails_closed() -> None:
+    svc, repo, _ = _make()
+    inv = await svc.create(_req(), invited_by=uuid.uuid4())
+    h = hash_token(inv.token)
+    repo.rows[h] = repo.rows[h].model_copy(update={"role": "manager"})
+    await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
+    with pytest.raises(InviteRejected):
+        await svc.complete_redemption(
+            inv.token,
+            method_id="m",
+            code="123456",
+            source_ip="1.1.1.1",
+            audit_downgrade=None,  # type: ignore[arg-type]  # proves runtime fail-closed
+        )
+    assert repo.rows[h].role == "manager"
