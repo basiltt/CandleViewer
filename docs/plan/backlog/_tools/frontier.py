@@ -21,12 +21,17 @@ tix = {t["key"]: t for t in _load("..", "all-tickets.json")}
 num = {k: v["number"] for k, v in led.items()}
 
 
+UNRESOLVED: set[str] = set()
+
+
 def done(key: str) -> bool:
+    """Fail closed: a blocker we cannot see on the board counts as NOT done (and is reported)."""
     n = num.get(key)
-    if n is None:
-        return True  # unpublished blocker -> treat as not applicable
-    it = b.get(n)
-    return it is None or it["state"] == "CLOSED" or it["status"] == "Done"
+    it = b.get(n) if n is not None else None
+    if it is None:
+        UNRESOLVED.add(key)
+        return False
+    return it["state"] == "CLOSED" or it["status"] == "Done"
 
 
 def sprint_no(s: str | None) -> int:
@@ -72,6 +77,13 @@ def main() -> None:
         json.dump(ready, fh, ensure_ascii=False, indent=1)
     limit = int(sys.argv[1]) if len(sys.argv) > 1 else 40
     print(f"{len(ready)} unblocked of {len(rows)} open non-epic tickets")
+    if UNRESOLVED:
+        print(
+            f"WARNING: {len(UNRESOLVED)} blocker key(s) not published / not in the snapshot were"
+            f" treated as NOT done (fail-closed): {', '.join(sorted(UNRESOLVED)[:12])}"
+            + (" ..." if len(UNRESOLVED) > 12 else ""),
+            file=sys.stderr,
+        )
     for r in ready[:limit]:
         print(
             f"#{r['number']:<5} {r['sprint'] or '-':<9} {r['status']:<8} {r['kind']:<8} "
