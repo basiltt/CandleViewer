@@ -20,11 +20,11 @@ Order of refusal (each before any storage read except where noted):
    server-issued `next_cursor` is returned whenever more rows remain.
 
 The cursor is bound to `(bars, symbol, bar_type:param)` (`api.market_response`), so a klines
-cursor or one for another series is `invalid_cursor`. Ordering is by `ts` with a `ts` cursor
-(ties broken by `"index"`, `bars.reader`). Since migration 0004 (#2016) equal-`ts` rows ARE
-reachable: one large print yields bars 0, 1, 2 at one `ts`, and the `ts` cursor steps past
-that `ts`, so with `limit=1` bars 1 and 2 are dropped (known gap, #2017).
-TODO(#2017): order by `(generation, index)`, put both on every bar, pin the generation.
+cursor or one for another series is `invalid_cursor`. Time bars order by `ts` with a `ts`
+cursor (open time is unique per interval; kline rows have a NULL `index`). Non-time bars order
+by the stored key `(ts, generation, index)` and the cursor carries that key (#2017), so
+equal-`ts` siblings (one print -> N volume bars / renko bricks) are each served exactly once
+across page boundaries. Every stored bar carries `index` and `generation` when the row has one.
 """
 
 from __future__ import annotations
@@ -44,7 +44,9 @@ from candleviewer.api.market_response import (
     build_meta,
     cursor_scope,
     decode_cursor,
+    decode_key_cursor,
     encode_cursor,
+    encode_key_cursor,
     kline_response,
     problem,
     serialize_bar,
@@ -67,7 +69,7 @@ from candleviewer.bars.metrics import (
     record_param_rejected,
 )
 from candleviewer.bars.models import BarSpec
-from candleviewer.bars.reader import BarPage, stored_bar
+from candleviewer.bars.reader import BarKey, BarPage, row_key, stored_bar
 from candleviewer.bars.spec import PARAM_MAX_LEN, from_wire
 
 _REQUIRED_PERMISSION: Final = "marketdata:read"
@@ -92,9 +94,16 @@ class _Resolver(Protocol):
 
 class BarReaderLike(Protocol):
     async def read_bars(
-        self, symbol: str, spec: BarSpec, from_us: int, to_us: int, limit: int,
-        *, after_us: int | None = None,
-    ) -> BarPage: ...  # fmt: skip
+        self,
+        symbol: str,
+        spec: BarSpec,
+        from_us: int,
+        to_us: int,
+        limit: int,
+        *,
+        after_us: int | None = None,
+        at_key: BarKey | None = None,
+    ) -> BarPage: ...
 
 
 RecordingStart = Callable[[str], Awaitable[int | None]]
@@ -212,10 +221,17 @@ def make_market_bars_router(
         if start_us > end_us:
             return _bad("'from' must not be after 'to'.")
         after_us: int | None = None
+        at_key: BarKey | None = None
         scope = cursor_scope("bars", symbol, f"{bar_type}:{param}")
         if cursor is not None:
             try:
-                after_us = decode_cursor(cursor, scope=scope, end_us=end_us, start_us=start_us) - 1
+                if spec.kind == "time":
+                    after_us = decode_cursor(cursor, scope=scope, end_us=end_us,
+                                             start_us=start_us) - 1  # fmt: skip
+                else:
+                    at_key = decode_key_cursor(cursor, scope=scope, end_us=end_us,
+                                               start_us=start_us)  # fmt: skip
+                    after_us = at_key[0] - 1  # window-cap arithmetic only; not sent to reader
             except InvalidCursor:
                 detail = "The cursor is not valid for this request; restart without it."
                 return problem(400, "invalid_cursor", "Invalid cursor", detail)
@@ -261,30 +277,35 @@ def make_market_bars_router(
         # total series a client can page through. TODO(#2093): stored-print-count estimate.
         try:
             async with asyncio.timeout(QUERY_TIMEOUT_S):
-                page = await reader.read_bars(symbol, spec, start_us, end_us, limit + 1,
-                                              after_us=after_us)  # fmt: skip
+                page = await (
+                    reader.read_bars(symbol, spec, start_us, end_us, limit + 1, after_us=after_us)
+                    if at_key is None
+                    else reader.read_bars(symbol, spec, start_us, end_us, limit + 1, at_key=at_key)
+                )
         except (TimeoutError, OSError, ConnectionError):
             return problem(503, "store_unavailable", "Service unavailable",
                            "Bar storage did not answer in time; retry shortly.")  # fmt: skip
         # `has_more` comes from the RAW fetch (#2089 adversarial M1): `read_bars` withholds
-        # checksum-failed rows (`page.dropped`) but reports `next_cursor` = the ts of the
-        # (limit+1)-th raw row whenever the fetch was full. That row is the next page's first,
-        # so a dropped row (even the page's last) is stepped over, never ends the series.
-        resume = page.next_cursor
+        # checksum-failed rows (`page.dropped`) but reports the position of the (limit+1)-th raw
+        # row whenever the fetch was full. That row is the next page's first, so a dropped row
+        # (even the page's last) is stepped over, never ends the series.
         rows = [stored_bar(r) for r in page.rows]
-        if resume is not None:
+        next_cursor: str | None = None
+        if spec.kind != "time":
+            if page.next_key is not None:  # keyset: the extra row opens the next page
+                rows = [s for s, r in zip(rows, page.rows, strict=True)
+                        if row_key(r) < page.next_key]  # fmt: skip
+                next_cursor = encode_key_cursor(scope, page.next_key)
+        elif (resume := page.next_cursor) is not None:
             kept = [r for r in rows if r.ts_us < resume]  # the extra row opens the next page
             if kept or not rows:
                 rows = kept
-            else:
-                # Every fetched row shares the resume ts (equal-ts rows filling the
-                # page): progress must be strict, so serve the page and step past that ts.
-                # Its remaining siblings are skipped. TODO(#2017): resume by (generation, index).
+            else:  # unreachable for time bars (unique open time); strict progress regardless
                 rows = rows[:limit]
                 resume = rows[-1].ts_us + 1
+            next_cursor = encode_cursor(scope, resume)
         if not include_open:
             rows = [r for r in rows if r.confirmed]  # only the newest bar can be forming
-        next_cursor = encode_cursor(scope, resume) if resume is not None else None
         sources = (["tape"] if any(r.tape_built for r in rows) else []) + (
             ["questdb"] if any(not r.tape_built for r in rows) else [])  # fmt: skip
         record_page("bars", len(rows), sources)

@@ -1,6 +1,7 @@
 """Range reads and stale-`build_version` handling for `bars_*` (E12-T02, #345).
 
-`read_bars` returns oldest->newest with a cursor (the last row's `ts`), parameterised queries only
+`read_bars` returns oldest->newest with a cursor (the last raw row's `ts`, and for non-time
+kinds its `(ts, generation, index)` key, #2017), parameterised queries only
 (`symbol`/`bar_param` come from the client). Rows whose `row_checksum` does not verify are
 dropped and counted (SR-E12-11). Rows at an older `build_version` than the running code are
 served as-is and a rebuild is scheduled **once** per `(symbol, spec_hash)` window, not per poll.
@@ -58,6 +59,10 @@ class RowFetcher(Protocol):
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]: ...
 
 
+#: A stored bar's position: `(ts µs, generation, index)` (#2017). Unique per series (DEDUP key).
+BarKey = tuple[int, int, int]
+
+
 @dataclass(frozen=True, slots=True)
 class BarPage:
     rows: list[dict[str, object]]
@@ -67,13 +72,30 @@ class BarPage:
     #: integrity failure, so the page is INCOMPLETE and the caller must not cache it as final.
     integrity_degraded: bool = False
     dropped: int = 0  # rows withheld (checksum mismatch or missing)
+    #: Non-time kinds only (#2017): `(ts, generation, index)` of the last RAW row of a full
+    #: fetch, i.e. the next page's first row (resume with `at_key=`); None = no more rows.
+    next_key: BarKey | None = None
 
 
-#: `ts` is primary: the `/market/bars` cursor is a `ts`, so it needs monotonic ts order;
-#: `index` only breaks equal-`ts` ties. `generation` is NOT ordered until #2017 moves the cursor to
-#: `(generation, index)` (NULL-`index` kline rows and index-reset rebuilds would skip rows).
+#: Ordering (#2017, 21 §9.5 choice (a)). `ts` stays primary everywhere: a builder cold start
+#: restarts `index` at 0 within the same generation (#2126 regression (b)), so `index` alone is
+#: not chronological. `bars_time` holds NULL-`index` kline rows, so it keeps `ts, "index"` with a
+#: `ts` cursor (unique open time per interval). Non-time kinds order by `ts, generation, "index"`
+#: and resume by keyset on that full key, so equal-`ts` siblings (renko multi-brick, volume
+#: splits) are never skipped at a page boundary. Within one pinned generation whose `index`
+#: increases with `ts` this is exactly the contract's `(generation, index)` order.
 #: `index` is a QuestDB reserved word: quoted via the shared helper (#2016), never hand-written.
-_ORDER_BY = ", ".join(column_identifier(c) for c in ("ts", "index"))
+_ORDER_BY_TIME = ", ".join(column_identifier(c) for c in ("ts", "index"))
+_ORDER_BY_KEY = ", ".join(column_identifier(c) for c in ("ts", "generation", "index"))
+#: QuestDB has no row-value comparison: `(ts, generation, index) >= ($5, $7, $9)` expanded.
+#: A NULL `index` sorts first and is `row_key` index -1; resuming AT such a row must also admit
+#: NULL (a comparison with NULL is never true), so that variant adds `OR "index" IS NULL`.
+_GEN, _IDX = column_identifier("generation"), column_identifier("index")
+_KEY_FROM = f"AND (ts > $5 OR (ts = $6 AND ({_GEN} > $7 OR ({_GEN} = $8 AND {_IDX} >= $9))))"
+_KEY_FROM_NULL = (
+    f"AND (ts > $5 OR (ts = $6 AND ({_GEN} > $7 OR ({_GEN} = $8 AND "
+    f"({_IDX} >= $9 OR {_IDX} IS NULL)))))"
+)
 
 
 def build_range_query(
@@ -84,19 +106,43 @@ def build_range_query(
     to_us: int,
     after_us: int | None,
     limit: int,
+    *,
+    at_key: BarKey | None = None,
 ) -> tuple[str, tuple[object, ...]]:
+    """`after_us` (time bars): resume after that ts. `at_key` (non-time bars): resume AT that
+    `(ts, generation, index)` inclusive. The `from`/`to` window predicate always applies."""
     if kind not in _FAMILIES:
         raise ValueError(f"unknown bar kind {kind!r}")
     if not 1 <= limit <= MAX_LIMIT:
         raise ValueError(f"limit must be between 1 and {MAX_LIMIT}")
+    if at_key is not None and (kind == "time" or after_us is not None):
+        raise ValueError("at_key is only for non-time bars and excludes after_us")
     start = from_us if after_us is None else max(from_us, after_us + 1)
+    order = _ORDER_BY_TIME if kind == "time" else _ORDER_BY_KEY
+    key_sql = ""
+    if at_key is not None:
+        key_sql = f" {_KEY_FROM_NULL if at_key[2] < 0 else _KEY_FROM}"
     sql = (
         f"SELECT * FROM bars_{kind} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 reason=table-from-closed-allowlist owner=@CandleViewer/backend
-        f"AND ts >= $3 AND ts < $4 ORDER BY {_ORDER_BY} LIMIT {int(limit)}"
+        f"AND ts >= $3 AND ts < $4{key_sql} ORDER BY {order} LIMIT {int(limit)}"
     )
     # QuestDB 8.x does not count `LIMIT $n` as a bind slot (asyncpg: "server expects 4
     # arguments"), so the validated-int `limit` (1..MAX_LIMIT, checked above) is inlined.
-    return sql, (symbol, bar_param, ts_param(start), ts_param(to_us))
+    params: tuple[object, ...] = (symbol, bar_param, ts_param(start), ts_param(to_us))
+    if at_key is not None:
+        ts_us, gen, idx = (int(v) for v in at_key)
+        params += (ts_param(ts_us), ts_param(ts_us), gen, gen, max(idx, 0))
+    return sql, params
+
+
+def row_key(row: dict[str, object]) -> BarKey:
+    """`(ts µs, generation, index)` of a stored row (NULL generation/index read as 0/-1)."""
+    gen, idx = row.get("generation"), row.get("index")
+    return (
+        ts_us_from_row(row["ts"]),
+        0 if gen is None else int(str(gen)),
+        -1 if idx is None else int(str(idx)),
+    )
 
 
 @dataclass(slots=True)
@@ -200,9 +246,10 @@ class BarReader:
         limit: int,
         *,
         after_us: int | None = None,
+        at_key: BarKey | None = None,
     ) -> BarPage:
         sql, params = build_range_query(
-            spec.kind, symbol, bar_param_for(spec), from_us, to_us, after_us, limit
+            spec.kind, symbol, bar_param_for(spec), from_us, to_us, after_us, limit, at_key=at_key
         )
         raw = await self._conn.fetch(sql, *params)
         table = f"bars_{spec.kind}"
@@ -226,7 +273,10 @@ class BarReader:
             await self._rebuilds.request(symbol, spec.spec_hash, from_us, to_us)
         more = len(raw) == limit
         cursor = ts_us_from_row(raw[-1]["ts"]) if more and raw else None
-        return BarPage(rows, cursor, stale, integrity_degraded=dropped > 0, dropped=dropped)
+        key = row_key(raw[-1]) if more and raw and spec.kind != "time" else None
+        return BarPage(
+            rows, cursor, stale, integrity_degraded=dropped > 0, dropped=dropped, next_key=key
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -252,6 +302,8 @@ class StoredBar:
     min_delta: str | None
     max_delta: str | None
     source: str
+    index: int | None = None  # NULL on kline-sourced `bars_time` rows (no builder index)
+    generation: int | None = None
 
     @property
     def tape_built(self) -> bool:
@@ -268,6 +320,7 @@ def stored_bar(row: dict[str, object]) -> StoredBar:
     vwap, volume = Decimal(str(row.get("vwap") or 0)), Decimal(str(row.get("volume") or 0))
     source = str(row.get("source") or "tape")  # NULL = pre-0003 legacy row, tape-built
     flow = source != "kline"
+    idx, gen = row.get("index"), row.get("generation")
     return StoredBar(
         ts_us=ts_us_from_row(row["ts"]),
         close_ts_us=ts_us_from_row(close_ts) if close_ts is not None else None,
@@ -277,6 +330,8 @@ def stored_bar(row: dict[str, object]) -> StoredBar:
         delta=_num(row.get("delta") or 0) if flow else None,
         min_delta=_num(row.get("min_delta") or 0) if flow else None,
         max_delta=_num(row.get("max_delta") or 0) if flow else None, source=source,
+        index=None if idx is None else int(str(idx)),
+        generation=None if gen is None else int(str(gen)),
     )  # fmt: skip
 
 
