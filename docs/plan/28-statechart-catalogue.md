@@ -594,6 +594,8 @@ ev2 = cv_re_mint(ev, data=patched)              # never type=/src=
 
 Standing constraints and their enforcement are tabled in ADR-0016 § *Decision (final)*.
 
+**SL-protection exception to C-04 / `CV-LINT-KILL-ANCESTOR` (amended 2026-10-09, #1650, owner decision #1778 item X; tightened per PR #2133 review).** Every `KILL` arm that carries a target must land in a `type: final` state. The single exception: a chart whose id is in the lint's explicit allowlist (`SL_PROTECTION_CHART_IDS = {"position_protection"}`) **and** whose root carries `"meta": {"cv:slProtection": true}` may target a **non-terminal** state, under all of these conditions, each enforced by `tools/lint_statecharts.py`: (1) the target state is named exactly `frozen`; (2) it declares no `invoke`, `after`, `always` or child `states`; (3) every arm on it is internal (no `target`) except recovery events `RECONCILED` / `RESUME` if a catalogue entry adds them. A non-final KILL target on any other chart, on an untagged chart, or pointing at any state other than `frozen` is a lint error. Pre-existing non-final KILL targets in B9/B10/B11/B12/B18/B19 are listed by exact (chart, state) pair in the lint's `KILL_NONFINAL_PENDING_DECISION`. They await an owner decision (separate ticket or documented baseline) and are **not** part of this exception. Rationale: KILL must never switch off a native stop-loss (C-2.6, C-4.14), so the SL-protection machine freezes rather than terminates. This is not a baseline change; no other chart may use it.
+
 ### 1.4 How to read each entry
 
 Every entry has the same seven parts: **Purpose** · **Why this shape** · **Contract (JSON)** · **States** · **Events** · **Guards / Actions / Services** · **Invariants**. The JSON is the normative part; the tables are derived from it and exist for review, not as a second source of truth.
@@ -617,7 +619,7 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
 | **Schema owner** | 24-internal-schemas.md §8.2 (order state machine), §8.8 (native-SL invariant), ADR-0006 |
 | **Fit (research)** | Good |
 | **Event rate** | per-order exchange events; bursty on fills, otherwise low |
-| **States / leaves / finals** | 20 / 18 / 4 |
+| **States / leaves / finals** | 21 / 19 / 5 |
 
 **Purpose.** The canonical lifecycle of a single exchange order, from local draft to a terminal state, plus the independent native-stop-loss protection invariant for the position that order opens.
 
@@ -649,7 +651,9 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
     "last_exchange_update": 0,
     "recon_misses": 0,
     "_fault": null,
-    "sl_deadline_us": null
+    "sl_deadline_us": null,
+    "halted_by_kill": false,
+    "kill_skip_cancel": false
   },
   "states": {
     "lifecycle": {
@@ -674,7 +678,13 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
                   "set_local_reject"
                 ]
               }
-            ]
+            ],
+            "KILL": {
+              "target": "#order.lifecycle.killed",
+              "actions": [
+                "skip_kill_cancel"
+              ]
+            }
           }
         },
         "validated": {
@@ -685,6 +695,12 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
           "on": {
             "SEND": {
               "target": "#order.lifecycle.submitting"
+            },
+            "KILL": {
+              "target": "#order.lifecycle.killed",
+              "actions": [
+                "skip_kill_cancel"
+              ]
             }
           }
         },
@@ -745,6 +761,11 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
                 "actions": [
                   "apply_fill"
                 ]
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
               }
             ],
             "TRIGGERED": {
@@ -786,6 +807,11 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
                 "actions": [
                   "apply_fill"
                 ]
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
               }
             ],
             "CANCEL": {
@@ -813,6 +839,11 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
                 "reenter": true,
                 "actions": [
                   "apply_fill"
+                ]
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
                 ]
               }
             ],
@@ -862,8 +893,19 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
                 "actions": [
                   "apply_fill"
                 ]
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
               }
-            ]
+            ],
+            "KILL": {
+              "actions": [
+                "mark_halted_by_kill",
+                "audit_kill_cancel_in_flight"
+              ]
+            }
           }
         },
         "amend_pending": {
@@ -1002,7 +1044,14 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
           ],
           "tags": [
             "terminal"
-          ]
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_kill_ignored_terminal"
+              ]
+            }
+          }
         },
         "cancelled": {
           "type": "final",
@@ -1012,7 +1061,14 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
           ],
           "tags": [
             "terminal"
-          ]
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_kill_ignored_terminal"
+              ]
+            }
+          }
         },
         "rejected": {
           "type": "final",
@@ -1022,7 +1078,14 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
           ],
           "tags": [
             "terminal"
-          ]
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_kill_ignored_terminal"
+              ]
+            }
+          }
         },
         "expired": {
           "type": "final",
@@ -1032,7 +1095,40 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
           ],
           "tags": [
             "terminal"
-          ]
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_kill_ignored_terminal"
+              ]
+            }
+          }
+        },
+        "killed": {
+          "type": "final",
+          "entry": [
+            "persist_event",
+            "mark_halted_by_kill",
+            "audit_kill",
+            "issue_kill_cancel",
+            "emit_terminal"
+          ],
+          "tags": [
+            "terminal",
+            "halted_by_kill"
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_kill_ignored_terminal"
+              ]
+            }
+          }
+        }
+      },
+      "on": {
+        "KILL": {
+          "target": "#order.lifecycle.killed"
         }
       }
     },
@@ -1090,6 +1186,13 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
             }
           }
         }
+      },
+      "on": {
+        "KILL": {
+          "actions": [
+            "audit_kill_protection_retained"
+          ]
+        }
       }
     }
   }
@@ -1115,6 +1218,7 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
 | `lifecycle.cancelled` | final | `terminal` | `persist_event`, `emit_terminal` | — | — |
 | `lifecycle.rejected` | final | `terminal` | `persist_event`, `emit_terminal` | — | — |
 | `lifecycle.expired` | final | `terminal` | `persist_event`, `emit_terminal` | — | — |
+| `lifecycle.killed` *(Corrected 2026-10-09)* | final | `terminal`, `halted_by_kill` | `persist_event`, `mark_halted_by_kill`, `audit_kill`, `issue_kill_cancel`, `emit_terminal` | — | — |
 | `protection` | compound | — | — | — | — |
 | `protection.not_required` | atomic | — | — | — | — |
 | `protection.sl_pending` | atomic | — | `arm_sl_deadline` | — | — |
@@ -1133,6 +1237,7 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
 | `lifecycle.submitting` | `*` | — | _(internal)_ | `defer` | — |
 | `lifecycle.submitted` | `EXEC` | `exec_new_and_closes` | `lifecycle.filled` | `apply_fill` | — |
 | `lifecycle.submitted` | `EXEC` | `exec_new_and_partial` | `lifecycle.partially_filled` | `apply_fill` | — |
+| `lifecycle.submitted` | `EXEC` | — | _(internal)_ | `audit_guard_denied` | — |
 | `lifecycle.submitted` | `TRIGGERED` | — | `lifecycle.triggered` | — | — |
 | `lifecycle.submitted` | `CANCEL` | — | `lifecycle.cancel_pending` | — | — |
 | `lifecycle.submitted` | `AMEND` | — | `lifecycle.amend_pending` | — | — |
@@ -1141,14 +1246,17 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
 | `lifecycle.submitted` | `FAULT` | — | `lifecycle.quarantined` | — | — |
 | `lifecycle.triggered` | `EXEC` | `exec_new_and_closes` | `lifecycle.filled` | `apply_fill` | — |
 | `lifecycle.triggered` | `EXEC` | `exec_new_and_partial` | `lifecycle.partially_filled` | `apply_fill` | — |
+| `lifecycle.triggered` | `EXEC` | — | _(internal)_ | `audit_guard_denied` | — |
 | `lifecycle.triggered` | `CANCEL` | — | `lifecycle.cancel_pending` | — | — |
 | `lifecycle.partially_filled` | `EXEC` | `exec_new_and_closes` | `lifecycle.filled` | `apply_fill` | — |
 | `lifecycle.partially_filled` | `EXEC` | `exec_new_and_partial` | `lifecycle.partially_filled` | `apply_fill` | yes |
+| `lifecycle.partially_filled` | `EXEC` | — | _(internal)_ | `audit_guard_denied` | — |
 | `lifecycle.partially_filled` | `CANCEL` | — | `lifecycle.cancel_pending` | — | — |
 | `lifecycle.partially_filled` | `AMEND` | — | `lifecycle.amend_pending` | — | — |
 | `lifecycle.partially_filled` | `FAULT` | — | `lifecycle.quarantined` | — | — |
 | `lifecycle.cancel_pending` | `EXEC` | `exec_new_and_closes` | `lifecycle.filled` | `apply_fill` | — |
 | `lifecycle.cancel_pending` | `EXEC` | `exec_new_and_partial` | `lifecycle.partially_filled` | `apply_fill` | — |
+| `lifecycle.cancel_pending` | `EXEC` | — | _(internal)_ | `audit_guard_denied` | — |
 | `lifecycle.cancel_pending` | `*` | — | _(internal)_ | `defer` | — |
 | `lifecycle.amend_pending` | `AMEND_REJECTED` | `has_fills` | `lifecycle.partially_filled` | `keep_prior_order_live`, `notify_amend_rejected` | — |
 | `lifecycle.amend_pending` | `AMEND_REJECTED` | — | `lifecycle.submitted` | `keep_prior_order_live`, `notify_amend_rejected` | — |
@@ -1162,6 +1270,16 @@ Every entry has the same seven parts: **Purpose** · **Why this shape** · **Con
 | `lifecycle.quarantined` | `RECON_FOUND_LIVE` | — | `lifecycle.submitted` | `adopt_recon` | — |
 | `lifecycle.quarantined` | `RECON_FOUND_PARTIAL` | — | `lifecycle.partially_filled` | `adopt_recon` | — |
 | `lifecycle.quarantined` | `RECON_FOUND_FILLED` | — | `lifecycle.filled` | `adopt_recon` | — |
+| `lifecycle` | `KILL` | — | `lifecycle.killed` | — (entry of `killed`) | — |
+| `lifecycle.draft` | `KILL` | — | `lifecycle.killed` | `skip_kill_cancel` *(Corrected 2026-10-09, #2133 review)* | — |
+| `lifecycle.validated` | `KILL` | — | `lifecycle.killed` | `skip_kill_cancel` *(Corrected 2026-10-09, #2133 review)* | — |
+| `lifecycle.cancel_pending` | `KILL` | — | _(internal)_ | `mark_halted_by_kill`, `audit_kill_cancel_in_flight` *(Corrected 2026-10-09, #2133 review)* | — |
+| `lifecycle.filled` | `KILL` | — | _(internal)_ | `audit_kill_ignored_terminal` | — |
+| `lifecycle.cancelled` | `KILL` | — | _(internal)_ | `audit_kill_ignored_terminal` | — |
+| `lifecycle.rejected` | `KILL` | — | _(internal)_ | `audit_kill_ignored_terminal` | — |
+| `lifecycle.expired` | `KILL` | — | _(internal)_ | `audit_kill_ignored_terminal` | — |
+| `lifecycle.killed` | `KILL` | — | _(internal)_ | `audit_kill_ignored_terminal` | — |
+| `protection` | `KILL` | — | _(internal)_ | `audit_kill_protection_retained` | — |
 | `protection.not_required` | `FIRST_FILL` | — | `protection.sl_pending` | — | — |
 | `protection.sl_pending` | `SL_DEADLINE` | — | `protection.sl_missing` | — | — |
 | `protection.sl_present` | `SL_LOST` | — | `protection.sl_missing` | — | — |
@@ -1220,13 +1338,21 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `set_local_reject` |
 | `set_reject_unresolvable` |
 | `stamp_validated` |
+| `audit_guard_denied` *(Corrected 2026-10-09)* |
+| `audit_kill` *(Corrected 2026-10-09)* |
+| `audit_kill_cancel_in_flight` *(Corrected 2026-10-09, #2133 review)* |
+| `audit_kill_ignored_terminal` *(Corrected 2026-10-09)* |
+| `audit_kill_protection_retained` *(Corrected 2026-10-09)* |
+| `issue_kill_cancel` *(Corrected 2026-10-09)* |
+| `mark_halted_by_kill` *(Corrected 2026-10-09)* |
+| `skip_kill_cancel` *(Corrected 2026-10-09, #2133 review)* |
 
 ### B1.7 Invariants
 
 | ID | Invariant |
 |---|---|
 | **INV-1** | `filled_qty <= qty` at every observable point, including mid-drain. |
-| **INV-2** | A terminal state (`filled`, `cancelled`, `rejected`, `expired`) is never left (24 §8.2 S6). |
+| **INV-2** | A terminal state (`filled`, `cancelled`, `rejected`, `expired`, `killed`) is never left (24 §8.2 S6). |
 | **INV-5** | **No delivered `EXEC` is ever unaccounted for**: every `exec_id` the gateway delivers appears in `seen_exec_ids` or in `_deferred`. This is the direct regression test for LC-03 and it is mandatory for this family. |
 | **INV-B1-a** | `apply_fill` is order-independent: applying the same set of `EXEC` events in any order yields identical `filled_qty` and `avg_price` (MUSTNOT-04). |
 | **INV-B1-b** | `exec_id` dedupe is total - a repeated `exec_id` changes nothing (24 §8.2 S4). |
@@ -1234,10 +1360,13 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B1-d** | A fill beats a pending cancel (S3): `cancel_pending` handles `EXEC` explicitly rather than deferring it. |
 | **INV-B1-e** | `unknown` never resubmits (S1); it may only be resolved by a `RECON_FOUND_*` event. |
 | **INV-B1-f** | The `protection` region reaches `sl_present` only from an exchange read (`SL_OBSERVED`), never from a local assumption. |
+| **INV-B1-h** | *(Corrected 2026-10-09, #1650; reworded #2133)* **At most one exchange cancel per order, and only if it was submitted.** Root `KILL` from `draft`/`validated` reaches `killed` with audit only (`skip_kill_cancel`, no exchange call); from any other non-terminal lifecycle state except `cancel_pending` it reaches `killed`, sets `halted_by_kill`, writes `audit_kill` **before** the cancel (write-ahead, C-2.9) and issues one `cancel_order` (same `orderLinkId`, C-2.10) bounded by `CV_KILL_CANCEL_TIMEOUT`; failure or timeout is audited and never rolls the kill back. In `cancel_pending` KILL reuses the in-flight cancel (no second call): it sets `halted_by_kill` and audits, and the existing invoke resolves the order. Reconciliation re-syncs the true exchange state (C-2.5). `KILL` on a terminal state only audits. |
+| **INV-B1-i** | *(Corrected 2026-10-09, #1650)* `KILL` never changes the `protection` region (C-2.6, C-4.14): no SL is cancelled or amended; the region only audits. |
 | **INV-B1-g** | A write-ahead `order_events` row exists for every transition before the in-memory state changes (S8, A7, MUST-02). |
 
 ### B1.8 Implementation notes
 
+- **Corrected 2026-10-09 (C-04 / C-07b, #1650, owner decision #1778 item X option a):** `lifecycle.on.KILL` → new final `killed` (entry: `persist_event`, `mark_halted_by_kill`, `audit_kill`, `issue_kill_cancel`, `emit_terminal` — audit is write-ahead of the cancel, C-2.9; *PR #2133 review:* `draft`/`validated` KILL skips the cancel via `skip_kill_cancel`, `cancel_pending` KILL reuses the in-flight cancel, and the cancel is bounded by `CV_KILL_CANCEL_TIMEOUT`) instead of misreporting the kill as an exchange-side `cancelled`/`rejected`/`expired`; every invoking lifecycle state has a kill ancestor. The `protection` region declares `KILL` as an internal audit-only arm (`audit_kill_protection_retained`) — it has no terminal by design and KILL must never remove the native SL. Terminals carry an internal `KILL` audit arm so a late kill is recorded, not deferred. Ordered unguarded `audit_guard_denied` arm appended to every guarded-only `EXEC` (C-07b). New context key `halted_by_kill`.
 - **Deferral is load-bearing.** `submitting` and `amend_pending` are occupied while an exchange round trip is in flight. Omit the wildcard handler on one of them and a fill is lost with no exception and no log line (LC-03; Study 05 C17 lost three `PARTIAL` fills deterministically across 10 runs). `cancel_pending` deliberately handles `EXEC` explicitly instead of deferring, because S3 says the fill wins the race.
 - **Timing is external.** `sl_deadline_us` and the reconciliation deadline are absolute microsecond timestamps in context, armed by the `MonotonicScheduler` and re-armed on restore (A2).
 - **Restore re-drives invokes.** A crash in `submitting` restores a machine parked in `submitting` with no service running (LC-19); the boot procedure re-sends the triggering event *after* draining `_deferred` (MUST-03).
@@ -3467,7 +3596,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **Schema owner** | 24-internal-schemas.md §8.8 (safety invariant), §10.7 (bracket), ADR-0008 rule 2 |
 | **Fit (research)** | Workaround |
 | **Event rate** | low; the watchdog scan is externally scheduled |
-| **States / leaves / finals** | 11 / 9 / 0 |
+| **States / leaves / finals** | 14 / 11 / 0 |
 
 **Purpose.** Enforce C-2.6: every open position carries a native exchange-side stop-loss, with an independent watchdog region that keeps checking.
 
@@ -3478,7 +3607,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 ```json
 {
   "id": "position_protection",
-  "actionErrorPolicy": "rollback",   // CV-C31: "fail" forbidden until upstream R5-12 is fixed; halt via explicit `halted` state
+  "actionErrorPolicy": "rollback",
   "onUnhandled": "defer",
   "guardErrorPolicy": "raise",
   "strictTargets": true,
@@ -3494,7 +3623,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
     "sl_deadline_us": null,
     "naked_since_us": null,
     "attach_attempts": 0,
-    "fallback_attempts": 0
+    "fallback_attempts": 0,
+    "frozen": false
   },
   "states": {
     "sl": {
@@ -3571,14 +3701,40 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
             "reset_fallback_attempts"
           ],
           "on": {
-            "TIGHTEN_SL": {
-              "target": "#position_protection.sl.amending",
-              "guard": "tightens_only"
-            },
-            "LOOSEN_SL": {
-              "target": "#position_protection.sl.amending",
-              "guard": "explicit_audited_override"
-            },
+            "TIGHTEN_SL": [
+              {
+                "guard": "amend_locked",
+                "actions": [
+                  "audit_amend_refused_frozen"
+                ]
+              },
+              {
+                "target": "#position_protection.sl.amending",
+                "guard": "tightens_only"
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
+              }
+            ],
+            "LOOSEN_SL": [
+              {
+                "guard": "amend_locked",
+                "actions": [
+                  "audit_amend_refused_frozen"
+                ]
+              },
+              {
+                "target": "#position_protection.sl.amending",
+                "guard": "explicit_audited_override"
+              },
+              {
+                "actions": [
+                  "audit_guard_denied"
+                ]
+              }
+            ],
             "WATCHDOG_MISS": {
               "target": "#position_protection.sl.naked"
             },
@@ -3645,6 +3801,13 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
             }
           }
         }
+      },
+      "on": {
+        "KILL": {
+          "actions": [
+            "audit_kill_sl_continues"
+          ]
+        }
       }
     },
     "watchdog": {
@@ -3683,7 +3846,39 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
           }
         }
       }
+    },
+    "amend_lock": {
+      "initial": "open",
+      "states": {
+        "open": {
+          "on": {
+            "KILL": {
+              "target": "#position_protection.amend_lock.frozen"
+            }
+          }
+        },
+        "frozen": {
+          "tags": [
+            "frozen",
+            "kill_halted"
+          ],
+          "entry": [
+            "audit_kill",
+            "publish_frozen_flag"
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_frozen_event"
+              ]
+            }
+          }
+        }
+      }
     }
+  },
+  "meta": {
+    "cv:slProtection": true
   }
 }
 ```
@@ -3700,6 +3895,9 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `sl.amending` | atomic | — | — | — | yes |
 | `sl.naked` | atomic | `naked`, `critical` | `stamp_naked_since`, `bump_fallback_attempts`, `raise_critical_alert`, `emit_naked_metric` | — | — |
 | `sl.naked_unrecoverable` | atomic | `naked`, `critical` | `page_owner`, `consider_reduce_only_close` | — | — |
+| `amend_lock` *(Corrected 2026-10-09, #2133 review)* | compound | — | — | — | — |
+| `amend_lock.open` | atomic | — | — | — | — |
+| `amend_lock.frozen` | atomic | `frozen`, `kill_halted` | `audit_kill`, `publish_frozen_flag` | — | — |
 | `watchdog` | compound | — | — | — | — |
 | `watchdog.idle` | atomic | — | — | — | — |
 | `watchdog.scanning` | atomic | — | — | — | — |
@@ -3712,12 +3910,19 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `sl.attaching` | `SL_DEADLINE` | — | `sl.naked` | — | — |
 | `sl.protected` | `TIGHTEN_SL` | `tightens_only` | `sl.amending` | — | — |
 | `sl.protected` | `LOOSEN_SL` | `explicit_audited_override` | `sl.amending` | — | — |
+| `sl.protected` | `TIGHTEN_SL` | — | _(internal)_ | `audit_guard_denied` | — |
+| `sl.protected` | `LOOSEN_SL` | — | _(internal)_ | `audit_guard_denied` | — |
 | `sl.protected` | `WATCHDOG_MISS` | — | `sl.naked` | — | — |
 | `sl.protected` | `POSITION_FLAT` | — | `sl.flat` | — | — |
 | `sl.amending` | `*` | — | _(internal)_ | `defer` | — |
 | `sl.naked` | `POSITION_FLAT` | — | `sl.flat` | — | — |
 | `sl.naked_unrecoverable` | `SL_OBSERVED` | — | `sl.protected` | — | — |
 | `sl.naked_unrecoverable` | `POSITION_FLAT` | — | `sl.flat` | — | — |
+| `sl` | `KILL` | — | _(internal)_ | `audit_kill_sl_continues` *(Corrected 2026-10-09, #2133 review)* | — |
+| `sl.protected` | `TIGHTEN_SL` | `amend_locked` (first arm) | _(internal)_ | `audit_amend_refused_frozen` *(Corrected 2026-10-09, #2133 review)* | — |
+| `sl.protected` | `LOOSEN_SL` | `amend_locked` (first arm) | _(internal)_ | `audit_amend_refused_frozen` *(Corrected 2026-10-09, #2133 review)* | — |
+| `amend_lock.open` | `KILL` | — | `amend_lock.frozen` | — (entry of `frozen`) | — |
+| `amend_lock.frozen` | `KILL` | — | _(internal)_ | `audit_frozen_event` | — |
 | `watchdog.idle` | `POSITION_OPENED` | — | `watchdog.scanning` | — | — |
 | `watchdog.scanning` | `SCAN_DUE` | `sl_observed` | `watchdog.scanning` | `reset_miss_counter` | yes |
 | `watchdog.scanning` | `SCAN_DUE` | — | `watchdog.scanning` | `bump_miss_counter`, `maybe_raise_watchdog_miss` | yes |
@@ -3736,6 +3941,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 | Guard | Polarity | Contract |
 |---|---|---|
+| `amend_locked` *(Corrected 2026-10-09, #2133 review)* | deny polarity | `context.frozen is True`; no I/O; total; returns `True` (locked) on any internal error |
 | `attach_attempts_left` | pure predicate over `(context, event)` | no I/O; total; returns `False` on any internal error and logs at `ERROR` (A6) |
 | `exchange_reports_sl` | pure predicate over `(context, event)` | no I/O; total; returns `False` on any internal error and logs at `ERROR` (A6) |
 | `explicit_audited_override` | pure predicate over `(context, event)` | no I/O; total; returns `False` on any internal error and logs at `ERROR` (A6) |
@@ -3762,6 +3968,12 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `reset_fallback_attempts` |
 | `reset_miss_counter` |
 | `stamp_naked_since` |
+| `audit_amend_refused_frozen` *(Corrected 2026-10-09)* |
+| `audit_frozen_event` *(Corrected 2026-10-09)* |
+| `audit_guard_denied` *(Corrected 2026-10-09)* |
+| `audit_kill` *(Corrected 2026-10-09)* |
+| `publish_frozen_flag` *(Corrected 2026-10-09)* |
+| `audit_kill_sl_continues` *(Corrected 2026-10-09, #2133 review)* |
 
 ### B8.7 Invariants
 
@@ -3774,9 +3986,11 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B8-d** | `naked_unrecoverable` pages the owner and considers a reduce-only close. No configuration, flag or environment suppresses this (C-2.6). |
 | **INV-B8-e** | The watchdog region's miss counter is reset only by a positive `sl_observed`, never by the passage of time. |
 | **INV-B8-f** | *(2026-09-24, B610-OC-CD03 fix)* The `naked ⇄ verifying` loop is bounded: `fallback_attempts` is bumped on every `naked` entry and reset only on `protected` entry; once `fallback_attempts_left` is false, verification failure goes to `naked_unrecoverable` (pages). Contract test: a fallback attach that succeeds while the exchange never reports an SL reaches `naked_unrecoverable` in ≤ `CV_B8_MAX_FALLBACK` laps with `chain_trips == 0` and exactly that many `raise_critical_alert` firings. |
+| **INV-B8-g** | *(Corrected 2026-10-09, #1650; redesigned #2133 review)* **KILL never abandons SL attachment.** In the `sl` region `KILL` is an internal audit-only arm (`audit_kill_sl_continues`), so an in-flight `attach_native_sl` / `read_position_sl` / `attach_fallback_sl` and the `naked_unrecoverable` page always run to completion. KILL moves the parallel `amend_lock` region `open` → `frozen` (**not terminal**): entry writes exactly one `audit_kill` and publishes the plain-bool frozen flag (C-2.20); from then on `amend_locked` refuses (audited) every `TIGHTEN_SL`/`LOOSEN_SL`, so no event sequence after KILL starts `set_trading_stop` or cancels/detaches the native SL (C-2.6, C-4.14). Every position therefore ends with a confirmed SL (`protected`) or an audited page (`naked_unrecoverable`). Un-freeze (`RECONCILED`/`RESUME`) is tracked in #2157. |
 
 ### B8.8 Implementation notes
 
+- **Corrected 2026-10-09 (C-04 / C-07b, #1650, owner decision #1778 item X; redesigned per PR #2133 review):** KILL is split across two regions. `sl.on.KILL` is internal and audit-only, so the attach / verify / fallback / page path is never cut short (an earlier draft sent `sl` KILL to a `frozen` leaf, which cancelled an in-flight attach and stranded an unprotected position). A new parallel `amend_lock` region (`open` → `frozen` on KILL) carries the freeze as an amend-lock flag rather than a leaf of `sl`. This was chosen over deferring KILL inside `sl` because the chart is already `parallel`, the lock then holds from every `sl` state including after `POSITION_FLAT` → re-open, and `frozen` stays a pure record (no invoke/after/always) under the §1.3c SL-protection exception. The chart root carries `"meta": {"cv:slProtection": true}`. The guarded `amend_locked` first arm on `protected.TIGHTEN_SL`/`LOOSEN_SL` refuses amendments while frozen, and the ordered unguarded `audit_guard_denied` arm keeps C-07b. New context key `frozen` (snapshotted). Re-publishing the process-level flag after restore and the un-freeze exit are tracked in **#2157**.
 - **Corrected 2026-09-24 (B610-OC-CD03, High, ours):** added `fallback_attempts` context, `fallback_attempts_left` guard, `bump_fallback_attempts` on `naked` entry and `reset_fallback_attempts` on `protected` entry; `verifying` failure falls through to `naked_unrecoverable` once exhausted. Before the fix, a successful-but-useless fallback attach looped `naked ⇄ verifying` unbounded (≈500 laps/s, one P1 alert per lap) until the chain budget tripped. Satisfies CV-C38 / CV-LINT-XS16 (bounded invoke cycle).
 - The SL deadline is held as `sl_deadline_us` in context; its numeric value is owned by 24 §8.8, which must be reconciled with ADR-0008 (the two currently disagree: 2 s vs 3000 ms).
 
@@ -7105,13 +7319,15 @@ There is no runtime switch. Every family runs on the pinned library from its fir
 | `leg` | 12 | `a7d8fb5d8c3e…` |
 | `live_gate` | 3 | `780accfd0086…` |
 | `oco` | 11 | `fd7edafda40f…` |
+| `order` | 2 | `743dfaada4e3…` |
 | `paper_account` | 4 | `401363766fb6…` |
+| `position_protection` | 3 | `d95cda091fac…` |
 | `reconciliation` | 8 | `b3a706bdf71d…` |
 | `recording` | 8 | `2b7174e42a14…` |
 | `replay` | 8 | `61dfccf1be37…` |
 | `risk_lockout` | 3 | `08f11db6dab6…` |
 | `rule_instance` | 11 | `a60ff42011cf…` |
-| `session` | 2 | `2d45266da1d7…` |
+| `session` | 2 | `a6ac6e5bd897…` |
 | `trade_group` | 10 | `c54de416e173…` |
 | `twap` | 12 | `c121934637d0…` |
 | `ws_conn` | 9 | `4103c8cba47a…` |

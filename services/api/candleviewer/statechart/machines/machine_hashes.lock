@@ -32,8 +32,16 @@
       "hash": "fd7edafda40fc1b25974fbd5ac49f8b274e2944de44323bdcee2e3c3f2c56850",
       "version": null
     },
+    "order": {
+      "hash": "743dfaada4e382a4c29d40a582e454285aa3f4d5142b1ade45603086c8087255",
+      "version": null
+    },
     "paper_account": {
       "hash": "401363766fb6e94bd9b7b3fba839915d0fbbc81408b2c0d1c2ff47ff4044f1d9",
+      "version": null
+    },
+    "position_protection": {
+      "hash": "d95cda091facfeb7e8d02268348b961f54c0265b02e24d6ef331b4d38cdf0810",
       "version": null
     },
     "reconciliation": {

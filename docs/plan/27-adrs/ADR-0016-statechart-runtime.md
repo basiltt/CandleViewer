@@ -1054,3 +1054,9 @@ Thirteen rounds in, **the remaining risk in this adoption is ours to discharge, 
 - **Ours before live orders:** merge the R14-03 chart fixes (B16, B18, B11) into catalogue 28; add the B8 attempt counter (B610-OC-CD03).
 
 Full record: `docs/research/xstate/79-r14-final-readiness-verdict.md`.
+
+## Addendum — 2026-10-09: SL-protection exception to C-04 (#1650, owner decision #1778 item X)
+
+- **B1 `order`:** root `KILL` → new final `lifecycle.killed`. Entry marks `halted_by_kill`, audits write-ahead (C-2.9), then issues **at most one** exchange cancel via `cancel_order` (same `orderLinkId`, C-2.10, bounded by `CV_KILL_CANCEL_TIMEOUT`, failure/timeout audited). There is no cancel for never-submitted `draft`/`validated`. In `cancel_pending` the in-flight cancel is reused (*revised per PR #2133 review*). Reconciliation re-syncs the true exchange state (C-2.5). The `protection` region only audits a KILL.
+- **B8 `position_protection`:** *(revised per PR #2133 review)* KILL never interrupts the `sl` attach/verify/fallback/page path (audit-only arm there). It flips a parallel `amend_lock` region to the non-terminal `frozen` (no amends, native SL untouched, audited, plain-bool flag per C-2.20). This is permitted only through the narrow `cv:slProtection` exception in catalogue §1.3c. `CV-LINT-KILL-ANCESTOR` now requires every KILL target to be final unless the chart is allowlisted (`position_protection`), tagged, and targeting `frozen`. Pre-existing non-final KILL targets (B9/B10/B11/B12/B18/B19) are listed explicitly pending an owner decision. Un-freeze and flag-on-restore: #2157.
+- **B1↔B8 interplay:** a failed or timed-out B1 kill cancel leaves the order live on the exchange until reconciliation. Protection of any resulting position is B8's job, and B8 keeps attaching and verifying the native SL through a KILL, so the kill never leaves a fill unprotected.
