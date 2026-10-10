@@ -42,7 +42,7 @@ KLINES_SCHEMA = TableSchema(
     boolean_field_columns=("confirmed",),
 )
 
-_BAR_TAG_COLUMNS = ("symbol", "bar_param")
+_BAR_TAG_COLUMNS = ("symbol", "bar_param", "source")
 _BAR_BOOL_COLUMNS = ("is_closed",)
 
 
