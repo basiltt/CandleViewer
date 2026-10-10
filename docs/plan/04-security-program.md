@@ -461,26 +461,27 @@ Scope: the repository itself, `main` branch integrity, branch-protection configu
 (W3-W5) to the gateway as built by E17-S01/S02/T02. Three concerns get dedicated analysis: the bounded 10 s
 unauthenticated window (pre-auth slots are capped only by the auth timeout until #2155), continuous topic
 authorisation (synchronous drop/narrow before any send; snapshot ordering requirement SR-189), and resource
-exhaustion, where every DoS limit is also a performance budget and must not be relaxed in isolation. 40 rows
-(WS-S01..E05), one inherent High (slow consumer); residual Medium on WG1 and WG3. Controls SR-183..
-SR-189 (§6.18); abuse cases AC-01..AC-23 go to E17-X02 (see RSK-063, RSK-064). Status Draft.
+exhaustion, where every DoS limit is also a performance budget and must not be relaxed in isolation. 47 rows
+(WS-S01..E06), one inherent High (slow consumer); residual Medium on WG1, WG3 and WG8. Controls SR-183..
+SR-191 (§6.18); abuse cases AC-01..AC-28 go to E17-X02 (see RSK-063, RSK-064). Status Draft.
 
-| T   | STRIDE                 | Threat                                                                      | L   | I   | Risk     | Mitigations                                                                                         | Residual |
-| --- | ---------------------- | --------------------------------------------------------------------------- | --- | --- | -------- | --------------------------------------------------------------------------------------------------- | -------- |
-| WG1 | Spoofing               | Unauthenticated sockets occupy slots during the 10 s auth window            | M   | M   | Medium   | SR-074; 10 s timeout, 3 attempts, rate limit and frame cap before auth; global pre-auth cap (#2155) | Medium   |
-| WG2 | Denial of service      | Slow consumer grows server memory                                           | H   | M   | **High** | SR-073; 8 MiB / 2 000-frame budget and overflow ladder (E17-T03); close 4429                        | Low      |
-| WG3 | Denial of service      | Per-user amplification: 8 sockets x 40 symbols of deep book and heatmap     | M   | M   | Medium   | Subscription/symbol/connection caps, throttles, encode-once (E17-S02/T03); measured by E17-Q03      | Medium   |
-| WG4 | Elevation of privilege | Subscription outlives a withdrawn grant or role                             | M   | H   | Medium   | SR-074; re-evaluation on every change, synchronous drop before send; SR-189 snapshot versioning     | Low      |
-| WG5 | Tampering              | Hostile CVWB or inbound JSON body exhausts a decoder                        | M   | M   | Medium   | SR-040, SR-128, SR-155; 256 KiB pre-decode cap; SR-184, SR-185                                      | Low      |
-| WG6 | Information disclosure | Token in URL/log/metric/error; cross-account leak; account-existence oracle | M   | H   | Medium   | SR-122; first-frame token only; per-account `decide`; one generic `account_scope_denied`            | Low      |
-| WG7 | Repudiation            | Private-topic subscription or revocation leaves no record                   | M   | M   | Medium   | `ws.subscribe.denied`, `ws.subscription.revoked`; SR-186, SR-187                                    | Low      |
+| T   | STRIDE                 | Threat                                                                                                                       | L   | I   | Risk     | Mitigations                                                                                         | Residual |
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --- | --- | -------- | --------------------------------------------------------------------------------------------------- | -------- |
+| WG1 | Spoofing               | Unauthenticated sockets occupy slots during the 10 s auth window                                                             | M   | M   | Medium   | SR-074; 10 s timeout, 3 attempts, rate limit and frame cap before auth; global pre-auth cap (#2155) | Medium   |
+| WG2 | Denial of service      | Slow consumer grows server memory                                                                                            | H   | M   | **High** | SR-073; 8 MiB / 2 000-frame budget and overflow ladder (E17-T03); close 4429                        | Low      |
+| WG3 | Denial of service      | Per-user amplification: 8 sockets x 40 symbols of deep book and heatmap                                                      | M   | M   | Medium   | Subscription/symbol/connection caps, throttles, encode-once (E17-S02/T03); measured by E17-Q03      | Medium   |
+| WG4 | Elevation of privilege | Subscription outlives a withdrawn grant or role                                                                              | M   | H   | Medium   | SR-074; re-evaluation on every change, synchronous drop before send; SR-189 snapshot versioning     | Low      |
+| WG5 | Tampering              | Hostile CVWB or inbound JSON body exhausts a decoder                                                                         | M   | M   | Medium   | SR-040, SR-128, SR-155; 256 KiB pre-decode cap; SR-184, SR-185                                      | Low      |
+| WG6 | Information disclosure | Token in URL/log/metric/error; cross-account leak; account-existence oracle                                                  | M   | H   | Medium   | SR-122; first-frame token only; per-account `decide`; one generic `account_scope_denied`            | Low      |
+| WG7 | Repudiation            | Private-topic subscription or revocation leaves no record                                                                    | M   | M   | Medium   | `ws.subscribe.denied`, `ws.subscription.revoked`; SR-186, SR-187                                    | Low      |
+| WG8 | Denial of service      | Transport limits enforced by the ASGI server (message size, compression, fragmentation, handshake) not explicitly configured | M   | M   | Medium   | SR-191 explicit server WS limits (#2176)                                                            | Medium   |
 
 ### 5.11 Risk summary
 
-| Residual level  | Count                                                                                                                                              |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Low             | 95 (adds S10–S12, S14, S16–S18, S20–S21 from E07-X01; WG2, WG4–WG7 from E17-X01)                                                                   |
-| Medium          | 7 (K9 memory exposure under host compromise; N5 remote-access outage; G3 unsigned commits, accepted; S13, S15 from E07-X01; WG1, WG3 from E17-X01) |
+| Residual level  | Count                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Low             | 95 (adds S10–S12, S14, S16–S18, S20–S21 from E07-X01; WG2, WG4–WG7 from E17-X01)                                                                        |
+| Medium          | 8 (K9 memory exposure under host compromise; N5 remote-access outage; G3 unsigned commits, accepted; S13, S15 from E07-X01; WG1, WG3, WG8 from E17-X01) |
 | High / Critical | 0                                                                                                                           |
 
 Any threat that remains High or Critical after mitigation is a release blocker and must be recorded in §16 with explicit owner sign-off before the affected release proceeds. S17/S19/S20 (E07-X01) are rated
@@ -774,20 +775,22 @@ Requirements arising from §5.12 (Area 11). IDs continue the existing numbering;
 | SR-164 | Every workflow under `.github/workflows/` MUST declare an explicit least-privilege `permissions:` block (no `write-all`, no omitted block defaulting broad); reviewed as part of the mandatory `security-review` label trigger on any workflow change (C-10.2).                                                                                     | ci-gate, manual-review | E01-T07 (guard workflows), E03 (job workflows) |
 | SR-165 | `pull_request_target` combined with checkout of untrusted (fork) PR head content is prohibited outright; a CI check greps `.github/workflows/**` for this pattern and fails the build unless an explicit, security-reviewed exception comment is present naming the mitigating control.                                                             | ci-gate                | E01-T07                                        |
 
-### 6.18 Client WS gateway (SR-183…SR-189)
+### 6.18 Client WS gateway (SR-183…SR-191)
 
 Requirements arising from §5.13 (Area 12, `docs/security/threat-models/E17-ws-gateway.md`). IDs continue the
 existing numbering after SR-182; no existing SR is renumbered. Each names its owner ticket.
 
-| ID     | Requirement                                                                                                                                                                                                  | Verification        |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| SR-183 | The WS upgrade MUST reject an `Origin` outside the configured allow-list, as defence in depth to first-frame token auth (E17-S01).                                                                           | integration         |
-| SR-184 | Any inbound frame that fails to parse — including excessive nesting within the size cap — MUST be handled as a protocol violation, never as an unhandled connection fault (E17-S01).                         | unit, fuzz          |
-| SR-185 | No WS decoder (msgpack or other) MAY be exposed to client input before it has a pre-decode size cap, depth/length limits and a fuzz target in the SR-155 corpus (E17-T07).                                   | fuzz, manual-review |
-| SR-186 | Successful subscriptions to private topics, session-revocation closes and user-disabled closes MUST write audit records; a failed WS audit write MUST increment an alerting metric (E17-S02, E17-T06).       | integration         |
-| SR-187 | WS auth failures, slow-consumer closes, resync-rate-limit revocations and denied cross-account subscribes MUST each have an audit action and a metric, aggregatable per identity/source (E17-T06).           | integration         |
-| SR-188 | The implicit `system` topic MUST carry only role-neutral fields; anything role-specific is filtered per subscriber before emission (E17-S03).                                                                | unit                |
-| SR-189 | Principal snapshots applied to WS connections MUST be versioned so an older snapshot never replaces a newer one, including for a connection that completes `auth` during a grant change (E17-S02 follow-up). | integration, chaos  |
+| ID     | Requirement                                                                                                                                                                                                   | Verification        |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| SR-183 | The WS upgrade MUST reject an `Origin` outside the configured allow-list, as defence in depth to first-frame token auth (E17-S01).                                                                            | integration         |
+| SR-184 | Any inbound frame that fails to parse — including excessive nesting within the size cap — MUST be handled as a protocol violation, never as an unhandled connection fault (E17-S01).                          | unit, fuzz          |
+| SR-185 | No WS decoder (msgpack or other) MAY be exposed to client input before it has a pre-decode size cap, depth/length limits and a fuzz target in the SR-155 corpus (E17-T07).                                    | fuzz, manual-review |
+| SR-186 | Successful subscriptions to private topics, session-revocation closes and user-disabled closes MUST write audit records; a failed WS audit write MUST increment an alerting metric (E17-S02, E17-T06).        | integration         |
+| SR-187 | WS auth failures, slow-consumer closes, resync-rate-limit revocations and denied cross-account subscribes MUST each have an audit action and a metric, aggregatable per identity/source (E17-T06).            | integration         |
+| SR-188 | The implicit `system` topic MUST carry only role-neutral fields; anything role-specific is filtered per subscriber before emission (E17-S03).                                                                 | unit                |
+| SR-189 | Principal snapshots applied to WS connections MUST be versioned so an older snapshot never replaces a newer one, including for a connection that completes `auth` during a grant change (E17-S02 follow-up).  | integration, chaos  |
+| SR-190 | Shared upstream references and encode-once fan-out buffers MUST be used only for public topic families; account-scoped frames are filtered and encoded per subscription (E17-S02, E17-T03).                   | unit, integration   |
+| SR-191 | The ASGI server's WebSocket limits — maximum message size, inbound compression, per-connection queue, handshake/keep-alive timeouts — MUST be set explicitly and consistently with the protocol caps (#2176). | integration         |
 
 ---
 
