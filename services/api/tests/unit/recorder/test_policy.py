@@ -5,8 +5,10 @@ from __future__ import annotations
 import pytest
 
 from candleviewer.recorder.errors import InvalidRecordedSymbolError, RecorderSymbolLimitError
-from candleviewer.recorder.policy import PolicyConfig, RecordingPolicy
+from candleviewer.recorder.policy import PolicyConfig, RecordingPolicy, user_actor
 from tests.unit.recorder.conftest import FakeAudit, FakeBus, FakeClock
+
+OWNER = user_actor("owner-1")
 
 
 async def test_policy_fresh_install_effective_set_is_empty(
@@ -21,7 +23,7 @@ async def test_policy_manual_add_publishes_within_5s(
     policy: RecordingPolicy, bus: FakeBus, audit: FakeAudit, clock: FakeClock
 ) -> None:
     t0 = clock()
-    await policy.add_manual("BTCUSDT", "owner-1", ("trades",), 200)
+    await policy.add_manual("BTCUSDT", OWNER, ("trades",), 200)
     topic, ev = bus.events[-1]
     assert topic == "demo.recorder.set_changed"
     assert (ev.symbol, ev.change, ev.reason) == ("BTCUSDT", "added", "manual")
@@ -32,6 +34,7 @@ async def test_policy_manual_add_publishes_within_5s(
     assert kw["after_state"] == {
         "symbol": "BTCUSDT", "reason": "manual", "actor": "owner-1", "trigger_ref": "manual:owner-1"
     }  # fmt: skip
+    assert kw["actor_label"] == "user:owner-1" and kw["env"] == "demo"
     entry = policy.effective_set()["BTCUSDT"]
     assert entry.priority == 300 and not entry.auto_evictable and entry.streams == ("trades",)
 
@@ -104,7 +107,7 @@ async def test_policy_grace_expiry_stops_and_audits(
 async def test_policy_manual_survives_trigger_loss(
     policy: RecordingPolicy, clock: FakeClock
 ) -> None:
-    await policy.add_manual("BTCUSDT", "owner-1")
+    await policy.add_manual("BTCUSDT", OWNER)
     await policy.on_chart_opened("BTCUSDT", "c1")
     clock.advance(60)
     await policy.tick()
@@ -136,7 +139,7 @@ async def test_policy_reason_precedence(
     if "position" in triggers:
         await policy.on_position_opened("ADAUSDT", "p1")
     if "manual" in triggers:
-        await policy.add_manual("ADAUSDT", "owner-1")
+        await policy.add_manual("ADAUSDT", OWNER)
     entry = policy.effective_set()["ADAUSDT"]
     assert entry.reason == expected
     assert entry.auto_evictable is (expected != "manual")
@@ -145,11 +148,11 @@ async def test_policy_reason_precedence(
 async def test_policy_remove_manual_then_grace_and_pin_exposed(
     policy: RecordingPolicy, clock: FakeClock, bus: FakeBus
 ) -> None:
-    await policy.add_manual("BTCUSDT", "owner-1")
-    await policy.set_pin("BTCUSDT", True)
+    await policy.add_manual("BTCUSDT", OWNER)
+    await policy.set_pin("BTCUSDT", True, OWNER)
     assert policy.effective_set()["BTCUSDT"].pinned
     await policy.on_position_opened("BTCUSDT", "p1")
-    await policy.remove_manual("BTCUSDT")
+    await policy.remove_manual("BTCUSDT", OWNER)
     assert bus.events[-1][1].change == "reason_changed"
     assert policy.effective_set()["BTCUSDT"].reason == "position_open"
 
@@ -175,9 +178,9 @@ async def test_policy_capacity_guard(clock: FakeClock, bus: FakeBus, audit: Fake
         bus=bus, audit=audit, env="demo", now=clock, config=PolicyConfig(max_symbols=1)
     )
     try:
-        await p.add_manual("BTCUSDT", "owner-1")
+        await p.add_manual("BTCUSDT", OWNER)
         with pytest.raises(RecorderSymbolLimitError):
-            await p.add_manual("ETHUSDT", "owner-1")
+            await p.add_manual("ETHUSDT", OWNER)
         await p.on_chart_opened("SOLUSDT", "c1")
         clock.advance(60)
         await p.tick()

@@ -5,15 +5,15 @@ One chart per symbol. Statecharts record, synchronous code enforces (C-2.21):
 `recorder.policy.RecordingPolicy` decides when a reason starts/ends and when the
 grace window is over, then sends `REASON_ADDED` / `REASON_REMOVED` / `LINGER_DUE`
 with the facts on the payload; guards only read those facts (event-aware, B11.5).
-Side effects (audit, bus, metrics) go through an injected hook, because bindings
-never import `recorder`/`audit` (same pattern as B10's `set_hook`). Guards are pure
+Side effects (audit, bus, metrics) go through a hook attached per interpreter
+(`attach_hook`; bindings never import `recorder`/`audit`). Guards are pure
 and total (A6); actions/services are `async def` (CV-C67); services are idempotent
 under re-entry (the hook owner de-duplicates by symbol).
 """
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
 
 import structlog
@@ -28,20 +28,32 @@ def logger() -> Any:
 
 
 #: `hook(name, context)`; names: subscribe, unsubscribe, recording, gap, degraded,
-#: error, killed. Installed by `recorder.policy`.
-Hook = Callable[[str, dict[str, Any]], Awaitable[None]]
+#: error, killed. Bound PER INTERPRETER by its owner via `attach_hook` (never a module
+#: global: two policies, e.g. live + demo, must never share or clear each other's sink).
+Hook = Callable[[str, Mapping[str, object]], Awaitable[None]]
+
+_HOOK_ATTR = "cv_b11_hook"
+#: Hooks that write the audit record (C-2.9): a missing sink fails closed.
+_AUDITED = frozenset({"subscribe", "unsubscribe"})
 
 
-async def _no_hook(_name: str, _ctx: dict[str, Any]) -> None:
-    return None
+class B11HookMissingError(RuntimeError):
+    """An audited B11 service ran on an interpreter with no hook attached (C-2.9)."""
 
 
-_hook: Hook = _no_hook
+def attach_hook(interp: object, hook: Hook) -> None:
+    """Bind *hook* to one interpreter (call right after `build`/`restore`)."""
+    setattr(interp, _HOOK_ATTR, hook)
 
 
-def set_hook(hook: Hook | None) -> None:
-    global _hook
-    _hook = hook or _no_hook
+async def _call_hook(interp: object, name: str, context: dict[str, Any]) -> None:
+    hook = getattr(interp, _HOOK_ATTR, None)
+    if hook is None:
+        if name in _AUDITED:
+            raise B11HookMissingError(f"B11 {name}: no hook attached; refusing unaudited I/O")
+        logger().warning("b11_hook_missing", hook=name)
+        return
+    await hook(name, context)
 
 
 def _payload(event: Any) -> dict[str, Any]:
@@ -125,7 +137,7 @@ async def cancel_linger(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> N
 
 
 async def emit_recording_metric(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
-    await _hook("recording", context)
+    await _call_hook(_i, "recording", context)
 
 
 async def mark_stream_unhealthy(_i: Any, context: dict[str, Any], event: Any, _a: Any) -> None:
@@ -141,7 +153,7 @@ async def mark_stream_healthy(_i: Any, context: dict[str, Any], event: Any, _a: 
 
 
 async def raise_degraded_alert(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
-    await _hook("degraded", context)
+    await _call_hook(_i, "degraded", context)
 
 
 async def bump_gap_count(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
@@ -149,30 +161,30 @@ async def bump_gap_count(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> 
 
 
 async def emit_gap_metric(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
-    await _hook("gap", context)  # INV-B11-c: every gap is metricised
+    await _call_hook(_i, "gap", context)  # INV-B11-c: every gap is metricised
 
 
 async def record_error(_i: Any, context: dict[str, Any], event: Any, _a: Any) -> None:
     """onError arm: the library hands an `ErrorEvent`; read `event.error` (CV-C21)."""
     err = event.error if hasattr(event, "error") else _payload(event).get("error")
     context["error"] = type(err).__name__ if isinstance(err, BaseException) else str(err)
-    await _hook("error", context)
+    await _call_hook(_i, "error", context)
 
 
 async def audit_kill(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
-    await _hook("killed", context)
+    await _call_hook(_i, "killed", context)
 
 
 # --- services (idempotent under re-entry) ---------------------------------------------
 
 
 async def subscribe_streams(_i: Any, context: dict[str, Any], _e: Any) -> dict[str, Any]:
-    await _hook("subscribe", context)
+    await _call_hook(_i, "subscribe", context)
     return {}
 
 
 async def unsubscribe_and_flush(_i: Any, context: dict[str, Any], _e: Any) -> dict[str, Any]:
-    await _hook("unsubscribe", context)
+    await _call_hook(_i, "unsubscribe", context)
     return {}
 
 

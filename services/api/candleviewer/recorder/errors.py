@@ -15,3 +15,7 @@ class RecorderSymbolLimitError(RecorderError):
     """Adding the symbol would exceed `CV_RECORDER_MAX_SYMBOLS` (`recorder_symbol_limit`, 422)."""
 
     code = "recorder_symbol_limit"
+
+
+class InvalidRecorderActorError(RecorderError):
+    """A recorder action named no (or an empty / non-user) actor (C-2.9, C-12.4)."""

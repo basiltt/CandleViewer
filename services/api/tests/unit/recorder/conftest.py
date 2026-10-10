@@ -38,6 +38,9 @@ class FakeAudit:
     async def emit(self, action: str, **kwargs: Any) -> None:
         self.records.append((action, kwargs))
 
+    def envs(self) -> list[tuple[str, str]]:
+        return [(a, kw["env"]) for a, kw in self.records]
+
     def actions(self) -> list[str]:
         return [a for a, _ in self.records]
 

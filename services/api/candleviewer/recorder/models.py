@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 Reason = Literal["manual", "position_open", "chart_open"]
 
@@ -16,6 +16,19 @@ PRECEDENCE: Final[tuple[Reason, ...]] = ("manual", "position_open", "chart_open"
 
 #: Eviction priority consumed by the E16-T07 ladder: higher survives longer.
 PRIORITY: Final[dict[Reason, int]] = {"manual": 300, "position_open": 200, "chart_open": 100}
+
+
+class Actor(BaseModel):
+    """Who caused a recorder action (audit `actor`, C-2.9). Never an empty id."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    kind: Literal["user", "system"]
+    id: str = Field(min_length=1, max_length=128, pattern=r"^\S+$")
+
+
+#: The policy's own principal for automatic (chart/position/grace) transitions.
+SYSTEM_ACTOR: Final = Actor(kind="system", id="recorder-policy")
 
 
 class EffectiveEntry(BaseModel):

@@ -13,6 +13,7 @@ the R14-03 G2 golden trace plus a hypothesis property per invariant.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from hypothesis import given, settings
@@ -56,14 +57,14 @@ class _Hooks:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
-    async def __call__(self, name: str, _ctx: dict[str, Any]) -> None:
+    async def __call__(self, name: str, _ctx: Mapping[str, object]) -> None:
         self.calls.append(name)
 
 
 async def _drive(events: list[dict[str, Any]]) -> tuple[Any, _Hooks]:
     hooks = _Hooks()
-    b11.set_hook(hooks)
     interp = (await build("recording", clock=SimulatedClock(), lane="platform")).interpreter
+    b11.attach_hook(interp, hooks)
     for ev in events:
         if interp.can(ev):
             await interp.send(ev, wait=True)
@@ -94,7 +95,6 @@ async def test_b11_g2_golden_trace_with_real_bindings() -> None:
         assert hooks.calls.count("subscribe") == 1 and hooks.calls.count("unsubscribe") == 1
     finally:
         await interp.stop()
-        b11.set_hook(None)
 
 
 @settings(max_examples=40, deadline=None)
@@ -111,8 +111,8 @@ async def test_inv_b11_a_never_stops_with_reason_or_position(
         else:
             events.append({"type": "LINGER_DUE", "position_open": pos})
     hooks = _Hooks()
-    b11.set_hook(hooks)
     interp = (await build("recording", clock=SimulatedClock(), lane="platform")).interpreter
+    b11.attach_hook(interp, hooks)
     try:
         for ev in events:
             before = list(interp.context.get("reasons") or ())
@@ -125,7 +125,6 @@ async def test_inv_b11_a_never_stops_with_reason_or_position(
                 assert not before and ev["position_open"] is False
     finally:
         await interp.stop()
-        b11.set_hook(None)
 
 
 @settings(max_examples=25, deadline=None)
@@ -142,7 +141,6 @@ async def test_inv_b11_c_every_gap_counted_and_metricised(n: int, degraded_at: i
         assert hooks.calls.count("gap") == n
     finally:
         await interp.stop()
-        b11.set_hook(None)
 
 
 @given(

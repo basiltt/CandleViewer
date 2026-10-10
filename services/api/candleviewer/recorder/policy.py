@@ -15,18 +15,25 @@ from __future__ import annotations
 
 import asyncio
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Final, Literal, Protocol
 
 import structlog
+from pydantic import ValidationError
 
 import candleviewer.statechart.bindings.b11_recording as b11
 from candleviewer.bus.models import Topic
-from candleviewer.recorder.errors import InvalidRecordedSymbolError, RecorderSymbolLimitError
+from candleviewer.recorder.errors import (
+    InvalidRecordedSymbolError,
+    InvalidRecorderActorError,
+    RecorderSymbolLimitError,
+)
 from candleviewer.recorder.models import (
     PRECEDENCE,
     PRIORITY,
+    SYSTEM_ACTOR,
+    Actor,
     EffectiveEntry,
     Reason,
     RecorderSetChanged,
@@ -45,19 +52,48 @@ _SETTLE_YIELDS: Final = 64
 Change = Literal["added", "removed", "reason_changed"]
 
 
-def logger() -> Any:
+def user_actor(user_id: str | None) -> Actor:
+    """The typed user principal for manual actions; empty/blank ids are refused."""
+    try:
+        return Actor(kind="user", id=user_id or "")
+    except ValidationError:
+        raise InvalidRecorderActorError("a non-empty user id is required") from None
+
+
+def _valid(symbol: str) -> str:
+    if not _SYMBOL_RE.match(symbol):
+        raise InvalidRecordedSymbolError("symbol must match [A-Z0-9]{2,30}")
+    return symbol
+
+
+def logger() -> structlog.stdlib.BoundLogger:
     """Resolve per call: a module-level logger pins a stale processor chain (#2008)."""
-    return structlog.get_logger(__name__)
+    return structlog.get_logger(__name__)  # type: ignore[no-any-return]  # structlog returns Any
 
 
 class BusPublisher(Protocol):
-    async def publish(self, topic: Topic, event: Any) -> None: ...
+    async def publish(self, topic: Topic, event: RecorderSetChanged) -> None: ...
+
+
+AuditState = Mapping[str, str | bool | None]
 
 
 class AuditSink(Protocol):
-    """`AuditWriter.emit` shape, injected (M11 may not import `audit`, C-3.3)."""
+    """The subset of `AuditWriter.emit` used here, injected (M11 may not import `audit`,
+    C-3.3). `env` is the exchange env string the policy runs in (C-2.11)."""
 
-    async def emit(self, action: str, **kwargs: Any) -> None: ...
+    async def emit(
+        self,
+        action: str,
+        *,
+        actor_label: str,
+        actor_user_id: str | None,
+        object_kind: str,
+        object_id: str,
+        reason: str,
+        after_state: AuditState,
+        env: str,
+    ) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +105,14 @@ class PolicyConfig:
     #: Gates chart-open convenience recording only; never position/manual recording.
     autorecord_enabled: bool = True
     max_symbols: int = 20
+    #: Distinct symbols tracked for chart-open refs (client-driven, untrusted).
+    max_chart_symbols: int = 1024
+    #: Distinct ids per symbol per trigger kind.
+    max_refs_per_symbol: int = 64
+
+
+#: The library interpreter, opaque to M11 (only `statechart/` may type it).
+_Interp = Any
 
 
 class _Refusals:
@@ -79,20 +123,39 @@ class _Refusals:
         self.counts[reason] = self.counts.get(reason, 0) + 1
 
 
+@dataclass(frozen=True, slots=True)
+class _Manual:
+    actor: Actor
+    streams: tuple[str, ...]
+    depth: int | None
+
+
 @dataclass
 class _Sym:
     charts: dict[str, float] = field(default_factory=dict)  # chart_id -> opened_at
     positions: set[str] = field(default_factory=set)
-    manual: dict[str, Any] | None = None
+    manual: _Manual | None = None
     pinned: bool = False
     linger_deadline: float | None = None
-    actor: str = "system"
-    trigger_ref: str | None = None
     started_reasons: set[Reason] = field(default_factory=set)  # reasons sent to B11
+    #: Actor of the latest manual change (adder or remover) for the next audit record.
+    last_actor: Actor = SYSTEM_ACTOR
+
+    def refs(self, reason: Reason) -> list[str]:
+        """Trigger refs per reason (not last-writer-wins)."""
+        if reason == "manual":
+            return [f"manual:{self.manual.actor.id}"] if self.manual else []
+        if reason == "position_open":
+            return sorted(f"position:{p}" for p in self.positions)
+        return sorted(f"chart:{c}" for c in self.charts)
+
+    def idle(self) -> bool:
+        return not (self.charts or self.positions or self.manual or self.pinned)
 
 
-#: Upper bound on symbols with any tracked trigger (bounded memory, C-2.18).
-MAX_TRACKED: Final = 1024
+#: Bound on symbols tracked for position/manual triggers (bounded memory, C-2.18).
+#: Separate from the chart-ref bound so chart spam cannot starve positions.
+MAX_PROTECTED: Final = 1024
 
 
 class RecordingPolicy:
@@ -108,61 +171,107 @@ class RecordingPolicy:
         self._bus, self._audit, self._env, self._now = bus, audit, env, now
         self._cfg = config or PolicyConfig()
         self._syms: dict[str, _Sym] = {}
-        self._charts: dict[str, Any] = {}
+        self._charts: dict[str, _Interp] = {}
         self._published: dict[str, Reason] = {}
         self._gateway = Gateway()
         self.refusals = _Refusals()
         self._lock = asyncio.Lock()
         self._topic = Topic(env=env, domain="recorder", detail="set_changed")
-        b11.set_hook(self._hook)
 
     # --- public triggers ---------------------------------------------------------------
 
     async def on_chart_opened(self, symbol: str, chart_id: str) -> None:
-        self._sym(symbol).charts.setdefault(chart_id, self._now())
+        s = self._sym(symbol, kind="chart")
+        if s is None:
+            logger().warning("recorder_chart_ref_refused", symbol=symbol, cause="symbol_cap")
+            return
+        if chart_id not in s.charts and len(s.charts) >= self._cfg.max_refs_per_symbol:
+            logger().warning("recorder_chart_ref_refused", symbol=symbol, cause="ref_cap")
+            return
+        s.charts.setdefault(chart_id, self._now())
         await self._reconcile(symbol)
 
     async def on_chart_closed(self, symbol: str, chart_id: str) -> None:
-        self._sym(symbol).charts.pop(chart_id, None)
-        await self._reconcile(symbol)
+        s = self._syms.get(_valid(symbol))
+        if s is not None:
+            s.charts.pop(chart_id, None)
+            await self._reconcile(symbol)
 
     async def on_position_opened(self, symbol: str, position_id: str) -> None:
-        s = self._sym(symbol)
+        """Money at risk: never refused by the chart caps (C-2.6 spirit, C-4.14)."""
+        s = self._sym(symbol, kind="protected")
+        if s is None:  # MAX_PROTECTED distinct symbols with positions: an incident, loud
+            raise InvalidRecordedSymbolError(f"more than {MAX_PROTECTED} protected symbols")
         s.positions.add(position_id)
-        s.trigger_ref = position_id
         await self._reconcile(symbol)
 
     async def on_position_closed(self, symbol: str, position_id: str) -> None:
-        self._sym(symbol).positions.discard(position_id)
-        await self._reconcile(symbol)
+        s = self._syms.get(_valid(symbol))
+        if s is not None:
+            s.positions.discard(position_id)
+            await self._reconcile(symbol)
 
     async def add_manual(
-        self, symbol: str, user_id: str, streams: tuple[str, ...] = (), depth: int | None = None
+        self,
+        symbol: str,
+        actor: Actor,
+        streams: tuple[str, ...] = (),
+        depth: int | None = None,
     ) -> None:
-        s = self._sym(symbol)
-        if s.manual is None and symbol not in self._active() and self._at_cap():
+        if actor.kind != "user":
+            raise InvalidRecorderActorError("manual add requires a user actor")
+        _valid(symbol)
+        existing = self._syms.get(symbol)
+        already = existing is not None and existing.manual is not None
+        if not already and symbol not in self._active() and self._at_cap():
             raise RecorderSymbolLimitError(f"max {self._cfg.max_symbols} recorded symbols")
-        s.manual = {"streams": tuple(streams), "depth": depth}
-        s.actor, s.trigger_ref = user_id, f"manual:{user_id}"
+        s = self._sym(symbol, kind="protected")
+        if s is None:
+            raise RecorderSymbolLimitError(f"more than {MAX_PROTECTED} tracked symbols")
+        s.manual = _Manual(actor=actor, streams=tuple(streams), depth=depth)
+        s.last_actor = actor
         await self._reconcile(symbol)
 
-    async def remove_manual(self, symbol: str) -> None:
-        self._sym(symbol).manual = None
+    async def remove_manual(self, symbol: str, actor: Actor) -> None:
+        s = self._syms.get(_valid(symbol))
+        if s is None or s.manual is None:
+            return
+        s.manual, s.last_actor = None, actor
         await self._reconcile(symbol)
 
-    async def set_pin(self, symbol: str, pinned: bool) -> None:
-        self._sym(symbol).pinned = pinned
+    async def set_pin(self, symbol: str, pinned: bool, actor: Actor) -> None:
+        """Pinning changes retention/eviction behaviour: audited with its actor (C-2.9)."""
+        s = self._sym(symbol, kind="protected")
+        if s is None:
+            raise RecorderSymbolLimitError(f"more than {MAX_PROTECTED} tracked symbols")
+        if s.pinned == pinned:
+            return
+        await self._audit_emit(
+            "retention.change",
+            symbol,
+            actor,
+            reason="pin" if pinned else "unpin",
+            extra={"pinned": pinned},
+        )
+        s.pinned = pinned
+        if s.idle():
+            self._syms.pop(symbol, None)
 
     # --- evaluation --------------------------------------------------------------------
 
-    def _sym(self, symbol: str) -> _Sym:
-        if not _SYMBOL_RE.match(symbol):
-            raise InvalidRecordedSymbolError("symbol must match [A-Z0-9]{2,30}")
+    def _sym(self, symbol: str, *, kind: Literal["chart", "protected"]) -> _Sym | None:
+        """Get-or-create, within the bound for *kind*; `None` when that bound is full.
+        Chart-only symbols and position/manual symbols are counted separately."""
+        _valid(symbol)
         s = self._syms.get(symbol)
-        if s is None:
-            if len(self._syms) >= MAX_TRACKED:
-                raise InvalidRecordedSymbolError(f"more than {MAX_TRACKED} tracked symbols")
-            s = self._syms[symbol] = _Sym()
+        if s is not None:
+            return s
+        chart_only = sum(1 for x in self._syms.values() if not (x.positions or x.manual))
+        if kind == "chart" and chart_only >= self._cfg.max_chart_symbols:
+            return None
+        if kind == "protected" and len(self._syms) - chart_only >= MAX_PROTECTED:
+            return None
+        s = self._syms[symbol] = _Sym()
         return s
 
     def _desired(self, s: _Sym) -> set[Reason]:
@@ -187,13 +296,21 @@ class RecordingPolicy:
         return len(self._active()) >= self._cfg.max_symbols
 
     async def tick(self) -> None:
-        """The 1 s evaluation tick: start delays and grace deadlines (fake clock in tests)."""
-        for symbol in list(self._syms):
+        """The 1 s evaluation tick: only symbols with a due start delay or grace deadline
+        are reconciled (no sends/locks for the rest; fake clock in tests)."""
+        for symbol in [sym for sym, s in self._syms.items() if self._due(sym, s)]:
             await self._reconcile(symbol)
+
+    def _due(self, symbol: str, s: _Sym) -> bool:
+        if s.linger_deadline is not None and self._now() >= s.linger_deadline:
+            return True
+        return "chart_open" not in s.started_reasons and "chart_open" in self._desired(s)
 
     async def _reconcile(self, symbol: str) -> None:
         async with self._lock:
-            s = self._syms[symbol]
+            s = self._syms.get(symbol)
+            if s is None:
+                return
             want = self._desired(s)
             if self._cfg.autorecord_enabled and s.charts and self.leaf(symbol) == "lingering":
                 want.add("chart_open")  # continuing an existing session is not a new start
@@ -210,10 +327,17 @@ class RecordingPolicy:
             await self._settle(symbol)
             if not s.started_reasons and self.leaf(symbol) in ("recording", "degraded"):
                 await self._linger_orphan(symbol, s)  # last reason left while `starting`
-            if self.leaf(symbol) in ("stopped", None) and not want and not s.pinned:
-                if not s.charts and not s.positions and s.manual is None:
-                    self._syms.pop(symbol, None)
+            if self.leaf(symbol) == "stopped":
+                await self._prune(symbol)  # keeps `_charts` = live sessions only
+            if self.leaf(symbol) is None and s.idle():
+                self._syms.pop(symbol, None)
             await self._publish(symbol)
+
+    async def _prune(self, symbol: str) -> None:
+        interp = self._charts.pop(symbol, None)
+        self._gateway.unregister(symbol)
+        if interp is not None:
+            await interp.stop()
 
     async def _add(self, symbol: str, s: _Sym, reason: Reason) -> None:
         if symbol not in self._charts:
@@ -222,7 +346,7 @@ class RecordingPolicy:
                 return
             interp = (await build(MACHINE, clock=default_clock(), lane=LANE)).interpreter
             self._register(symbol, interp)
-        streams = list((s.manual or {}).get("streams") or ())
+        streams = list(s.manual.streams) if s.manual else []
         if await self._send_recording(
             symbol, "REASON_ADDED", reason=reason, symbol=symbol, streams=streams
         ):
@@ -245,14 +369,15 @@ class RecordingPolicy:
         ):
             s.linger_deadline = deadline
 
-    def _register(self, symbol: str, interp: Any) -> None:
+    def _register(self, symbol: str, interp: _Interp) -> None:
+        b11.attach_hook(interp, self._hook)  # per interpreter: never shared across policies
         self._gateway.register(symbol, interp, kind="recording", lane=LANE, metrics=self.refusals)
         self._charts[symbol] = interp
 
-    async def _send_recording(self, symbol: str, event: str, /, **payload: Any) -> bool:
+    async def _send_recording(self, symbol: str, event: str, /, **payload: object) -> bool:
         """Refuse (never park on `onUnhandled: defer`, CV-C06) what the leaf cannot take."""
         interp = self._charts.get(symbol)
-        ev: dict[str, Any] = {"type": event, **payload}
+        ev: dict[str, object] = {"type": event, **payload}
         if interp is None or not interp.can(ev):
             self.refusals.record_send_refused("unhandled")
             return False
@@ -280,7 +405,6 @@ class RecordingPolicy:
         held = sorted(s.started_reasons, key=PRECEDENCE.index)
         lingering = self.leaf(symbol) == "lingering" or not held
         top: Reason = held[0] if held else self._last_reason(symbol)
-        manual = s.manual or {}
         return EffectiveEntry(
             symbol=symbol,
             reason=top,
@@ -289,8 +413,8 @@ class RecordingPolicy:
             auto_evictable=top != "manual",
             lingering=lingering,
             pinned=s.pinned,
-            streams=tuple(manual.get("streams") or ()),
-            depth=manual.get("depth"),
+            streams=s.manual.streams if s.manual else (),
+            depth=s.manual.depth if s.manual else None,
         )
 
     def _last_reason(self, symbol: str) -> Reason:
@@ -325,39 +449,56 @@ class RecordingPolicy:
             self._published[symbol] = entry.reason
         await self._bus.publish(self._topic, event)
 
-    async def _hook(self, name: str, context: dict[str, Any]) -> None:
-        """B11 side effects. Audit is write-ahead and raises if unavailable (C-2.9)."""
+    async def _hook(self, name: str, context: Mapping[str, object]) -> None:
+        """B11 side effects for THIS policy's charts. Audit is write-ahead and raises if
+        unavailable, so the service fails and the chart goes to `error` (C-2.9)."""
         symbol = str(context.get("symbol") or "")
         if name not in ("subscribe", "unsubscribe"):
-            logger().info("recorder_b11_event", hook=name, symbol=symbol)
+            logger().info("recorder_b11_event", hook=name, symbol=symbol, env=self._env)
             return
         s = self._syms.get(symbol) or _Sym()
-        reasons = list(context.get("reasons") or ())
-        reason = reasons[0] if reasons else self._published.get(symbol, "chart_open")
-        await self._audit.emit(
+        raw = context.get("reasons")
+        held = [r for r in PRECEDENCE if isinstance(raw, list) and r in raw]
+        reason: Reason = held[0] if held else self._published.get(symbol, "chart_open")
+        actor = s.last_actor if reason == "manual" else SYSTEM_ACTOR
+        await self._audit_emit(
             "recorder.start" if name == "subscribe" else "recorder.stop",
-            actor_label=s.actor if reason == "manual" else "system",
+            symbol,
+            actor,
+            reason=reason,
+            extra={"trigger_ref": ",".join(s.refs(reason)) or None},
+        )
+
+    async def _audit_emit(
+        self,
+        action: str,
+        symbol: str,
+        actor: Actor,
+        *,
+        reason: str,
+        extra: Mapping[str, str | bool | None],
+    ) -> None:
+        await self._audit.emit(
+            action,
+            actor_label=f"{actor.kind}:{actor.id}",
+            actor_user_id=actor.id if actor.kind == "user" else None,
             object_kind="recorded_symbol",
             object_id=symbol,
-            reason=str(reason),
-            after_state={
-                "symbol": symbol,
-                "reason": reason,
-                "actor": s.actor,
-                "trigger_ref": s.trigger_ref,
-            },
+            reason=reason,
+            after_state={"symbol": symbol, "reason": reason, "actor": actor.id, **extra},
+            env=self._env,
         )
 
     # --- lifecycle ---------------------------------------------------------------------
 
-    async def restore(self, restorer: Restorer, key: MachineKey, env: SealedSnapshot) -> None:
+    async def restore(self, restorer: Restorer, key: MachineKey, sealed: SealedSnapshot) -> None:
         """Rehydrate one symbol's chart via `statechart.persistence` only. Reasons already
         recorded in the snapshot are adopted, so no duplicate session (REASON_ADDED from
         idle/stopped) is opened for a symbol that was recording or lingering."""
-        res = await restore_chart(restorer, key, env)
+        res = await restore_chart(restorer, key, sealed)
         symbol = key.entity_id
         self._register(symbol, res.interpreter)
-        s = self._sym(symbol)
+        s = self._sym(symbol, kind="protected") or _Sym()
         s.started_reasons = {r for r in res.interpreter.context.get("reasons") or ()}
         if self.leaf(symbol) == "lingering":
             until = res.interpreter.context.get("linger_until_us")
@@ -371,4 +512,3 @@ class RecordingPolicy:
             interp = self._charts.pop(symbol)
             self._gateway.unregister(symbol)
             await interp.stop()
-        b11.set_hook(None)
