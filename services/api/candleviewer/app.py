@@ -71,6 +71,7 @@ from candleviewer.api.invites import make_invites_router
 from candleviewer.api.market_bars import make_market_bars_router
 from candleviewer.api.onboarding import make_onboarding_router
 from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
+from candleviewer.api.recorder_admin import AdminJobStore, make_recorder_admin_router
 from candleviewer.api.rules_actor import SessionRulesActorResolver, make_rules_audit
 from candleviewer.api.rules_crud import make_rules_crud_router
 from candleviewer.api.sessions import make_session_router
@@ -161,11 +162,14 @@ from candleviewer.paper.service import PaperService
 from candleviewer.recorder.service import RecorderService
 from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
+from candleviewer.rolloff_wiring import build_rolloff_job
 from candleviewer.rules.service import RulesService
 from candleviewer.rules_store_pg import PostgresRuleStore
 from candleviewer.settings import Environment, Settings, get_settings
 from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
+from candleviewer.storage.cold.compaction_run import compact_all
+from candleviewer.storage.cold.compactor import Compactor
 from candleviewer.storage.cold.kline_reader import ParquetKlineReader
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
@@ -966,6 +970,34 @@ def create_app(
     app.state.support_bundle = support_bundle
     app.include_router(
         make_support_bundle_router(support_bundle, _LazyAuditEmitter(ctx.audit), audit_resolver)
+    )
+    # E16-T05: weekly cold-tier compaction on demand (async job, polled via /admin/jobs).
+    _cold_registry = DatasetRegistry(resolved.parquet_root)
+
+    async def _compact(
+        symbols: list[str] | None, older_than_days: int | None, progress: Callable[[float], None]
+    ) -> dict[str, object]:
+        summary = await compact_all(
+            _cold_registry,
+            Compactor(events=LoggingSystemEventSink()),
+            symbols=symbols,
+            older_than_days=older_than_days,
+            on_progress=progress,
+        )
+        return summary.as_result()
+
+    admin_jobs = AdminJobStore()
+    app.state.admin_jobs = admin_jobs  # cancelled by the lifespan at shutdown
+    app.include_router(
+        make_recorder_admin_router(
+            admin_jobs, _compact, _LazyAuditEmitter(ctx.audit), audit_resolver
+        )
+    )
+    # E16-T05: nightly roll-off composition (constructed only; scheduling is flag-gated).
+    app.state.rolloff_job = build_rolloff_job(
+        resolved,
+        _LazyAuditEmitter(ctx.audit),
+        SqlAlchemyRecorderRepository(_kb_pg) if _kb_pg is not None else None,
     )
     # QA defect #1622 blocker: `/market/klines` (E08-S06 core deliverable)
     # was missing entirely — cache-only reads today (`ctx.storage.

@@ -143,3 +143,36 @@ def test_dedup_collision_with_differing_fields_is_observable() -> None:
     rows = dedup_merge(cold, hot, ("ts", "symbol", "trade_id"))
     assert rows == hot  # hot wins
     assert storage_router_dedup_conflicts_total._value.get() == before + 1  # type: ignore[attr-defined]
+
+
+async def test_router_meta_sources_report_tiers_for_14_day_cross_tier_window() -> None:
+    """E16-T05 AC "Cross-tier query is seamless": one merged, ordered result and
+    `meta.sources` lists both questdb and parquet."""
+    from candleviewer.storage.models import StreamKind, TimeRange
+    from candleviewer.storage.router import RoutedRows, TierRouter
+
+    day = 86_400_000_000
+    now = 100 * day
+    cold_rows = [
+        {"ts": now - 13 * day + i, "symbol": "BTCUSDT", "trade_id": f"c{i}"} for i in range(3)
+    ]
+    hot_rows = [
+        {"ts": now - 2 * day + i, "symbol": "BTCUSDT", "trade_id": f"h{i}"} for i in range(3)
+    ]
+
+    async def hot(sym: str, rng: TimeRange) -> list[dict[str, object]]:
+        return list(reversed(hot_rows))
+
+    async def cold(sym: str, rng: TimeRange) -> list[dict[str, object]]:
+        return cold_rows
+
+    router = TierRouter(
+        {StreamKind.TRADES: hot}, {StreamKind.TRADES: cold}, lambda s: 7, clock_us=lambda: now
+    )
+    out = await router.read(
+        StreamKind.TRADES, "BTCUSDT", TimeRange(start_us=now - 14 * day, end_us=now)
+    )
+    assert out.sources == ["questdb", "parquet"]
+    assert [r["ts"] for r in out.rows] == sorted(r["ts"] for r in cold_rows + hot_rows)
+    assert RoutedRows([], "hot").sources == ["questdb"]
+    assert RoutedRows([], "cold").sources == ["parquet"]

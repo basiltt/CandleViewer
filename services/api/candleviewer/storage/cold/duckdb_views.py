@@ -24,6 +24,10 @@ VIEW_STREAMS: dict[str, StreamKind] = {
     "orderbook_deltas": StreamKind.ORDERBOOK_DELTA,
     "bars": StreamKind.BARS,
     "footprint_cells": StreamKind.FOOTPRINT_CELLS,
+    # E16-T05: the roll-off archives these too; `_quarantine/` is outside every glob.
+    "tickers": StreamKind.TICKERS,
+    "liquidations": StreamKind.LIQUIDATIONS,
+    "heatmap_cells": StreamKind.HEATMAP_CELLS,
 }
 
 #: OMS-sourced views (producers are E41/E29); `oms/<name>/ym=*/`.
