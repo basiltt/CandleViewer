@@ -3433,6 +3433,7 @@ class Permission(StrEnum):
     # rules & alerts
     RULES_READ = "rules:read"
     RULES_WRITE = "rules:write"
+    RULES_ARM_LIVE = "rules:arm_live"   # dangerous; separate from rules:write
     ALERTS_READ = "alerts:read"
     ALERTS_WRITE = "alerts:write"
     # journal
@@ -3463,7 +3464,7 @@ class Scope(StrEnum):
 | Permission group                                                                                        | owner                           | manager                                                                | viewer                                |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------- |
 | `marketdata:read`, `instruments:read`                                                                   | ✔                               | ✔                                                                      | ✔                                     |
-| `replay:read`, `replay:write`, `recording:read`                                                         | ✔                               | ✔                                                                      | ✔ (own sessions)                      |
+| `replay:read`, `replay:write`, `recording:read`                                                         | ✔                               | ✔                                                                      | ✔ (read only; no `replay:write`)      |
 | `recording:write`                                                                                       | ✔ (step-up for purge/retention) | ✘                                                                      | ✘                                     |
 | `orders:read`, `positions:read`, `executions:read`                                                      | ✔                               | ✔ (granted accounts)                                                   | ✔ (granted accounts)                  |
 | `orders:write`, `positions:write`                                                                       | ✔                               | ✔ (granted accounts with the `trade` mode, and only `allowed_symbols`) | ✘                                     |
@@ -3477,7 +3478,7 @@ class Scope(StrEnum):
 | `admin:read`                                                                                            | ✔                               | ✘                                                                      | ✘                                     |
 | `audit:read`                                                                                            | ✔ (all, raw payloads)           | ✔ (own actions only, redacted)                                         | ✘                                     |
 
-**Arming a rule against live is not a separate permission.** It is `rules:write` plus the environment leg of the check plus the `live_trading` flag, restricted to `owner` with an elevated session. The same applies to placing a live order: one `orders:write` permission, gated by environment — never two permissions for one decision.
+The seed (`services/api/candleviewer/auth/rbac_seed.json`) defines **38 permission strings**. The `viewer` role is **read-only**: it holds only `*:read` permissions (13 in the seed) and no writes, self-scoped or otherwise; the self-scoped write rows above apply to `owner` and `manager` only. **Arming a rule against live is the separate, dangerous `rules:arm_live` permission** (owner only, via the wildcard grant; not held by `manager`), in addition to the environment leg of the check, the `live_trading` flag and an elevated session. Placing a live order remains a single `orders:write` permission gated by environment.
 
 **Authorization is a 4-tuple check** on every trading request: `(permission, account_id ∈ granted accounts, symbol ∈ allowed_symbols, environment enabled)`. All four must pass, and for the capabilities marked `(step-up)` in `04-security-program.md` §7.2.2 the session must additionally be elevated. The check lives in one `authorize()` function; endpoints never hand-roll it.
 
@@ -4005,7 +4006,7 @@ The pass had to resolve the same concept being defined in several places. The fo
 | Concern                                                     | Canonical source                      | Consumers                                                  |
 | ----------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
 | REST operations, paths, request/response shapes             | `22-api-openapi.yaml`                 | 14 (screens), backend routers, generated TS/Python clients |
-| RBAC permission vocabulary (36 strings) and scope semantics | `22-api-openapi.yaml` `x-rbac`        | 04 §7.2, 21 §10.1 seed, 24 §15.2 enum                      |
+| RBAC permission vocabulary (38 strings) and scope semantics | `22-api-openapi.yaml` `x-rbac`        | 04 §7.2, 21 §10.1 seed, 24 §15.2 enum                      |
 | WS topics, options, framing, sequencing                     | `23-ws-protocol.md` §6                | 14 §0.4, chart engine, frontend stores                     |
 | Relational storage, column names, PG enums                  | `21-database-schema.md`               | 22 schemas (via `x-db-enum`), 24 models                    |
 | Domain models, rule IR, OMS state machine, metric registry  | `24-internal-schemas.md`              | 22 (projection), rule editors, engine                      |
@@ -4120,15 +4121,15 @@ Four documents described four **mutually disjoint** permission vocabularies:
 
 | Document                       | Was                                    | Example                                 |
 | ------------------------------ | -------------------------------------- | --------------------------------------- |
-| `22-api-openapi.yaml`          | 36 `domain:action` strings on `x-rbac` | `orders:write`                          |
+| `22-api-openapi.yaml`          | 38 `domain:action` strings on `x-rbac` | `orders:write`                          |
 | `21-database-schema.md` §10.1  | 38 dotted codes                        | `orders.submit.live`                    |
 | `24-internal-schemas.md` §15.2 | 28 enum members                        | `ORDER_PLACE_LIVE = "order.place_live"` |
 | `04-security-program.md` §7.3  | invented examples                      | `order.place.live`                      |
 
-No two matched, and the security matrix could not be implemented as written. **`22-api-openapi.yaml` is now canonical** (it is the only one mechanically bound to routes), and the other three were regenerated from it. All four now contain exactly the same 36 strings — verified mechanically.
+No two matched, and the security matrix could not be implemented as written. **`22-api-openapi.yaml` is now canonical** (it is the only one mechanically bound to routes), and the other three were regenerated from it. All four now contain exactly the same 38 strings — verified mechanically.
 
 - **04 §7.2** rewritten: adds §7.2.0 (the vocabulary, the `scope` semantics, the "permission is necessary but never sufficient" 4-tuple rule), §7.2.1 (role → permission assignment), and a §7.2.2 capability matrix where **every row names the permission and the `operationId` that enforces it**. §7.3 now describes the enum as _generated_ from `x-rbac`, not hand-maintained.
-- **21 §10.1** reseeded with the 36 strings and marked generated; three non-obvious assignments are explained (manager has no `keys:*` at all; viewer holds the four `scope: self` write permissions; live arming is not a separate permission).
+- **21 §10.1** reseeded with the 38 strings and marked generated; three non-obvious assignments are explained (manager has no `keys:*` at all; viewer is read-only; live arming is the separate owner-only `rules:arm_live` permission).
 - **24 §15.2** enum regenerated, plus a `Scope` enum mirroring `x-rbac.scope`.
 
 **One capability was removed rather than reconciled.** Row 49 previously granted a Viewer "redacted metadata, granted accounts, if granted" access to the audit log. No such grant exists: `user_account_access` scopes _accounts_, not the audit log, and no audit operation is account-scoped. Rather than invent a grant type to justify the row, Viewer audit access is now **denied**, and the row says so. This is a deliberate narrowing of documented access, made so that §7.2 is implementable exactly as written.
@@ -4151,7 +4152,7 @@ Mechanical checks, all passing at the close of the pass:
 | No duplicate `operationId`                           | ✔                                   |
 | Every `VERB /api/v1/…` in doc 14 exists in doc 22    | ✔ 0 missing (was 102)               |
 | Every WS topic in doc 14 exists in doc 23 §6         | ✔ 0 non-canonical (was 20 families) |
-| Permission sets in 04 / 21 / 22 / 24 are identical   | ✔ 36 = 36 = 36 = 36                 |
+| Permission sets in 04 / 21 / 22 / 24 are identical   | ✔ 38 = 38 = 38 = 38                 |
 | `x-db-enum` schemas match PG `CREATE TYPE`           | ✔ 31/31                             |
 | Every `examples:` block validates against its schema | ✔ 102/102                           |
 
@@ -4161,7 +4162,7 @@ These are contract-test obligations created by this pass; they belong in the CI 
 
 | Test id                         | Asserts                                                                                                                                                    |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rbac_vocabulary_single_source` | The 36 permissions in `x-rbac`, the 21 §10.1 seed and the 24 §15.2 enum are identical, and no route uses an unlisted permission.                           |
+| `rbac_vocabulary_single_source` | The 38 permissions in `x-rbac`, the 21 §10.1 seed and the 24 §15.2 enum are identical, and no route uses an unlisted permission.                           |
 | `rbac_matrix_fixture`           | 04 §7.2.2 generates a fixture in which every row's `operationId` exists and carries the stated permission.                                                 |
 | `rule_ir_schema_parity`         | The 22 `RuleIr` projection equals the JSON Schema generated from the 24 §11.2 pydantic models.                                                             |
 | `rule_ir_round_trip`            | Compiling a rule's form model and its graph model yields the same `ir_hash` (`POST /rules/{ruleId}/compile`).                                              |
