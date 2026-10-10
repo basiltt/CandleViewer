@@ -27,7 +27,9 @@ jobs:
       - name: Heavy harness tests (100k + adversarial matrix; deselected from the PR lane)
         id: harness_tests
         working-directory: services/api
-        run: uv run pytest tests/unit/bars/test_determinism_harness.py -m harness -q -p no:randomly --no-cov
+        # Every `harness`-marked test under tests/unit/bars (E12-T04 heavy lane + the full BI-1/BI-5
+        # sweeps moved here by #2177) — the PR lane deselects the marker.
+        run: uv run pytest tests/unit/bars -m harness -q -p no:randomly --no-cov
       - name: Full harness (1M trades, BI-1..BI-6, reference, throughput vs baseline)
         id: harness
         working-directory: services/api

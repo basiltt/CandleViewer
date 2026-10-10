@@ -89,7 +89,7 @@ gate(3, "unit-backend", () => {
       "-p",
       "no:cacheprovider",
       "-m",
-      "not exchange_smoke and not (chaos and integration) and not roundtrip and not fuzz and not integration",
+      "not exchange_smoke and not (chaos and integration) and not roundtrip and not fuzz and not harness and not integration",
       "--ignore=tests/unit/ws/test_cvwb_perf.py",
     ],
     { cwd: path.join(REPO_ROOT, "services", "api") },
