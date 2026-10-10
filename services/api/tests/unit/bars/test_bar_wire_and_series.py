@@ -19,9 +19,10 @@ from candleviewer.bars.spec import TIME_INTERVALS, from_wire, is_wire_representa
 wire_pairs = st.one_of(
     st.tuples(st.just("time"), st.sampled_from(sorted(TIME_INTERVALS))),
     st.tuples(
-        st.sampled_from(["tick", "volume", "range", "delta", "renko"]),
+        st.sampled_from(["tick", "volume", "range", "delta"]),
         st.integers(1, 10**17).map(str),
     ),
+    st.tuples(st.just("renko"), st.integers(2, 100_000).map(str)),
 )
 
 
@@ -65,7 +66,9 @@ def test_wire_param_with_dot_rejected(param: str) -> None:
         ("candles", "5", "not a supported bar type"),
         ("time", "M", "not a supported time interval"),
         ("time", "7", "not a supported time interval"),
-        ("renko", "atr:14", "ATR-sized"),
+        ("renko", "atr:14", "ATR bricks are not available yet"),
+        ("renko", "1", "between 2 and 100000"),
+        ("renko", "100001", "between 2 and 100000"),
         ("tick", "0", "positive whole number"),
         ("tick", "01", "positive whole number"),
         ("tick", "-5", "positive whole number"),

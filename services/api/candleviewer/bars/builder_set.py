@@ -33,6 +33,7 @@ import time
 from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
+from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Protocol
 
@@ -53,6 +54,7 @@ from candleviewer.bars.metrics import (
     bars_restore_gap_total,
 )
 from candleviewer.bars.models import BarBuilder, BarSpec, BarUpdate
+from candleviewer.bars.renko_builder import RenkoBarBuilder
 from candleviewer.bars.state_store import StateStore, StoredState, Watermark
 from candleviewer.bars.time_builder import TimeBarBuilder
 from candleviewer.bus.bus import Bus, Subscription
@@ -105,6 +107,19 @@ def default_factory(spec: BarSpec, symbol: str) -> BarBuilder:
     if make is None:
         raise BarSpecError(f"Bar series of kind '{spec.kind}' are not available yet.")
     return make(spec, symbol)
+
+
+def renko_factory(
+    tick_size_of: Callable[[str], Decimal | None], base: BuilderFactory = default_factory
+) -> BuilderFactory:
+    """`base` plus renko (E12-S04), composed only when the `bars_renko_enabled` flag is on."""
+
+    def make(spec: BarSpec, symbol: str) -> BarBuilder:
+        if spec.kind == "renko":
+            return RenkoBarBuilder(spec, symbol, tick_size_of)
+        return base(spec, symbol)
+
+    return make
 
 
 class TapeSource(Protocol):

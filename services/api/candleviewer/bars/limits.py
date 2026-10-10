@@ -22,17 +22,25 @@ MAX_WINDOW_BARS: Final = 250_000
 #: SR-E12-03: param floors/ceilings per non-time bar type.
 TICK_PARAM_RANGE: Final = (100, 1_000_000)
 RANGE_TICKS_RANGE: Final = (2, 100_000)
+#: Renko shares the range bound (a tiny brick emits bricks per trade); reversal cost <= 10 bricks.
+RENKO_TICKS_RANGE: Final = RANGE_TICKS_RANGE
+MAX_REVERSAL_BRICKS: Final = 10
+#: SR on #2125: one trade may complete at most this many bricks; beyond it the builder raises.
+MAX_BRICKS_PER_TRADE: Final = 1_000
 QTY_PARAM_MAX: Final = 10**12
 
 __all__ = [
     "DEFAULT_LIMIT",
+    "MAX_BRICKS_PER_TRADE",
     "MAX_LIMIT",
     "MAX_NON_TIME_WINDOW_US",
+    "MAX_REVERSAL_BRICKS",
     "MAX_TIME_WINDOW_US",
     "MAX_WINDOW_BARS",
     "QTY_PARAM_MAX",
     "QUERY_TIMEOUT_S",
     "RANGE_TICKS_RANGE",
+    "RENKO_TICKS_RANGE",
     "RESPONSE_MAX_BYTES",
     "TICK_PARAM_RANGE",
 ]
