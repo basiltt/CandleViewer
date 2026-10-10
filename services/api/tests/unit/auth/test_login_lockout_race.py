@@ -1,10 +1,11 @@
-"""SR-015/SR-016: login lockout counters are race-safe under concurrent failures.
+"""SR-015/SR-016: login lockout ordering under concurrent failures (unit level).
 
-The fake repository's `record_login_failure` is a single synchronous step (no
-`await` between read and write), mirroring the atomic SQL UPDATE the real
-repository must provide; `asyncio.gather` still interleaves the surrounding
-`await`s (password verification, user lookup), which is where a stale-snapshot
-race would appear.
+Scope: the in-memory fake repository is atomic by construction (no `await` between
+read and write), so these tests do NOT prove the real repository is race-safe; they
+check `LoginService` ordering/lock semantics only (it must delegate the increment
+to the repository and never compute counts from a stale user snapshot). The real
+lost-update race is covered against Postgres in
+`tests/integration/auth/test_login_lockout_race_pg.py` (CI only; no docker locally).
 """
 
 from __future__ import annotations
