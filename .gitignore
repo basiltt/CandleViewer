@@ -80,3 +80,7 @@ reports/a11y/
 
 # Hypothesis example database (E35-Q02 roundtrip suite; cached in CI)
 .hypothesis/
+
+# Autonomous-run scratch outputs (board_snapshot.py / frontier.py) — regenerate, never commit
+docs/plan/backlog/_tools/_board_snapshot.json
+docs/plan/backlog/_tools/_frontier.json
