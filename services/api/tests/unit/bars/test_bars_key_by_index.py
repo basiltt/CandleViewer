@@ -159,7 +159,9 @@ def test_range_query_bind_count_matches_placeholders() -> None:
         assert sql.endswith("LIMIT 5")
         assert all(isinstance(p, datetime) and p.tzinfo is None for p in params[2:])
     sql, params = build_range_query("volume", SYM, "vol:1500", 0, 10, None, 5, at_key=(3, 1, 2))
-    assert sorted(set(re.findall(r"\$(\d+)", sql))) == [str(i + 1) for i in range(len(params))]
+    from candleviewer.domain.sql_names import assert_bind_count
+
+    assert_bind_count(sql, params)
     assert len(params) == 9 and params[7:] == (1, 2)
     assert all(isinstance(p, datetime) and p.tzinfo is None for p in params[2:6])
     assert all(type(p) is int for p in params[6:])  # generation, generation, index
