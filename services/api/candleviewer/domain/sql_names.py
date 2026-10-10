@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime, timedelta
 
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,62}")
 
@@ -28,3 +29,27 @@ def column_identifier(name: str) -> str:
     if not _IDENTIFIER.fullmatch(name):
         raise ValueError(f"not a plain SQL identifier: {name!r}")
     return f'"{name}"' if name.lower() in QUESTDB_RESERVED else name
+
+
+EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+
+
+def ts_param(us: int) -> datetime:
+    """Epoch microseconds -> tz-aware UTC datetime for a `TIMESTAMP` bind (asyncpg refuses ints).
+
+    Exact to the microsecond (`EPOCH + timedelta`, never a float division).
+    """
+    return EPOCH + timedelta(microseconds=us)
+
+
+def ts_us_from_row(value: object) -> int:
+    """A `TIMESTAMP` value read back from QuestDB (datetime) -> epoch microseconds.
+
+    Ints pass through (ILP-shaped rows and test fakes); naive datetimes are taken as UTC.
+    """
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        delta = value - EPOCH
+        return (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
+    return int(str(value))

@@ -28,6 +28,7 @@ from candleviewer.bars.reader import BarReader
 from candleviewer.bars.rows import bar_param_for, bar_row
 from candleviewer.bars.threshold_builders import DeltaBarBuilder, RangeBarBuilder
 from candleviewer.bars.time_builder import TimeBarBuilder
+from candleviewer.domain.sql_names import ts_us_from_row
 from tests.unit.bars._trades import final_bars
 from tests.unit.bars.test_time_builder_golden import _tape
 
@@ -96,6 +97,7 @@ class _Fetch:
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
         self.calls += 1
         symbol, bar_param, start, to = params
+        start, to = ts_us_from_row(start), ts_us_from_row(to)
         limit = int(sql.rsplit("LIMIT ", 1)[1])
         rows = [r for r in _STORE.get(str(bar_param), []) if r["symbol"] == symbol
                 and int(str(start)) <= int(str(r["ts"])) < int(str(to))]  # fmt: skip

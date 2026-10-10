@@ -21,6 +21,7 @@ from candleviewer.bars.rows import (
     to_double,
 )
 from candleviewer.bars.writer import BarBufferFull, BarWriter
+from candleviewer.domain.sql_names import ts_param
 from candleviewer.storage.questdb.ddl import parse_ddl_dir
 from candleviewer.storage.questdb.ilp_writer import serialize_ilp_line
 from candleviewer.storage.questdb.schemas import BAR_SCHEMAS_BY_FAMILY
@@ -251,7 +252,7 @@ async def test_stale_build_version_served_and_rebuild_scheduled_once() -> None:
 
     reader = BarReader(_Conn([old]), sched)
     for _ in range(3):
-        page = await reader.read_bars("BTCUSDT", SPEC, 0, 2**60, 10)
+        page = await reader.read_bars("BTCUSDT", SPEC, 0, 2**55, 10)
         assert page.stale and len(page.rows) == 1
     assert len(scheduled) == 1
 
@@ -260,7 +261,7 @@ async def test_stale_build_version_served_and_rebuild_scheduled_once() -> None:
 async def test_read_cursor_and_checksum_drop() -> None:
     good = bar_row(_bar(), SPEC)
     bad = replace_row(bar_row(_bar(index=4, open_time=1_700_000_000_000_009), SPEC))
-    page = await BarReader(_Conn([good, bad]), _sched_noop).read_bars("BTCUSDT", SPEC, 0, 2**60, 2)
+    page = await BarReader(_Conn([good, bad]), _sched_noop).read_bars("BTCUSDT", SPEC, 0, 2**55, 2)
     assert page.rows == [good] and page.next_cursor == 1_700_000_000_000_009
 
 
@@ -274,7 +275,7 @@ async def _sched_noop(sym: str, h: str, lo: int, hi: int) -> None:
 
 def test_range_query_is_parameterised_and_bounded() -> None:
     sql, params = build_range_query("time", "X'; DROP", "5m", 0, 10, 4, 100)
-    assert "DROP" not in sql and params == ("X'; DROP", "5m", 5, 10)
+    assert "DROP" not in sql and params == ("X'; DROP", "5m", ts_param(5), ts_param(10))
     assert sql.endswith("LIMIT 100") and len(params) == len(set(re.findall(r"\$\d+", sql)))
     with pytest.raises(ValueError):
         build_range_query("evil", "X", "5m", 0, 1, None, 1)
@@ -378,7 +379,7 @@ async def test_checksum_mismatch_and_missing_are_integrity_events() -> None:
         m.labels("bars_time", "missing")._value.get(),
     )
     page = await BarReader(_Conn([good, bad, missing, legacy]), _sched_noop).read_bars(
-        "BTCUSDT", SPEC, 0, 2**60, 10
+        "BTCUSDT", SPEC, 0, 2**55, 10
     )
     assert page.rows == [good, legacy]  # NULL checksum + non-NULL source is NOT trusted
     assert page.integrity_degraded and page.dropped == 2

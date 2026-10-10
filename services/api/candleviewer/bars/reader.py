@@ -21,7 +21,7 @@ import structlog
 from candleviewer.bars.metrics import bars_tape_read_degraded_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum
-from candleviewer.domain.sql_names import column_identifier
+from candleviewer.domain.sql_names import column_identifier, ts_param, ts_us_from_row
 from candleviewer.observability.metrics import Counter
 
 
@@ -96,7 +96,7 @@ def build_range_query(
     )
     # QuestDB 8.x does not count `LIMIT $n` as a bind slot (asyncpg: "server expects 4
     # arguments"), so the validated-int `limit` (1..MAX_LIMIT, checked above) is inlined.
-    return sql, (symbol, bar_param, start, to_us)
+    return sql, (symbol, bar_param, ts_param(start), ts_param(to_us))
 
 
 @dataclass(slots=True)
@@ -225,7 +225,7 @@ class BarReader:
             bars_stale_build_version_total.inc()
             await self._rebuilds.request(symbol, spec.spec_hash, from_us, to_us)
         more = len(raw) == limit
-        cursor = int(str(raw[-1]["ts"])) if more and raw else None
+        cursor = ts_us_from_row(raw[-1]["ts"]) if more and raw else None
         return BarPage(rows, cursor, stale, integrity_degraded=dropped > 0, dropped=dropped)
 
 
@@ -269,8 +269,8 @@ def stored_bar(row: dict[str, object]) -> StoredBar:
     source = str(row.get("source") or "tape")  # NULL = pre-0003 legacy row, tape-built
     flow = source != "kline"
     return StoredBar(
-        ts_us=int(str(row["ts"])),
-        close_ts_us=int(str(close_ts)) if close_ts is not None else None,
+        ts_us=ts_us_from_row(row["ts"]),
+        close_ts_us=ts_us_from_row(close_ts) if close_ts is not None else None,
         open=_num(row["open"]), high=_num(row["high"]), low=_num(row["low"]),
         close=_num(row["close"]), volume=_num(volume), turnover=repr(float(vwap * volume)),
         confirmed=bool(row.get("is_closed")), trades=int(str(row.get("trade_count") or 0)),

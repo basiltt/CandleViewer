@@ -308,7 +308,7 @@ async def test_read_bars_order_by_ts_then_index_executes_on_real_questdb(
         await sink.write_rows("bars_volume", rows, "ts")
         await sink.stop()
         await wait_for_row_count(conn, "bars_volume", 3)
-        sql, params = build_range_query("volume", "BTCUSDT", "vol:1500", 0, 2**60, None, 10)
+        sql, params = build_range_query("volume", "BTCUSDT", "vol:1500", 0, 2**55, None, 10)
         got = await conn.fetch(sql, *params)
         assert [r["index"] for r in got] == [0, 1, 2]
     finally:

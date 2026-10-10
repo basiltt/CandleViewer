@@ -125,7 +125,7 @@ async def test_backfill_unknown_interval_raises_and_writes_nothing() -> None:
     store = InMemoryFundingStore()
     svc = _service(store, interval=None, fetcher=_Fetcher(_settlements(1)))
     with pytest.raises(FundingIntervalUnknown):
-        await svc.backfill("BTCUSDT", TimeWindow(0, 2**60))
+        await svc.backfill("BTCUSDT", TimeWindow(0, 2**55))
     assert len(store) == 0
 
 

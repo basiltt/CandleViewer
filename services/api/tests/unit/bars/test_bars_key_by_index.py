@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from candleviewer.bars.models import Bar, BarSpec
 from candleviewer.bars.reader import BarReader
 from candleviewer.bars.rows import bar_row, row_checksum
 from candleviewer.bars.writer import BarWriter
+from candleviewer.domain.sql_names import ts_us_from_row
 from candleviewer.storage.questdb.ddl import parse_ddl_dir
 from tests.unit.bars._trades import SYM, trade
 
@@ -37,7 +39,7 @@ class _DedupStore:
         def order(r: dict[str, object]) -> tuple[int, int]:
             # QuestDB sorts NULL first in ASC; `ORDER BY ts, "index"`.
             idx = r["index"]
-            return (int(str(r["ts"])), -1 if idx is None else int(str(idx)))
+            return (ts_us_from_row(r["ts"]), -1 if idx is None else int(str(idx)))
 
         return sorted(self.rows.values(), key=order)
 
@@ -62,7 +64,7 @@ async def test_three_volume_bars_from_one_print_survive_write_read_round_trip() 
     await writer.submit(bars, SPEC)
     assert await writer.stop() == 0
     assert len(store.rows) == 3  # (ts, symbol, bar_param) alone would have collapsed to 1
-    page = await BarReader(store, _sched).read_bars(SYM, SPEC, 0, 2**60, 10)
+    page = await BarReader(store, _sched).read_bars(SYM, SPEC, 0, 2**55, 10)
     assert [r["index"] for r in page.rows] == [b.index for b in bars]
     assert all(r["generation"] == 0 for r in page.rows)
     assert sum(Decimal(repr(r["volume"])) for r in page.rows) == Decimal("4500")  # BI-1
@@ -124,7 +126,7 @@ def _row(b: Bar, **kw: object) -> dict[str, object]:
 
 
 async def _page(store: _DedupStore, limit: int) -> list[dict[str, object]]:
-    return (await BarReader(store, _sched).read_bars(SYM, SPEC, 0, 2**60, limit)).rows
+    return (await BarReader(store, _sched).read_bars(SYM, SPEC, 0, 2**55, limit)).rows
 
 
 @pytest.mark.asyncio
@@ -159,3 +161,32 @@ def test_range_query_bind_count_matches_placeholders() -> None:
         sql, params = build_range_query("volume", SYM, "vol:1500", 0, 10, after, 5)
         assert sorted(set(re.findall(r"\$(\d+)", sql))) == [str(i + 1) for i in range(len(params))]
         assert sql.endswith("LIMIT 5")
+        assert all(isinstance(p, datetime) and p.tzinfo is not None for p in params[2:])
+
+
+def test_ts_param_is_microsecond_exact_and_round_trips() -> None:
+    from candleviewer.domain.sql_names import ts_param, ts_us_from_row
+
+    us = 1_700_000_000_123_457  # float division would round this
+    dt = ts_param(us)
+    assert dt.microsecond == 123_457 and dt.tzinfo is not None
+    assert ts_us_from_row(dt) == us and ts_us_from_row(us) == us and ts_param(0).year == 1970
+    assert ts_us_from_row(dt.replace(tzinfo=None)) == us  # naive is taken as UTC
+
+
+@pytest.mark.asyncio
+async def test_read_bars_cursor_and_rows_accept_datetime_ts_from_questdb() -> None:
+    """QuestDB returns `ts` as datetime: cursor math and stored_bar must still get int µs."""
+    from candleviewer.bars.reader import stored_bar
+    from candleviewer.domain.sql_names import ts_param
+
+    b = _closed_bars()[0]
+    store = _DedupStore()
+    for i in range(3):
+        r = _row(b, ts=1_000 + i, index=i)
+        r["ts"], r["close_ts"] = ts_param(1_000 + i), ts_param(2_000 + i)
+        store.rows[("dt", i)] = r  # row_checksum was computed over int ts; ts is not in it
+    page = await BarReader(store, _sched).read_bars(SYM, SPEC, 0, 2**55, 3)
+    assert page.next_cursor == 1_002  # int µs, usable for `after_us + 1`
+    sb = stored_bar(page.rows[0])
+    assert sb.ts_us == 1_000 and sb.close_ts_us == 2_000
