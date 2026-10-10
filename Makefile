@@ -116,3 +116,8 @@ audit-bench:
 # E41-K01: journal analytics tier benchmark (scratch Postgres DSN; needs duckdb/pyarrow/psycopg).
 bench-journal:
 	cd services/api && uv run python -m bench.journal_analytics.run --dsn "$(DSN)"
+
+# E12-Q02: regenerate the bar golden banks (E12-T04 day + E12-Q02 tapes). Dry run (prints a diff
+# summary, exits 1 if goldens would change) unless WRITE=1 CV_GOLDEN_REASON="why" (WRITE=1 only). Refused under CI.
+golden-update:
+	cd services/api && uv run python -m bench.bar_determinism.regen_goldens --suite all $(if $(filter 1,$(WRITE)),--write,)

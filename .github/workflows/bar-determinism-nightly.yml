@@ -27,6 +27,8 @@ jobs:
       - name: Heavy harness tests (100k + adversarial matrix; deselected from the PR lane)
         id: harness_tests
         working-directory: services/api
+        env:
+          CV_CONFORMANCE_SUMMARY: conformance-summary.json  # E12-Q02 per-pair bar counts, merged per tape
         # Every `harness`-marked test under tests/unit/bars (E12-T04 heavy lane + the full BI-1/BI-5
         # sweeps moved here by #2177) — the PR lane deselects the marker.
         run: uv run pytest tests/unit/bars -m harness -q -p no:randomly --no-cov
@@ -47,5 +49,7 @@ jobs:
         if: always()
         with:
           name: bar-determinism-results
-          path: services/api/bar-determinism.json
+          path: |
+            services/api/bar-determinism.json
+            services/api/conformance-summary.json
           if-no-files-found: ignore
