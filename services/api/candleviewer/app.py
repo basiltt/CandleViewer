@@ -176,6 +176,7 @@ from candleviewer.storage.cold.kline_reader import ParquetKlineReader
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
+from candleviewer.storage.cold.watermarks import FileWatermarkStore
 from candleviewer.storage.models import StreamKind, TimeRange
 from candleviewer.storage.questdb.wiring import QuestDbRowSink
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
@@ -716,7 +717,12 @@ def create_app(
     # E16-T04: sessions-backed coverage + `recording_started_at` (real backend only; the fake
     # backend keeps the tape-based provider, and the coverage route answers 503).
     coverage_service = (
-        CoverageService(SqlAlchemyRecorderRepository(_kb_pg), now_us=lambda: time.time_ns() // 1000)
+        CoverageService(
+            SqlAlchemyRecorderRepository(_kb_pg),
+            now_us=lambda: time.time_ns() // 1000,
+            # E16-T05 roll-off watermarks: older -> parquet, newer -> questdb.
+            watermarks=FileWatermarkStore(DatasetRegistry(resolved.parquet_root)),
+        )
         if _kb_pg is not None
         else None
     )

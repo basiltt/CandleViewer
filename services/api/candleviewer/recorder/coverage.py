@@ -24,6 +24,7 @@ from datetime import datetime
 from typing import Any, Final, Literal, Protocol
 
 from candleviewer.recorder.intervals import Span, coverage, split_at
+from candleviewer.recorder.rolloff import WatermarkStore
 from candleviewer.recorder.sessions import to_dt, to_us
 from candleviewer.storage.models import StreamKind
 
@@ -54,15 +55,9 @@ class CoverageStore(Protocol):
     async def earliest_first_event(self, symbol: str) -> datetime | None: ...
 
 
-class WatermarkLike(Protocol):
-    @property
-    def archived_through_us(self) -> int: ...
-
-
-class WatermarkReader(Protocol):
-    """E16-T05 `storage.cold.watermarks.FileWatermarkStore.get` (PR #2213)."""
-
-    async def get(self, symbol: str, stream: StreamKind) -> WatermarkLike: ...
+#: The E16-T05 roll-off watermark API (`recorder.rolloff.WatermarkStore`; production impl
+#: `storage.cold.watermarks.FileWatermarkStore`). Only `get` is used here.
+WatermarkReader = WatermarkStore
 
 
 @dataclass(frozen=True, slots=True)

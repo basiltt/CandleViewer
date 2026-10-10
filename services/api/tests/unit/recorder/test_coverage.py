@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from hypothesis import given, settings
@@ -248,3 +249,29 @@ async def test_kline_backfill_with_no_bars_leaves_gap_unmarked() -> None:
 
     assert await mark_kline_backfill(store, nothing, "BTCUSDT", 0, _us(2026, 9, 14)) == []
     assert store.gaps[0]["backfilled"] is False
+
+
+async def test_real_watermark_store_drives_tier_attribution(tmp_path: Path) -> None:
+    """E16-T05 API (FileWatermarkStore): before roll-off everything is questdb; advancing the
+    watermark into a session splits it; past the session window makes it entirely parquet."""
+    from candleviewer.storage.cold.layout import DatasetRegistry
+    from candleviewer.storage.cold.watermarks import FileWatermarkStore
+
+    store, _ = await _seeded()
+    marks = FileWatermarkStore(DatasetRegistry(tmp_path / "cold"))
+    lo, hi = _us(2026, 9, 1), _us(2026, 9, 14)
+    svc = CoverageService(store, now_us=UsClock(_us(2026, 9, 14, 10)), watermarks=marks)
+
+    async def tiers() -> list[tuple[int, int, str]]:
+        svc.invalidate("BTCUSDT")
+        (cov,) = await svc.coverage("BTCUSDT", ["trades"], lo, hi)
+        return [(i.lo, i.hi, i.tier) for i in cov.intervals]
+
+    assert {t for *_, t in await tiers()} == {"questdb"}
+    await marks.advance("BTCUSDT", StreamKind.TRADES, _us(2026, 9, 10), now_us=0)
+    got = await tiers()
+    assert (_us(2026, 9, 10), hi, "questdb") in got
+    assert all(t == "parquet" for a, b, t in got if b <= _us(2026, 9, 10))
+    await marks.advance("BTCUSDT", StreamKind.TRADES, _us(2026, 9, 20), now_us=0)
+    assert {t for *_, t in await tiers()} == {"parquet"}
+    assert len(await tiers()) == 2  # gap still separates; no questdb tail
