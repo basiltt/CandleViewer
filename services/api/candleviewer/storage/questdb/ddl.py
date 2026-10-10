@@ -22,7 +22,7 @@ _CREATE_RE = re.compile(
 
 #: A column definition line: `name TYPE [CAPACITY n] [CACHE] -- comment`.
 _COLUMN_RE = re.compile(
-    r"^\s*(?P<name>\w+)\s+(?P<type>[A-Z0-9_]+(?:\(\d+\))?)(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*$",
+    r'^\s*"?(?P<name>\w+)"?\s+(?P<type>[A-Z0-9_]+(?:\(\d+\))?)(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*$',
     re.IGNORECASE,
 )
 
@@ -81,7 +81,7 @@ def parse_ddl_file(path: Path) -> list[TableDef]:
             if col_match:
                 columns.append(col_match.group("name").lower())
         dedup_raw = match.group("dedup") or ""
-        dedup_keys = tuple(k.strip().lower() for k in dedup_raw.split(",") if k.strip())
+        dedup_keys = tuple(k.strip().strip('"').lower() for k in dedup_raw.split(",") if k.strip())
         tables.append(
             TableDef(
                 name=match.group("name").lower(),
@@ -99,10 +99,13 @@ def parse_ddl_dir(dir_path: Path) -> list[TableDef]:
     """Parse every `NNNN_*.sql` file in `dir_path`, in filename order (the
     order they are applied — `backend/db/questdb/NNNN_*.sql` naming, per
     `docs/plan/21-database-schema.md` Sec.9.1)."""
-    tables: list[TableDef] = []
+    latest: dict[str, TableDef] = {}
     for sql_path in sorted(dir_path.glob("*.sql")):
-        tables.extend(parse_ddl_file(sql_path))
-    return _apply_alters(tables, dir_path)
+        for table in parse_ddl_file(sql_path):
+            # A later file may DROP + re-CREATE a table (0004, #2016): the last definition wins
+            # (dict keeps the first-seen position, so table order stays stable).
+            latest[table.name] = table
+    return _apply_alters(list(latest.values()), dir_path)
 
 
 def _apply_alters(tables: list[TableDef], dir_path: Path) -> list[TableDef]:

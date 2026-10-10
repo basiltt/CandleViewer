@@ -21,6 +21,7 @@ from candleviewer.bars.rows import (
     to_double,
 )
 from candleviewer.bars.writer import BarBufferFull, BarWriter
+from candleviewer.domain.sql_names import ts_param
 from candleviewer.storage.questdb.ddl import parse_ddl_dir
 from candleviewer.storage.questdb.ilp_writer import serialize_ilp_line
 from candleviewer.storage.questdb.schemas import BAR_SCHEMAS_BY_FAMILY
@@ -90,7 +91,7 @@ def test_row_golden_ilp_line() -> None:
         "bars_time,symbol=BTCUSDT,bar_param=5m close_ts=1700000299999999t,open=100.1,high=101.0,"
         "low=99.5,close=100.5,volume=10.0,buy_volume=6.0,sell_volume=4.0,delta=2.0,min_delta=-1.0,"
         "max_delta=3.0,delta_pct=20.0,trade_count=7i,vwap=100.3,is_closed=true,build_version=1i,"
-        "row_checksum=0i 1700000000000000000"
+        "generation=0i,index=3i,row_checksum=0i 1700000000000000000"
     )
 
 
@@ -110,13 +111,6 @@ def test_source_must_be_known() -> None:
         bar_row(_bar(), SPEC, source="guess")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "21 §4.8 is ahead of the DDL since #2019 (generation/index columns and dedup keys "
-        "land with QuestDB migration 0004, #2016); strict so the marker must go when it lands"
-    ),
-)
 def test_ddl_matches_schema_doc() -> None:
     doc = (ROOT / "docs/plan/21-database-schema.md").read_text("utf-8")
     block = doc[doc.index("### 4.8") : doc.index("### 4.9")]
@@ -128,7 +122,7 @@ def test_ddl_matches_schema_doc() -> None:
     # exactly when the DDL catches up with §4.8 (migration 0004, #2016).
     doc_keys_m = re.search(r"DEDUP UPSERT KEYS\(([^)]*)\)", block)
     assert doc_keys_m is not None
-    doc_keys = tuple(k.strip() for k in doc_keys_m.group(1).split(","))
+    doc_keys = tuple(k.strip().strip('"') for k in doc_keys_m.group(1).split(","))
     tables = {
         t.name: t for t in parse_ddl_dir(ROOT / "backend/db/questdb") if t.name.startswith("bars_")
     }
@@ -230,7 +224,7 @@ async def test_amended_close_has_same_dedup_key() -> None:
     amended = bar_row(_bar(close=Decimal("100.9")), SPEC)
 
     def key(r: dict[str, object]) -> tuple[object, ...]:
-        return (r["ts"], r["symbol"], r["bar_param"])
+        return (r["ts"], r["symbol"], r["bar_param"], r["generation"], r["index"])
 
     assert key(first) == key(amended) and first["close"] != amended["close"]
     assert amended["row_checksum"] != first["row_checksum"]
@@ -258,7 +252,7 @@ async def test_stale_build_version_served_and_rebuild_scheduled_once() -> None:
 
     reader = BarReader(_Conn([old]), sched)
     for _ in range(3):
-        page = await reader.read_bars("BTCUSDT", SPEC, 0, 2**60, 10)
+        page = await reader.read_bars("BTCUSDT", SPEC, 0, 2**55, 10)
         assert page.stale and len(page.rows) == 1
     assert len(scheduled) == 1
 
@@ -267,7 +261,7 @@ async def test_stale_build_version_served_and_rebuild_scheduled_once() -> None:
 async def test_read_cursor_and_checksum_drop() -> None:
     good = bar_row(_bar(), SPEC)
     bad = replace_row(bar_row(_bar(index=4, open_time=1_700_000_000_000_009), SPEC))
-    page = await BarReader(_Conn([good, bad]), _sched_noop).read_bars("BTCUSDT", SPEC, 0, 2**60, 2)
+    page = await BarReader(_Conn([good, bad]), _sched_noop).read_bars("BTCUSDT", SPEC, 0, 2**55, 2)
     assert page.rows == [good] and page.next_cursor == 1_700_000_000_000_009
 
 
@@ -281,7 +275,8 @@ async def _sched_noop(sym: str, h: str, lo: int, hi: int) -> None:
 
 def test_range_query_is_parameterised_and_bounded() -> None:
     sql, params = build_range_query("time", "X'; DROP", "5m", 0, 10, 4, 100)
-    assert "DROP" not in sql and params == ("X'; DROP", "5m", 5, 10, 100)
+    assert "DROP" not in sql and params == ("X'; DROP", "5m", ts_param(5), ts_param(10))
+    assert sql.endswith("LIMIT 100") and len(params) == len(set(re.findall(r"\$\d+", sql)))
     with pytest.raises(ValueError):
         build_range_query("evil", "X", "5m", 0, 1, None, 1)
     with pytest.raises(ValueError):
@@ -384,7 +379,7 @@ async def test_checksum_mismatch_and_missing_are_integrity_events() -> None:
         m.labels("bars_time", "missing")._value.get(),
     )
     page = await BarReader(_Conn([good, bad, missing, legacy]), _sched_noop).read_bars(
-        "BTCUSDT", SPEC, 0, 2**60, 10
+        "BTCUSDT", SPEC, 0, 2**55, 10
     )
     assert page.rows == [good, legacy]  # NULL checksum + non-NULL source is NOT trusted
     assert page.integrity_degraded and page.dropped == 2

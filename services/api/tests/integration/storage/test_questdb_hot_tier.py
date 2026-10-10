@@ -181,6 +181,7 @@ async def test_ddl_runner_applies_all_tables_idempotently(
             "0001_core_tables.sql",
             "0002_footprint_cells.sql",
             "0003_bars_integrity_columns.sql",
+            "0004_bars_key_by_index.sql",
         ]
         await assert_no_schema_drift(executor, DDL_DIR)
 
@@ -280,5 +281,39 @@ async def test_bars_sink_writes_row_readable_over_pgwire(
         await sink.write_rows("bars_time", [row], "ts")
         await sink.stop()
         await wait_for_row_count(conn, "bars_time", 1)
+    finally:
+        await conn.close()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_read_bars_order_by_ts_then_index_executes_on_real_questdb(
+    questdb_container: tuple[str, int, int],
+) -> None:
+    """#2016: the reader's `ORDER BY ts, "index"` and bind count must run on a real QuestDB."""
+    from candleviewer.bars.reader import build_range_query
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    host, pg_port, ilp_port = questdb_container
+    conn = await _connect(host, pg_port)
+    sink = QuestDbRowSink(f"{host}:{ilp_port}", f"{host}:{pg_port}", _PGWIRE_USER, _PGWIRE_PASSWORD)
+    try:
+        await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
+        base: dict[str, object] = {
+            "symbol": "BTCUSDT", "bar_param": "vol:1500", "ts": 1_700_000_000_000_000,
+            "open": 1.0, "high": 2.0, "low": 0.5, "close": 1.5, "volume": 1500.0,
+            "is_closed": True, "generation": 0,
+        }  # fmt: skip
+        rows = [{**base, "index": i} for i in (2, 0, 1)]  # same ts: only the index differs
+        await sink.write_rows("bars_volume", rows, "ts")
+        await sink.stop()
+        await wait_for_row_count(conn, "bars_volume", 3)
+        ts = 1_700_000_000_000_000
+        sql, params = build_range_query("volume", "BTCUSDT", "vol:1500", ts - 1, ts + 1, None, 10)
+        got = await conn.fetch(sql, *params)
+        assert [r["index"] for r in got] == [0, 1, 2]  # same ts: the "index" tiebreak orders
+        # The `ts >= $3 AND ts < $4` predicate must also exclude, not just include.
+        sql, params = build_range_query("volume", "BTCUSDT", "vol:1500", ts + 10, ts + 20, None, 10)
+        assert await conn.fetch(sql, *params) == []
     finally:
         await conn.close()

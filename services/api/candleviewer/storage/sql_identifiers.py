@@ -9,9 +9,15 @@ rejected before any SQL is built (C-12, `cv-storage-sql-construction`).
 
 from __future__ import annotations
 
-import re
+from candleviewer.domain.sql_names import _IDENTIFIER, QUESTDB_RESERVED, column_identifier
 
-_IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,62}")
+__all__ = [
+    "QUESTDB_RESERVED",
+    "UnsafeSqlIdentifier",
+    "checked_identifier",
+    "column_identifier",
+    "sql_string_literal",
+]
 
 
 class UnsafeSqlIdentifier(ValueError):

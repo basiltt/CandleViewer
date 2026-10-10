@@ -21,6 +21,7 @@ import structlog
 from candleviewer.bars.metrics import bars_tape_read_degraded_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum
+from candleviewer.domain.sql_names import column_identifier, ts_param, ts_us_from_row
 from candleviewer.observability.metrics import Counter
 
 
@@ -68,6 +69,13 @@ class BarPage:
     dropped: int = 0  # rows withheld (checksum mismatch or missing)
 
 
+#: `ts` is primary: the `/market/bars` cursor is a `ts`, so it needs monotonic ts order;
+#: `index` only breaks equal-`ts` ties. `generation` is NOT ordered until #2017 moves the cursor to
+#: `(generation, index)` (NULL-`index` kline rows and index-reset rebuilds would skip rows).
+#: `index` is a QuestDB reserved word: quoted via the shared helper (#2016), never hand-written.
+_ORDER_BY = ", ".join(column_identifier(c) for c in ("ts", "index"))
+
+
 def build_range_query(
     kind: str,
     symbol: str,
@@ -84,9 +92,11 @@ def build_range_query(
     start = from_us if after_us is None else max(from_us, after_us + 1)
     sql = (
         f"SELECT * FROM bars_{kind} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 reason=table-from-closed-allowlist owner=@CandleViewer/backend
-        "AND ts >= $3 AND ts < $4 ORDER BY ts LIMIT $5"
+        f"AND ts >= $3 AND ts < $4 ORDER BY {_ORDER_BY} LIMIT {int(limit)}"
     )
-    return sql, (symbol, bar_param, start, to_us, limit)
+    # QuestDB 8.x does not count `LIMIT $n` as a bind slot (asyncpg: "server expects 4
+    # arguments"), so the validated-int `limit` (1..MAX_LIMIT, checked above) is inlined.
+    return sql, (symbol, bar_param, ts_param(start), ts_param(to_us))
 
 
 @dataclass(slots=True)
@@ -215,7 +225,7 @@ class BarReader:
             bars_stale_build_version_total.inc()
             await self._rebuilds.request(symbol, spec.spec_hash, from_us, to_us)
         more = len(raw) == limit
-        cursor = int(str(raw[-1]["ts"])) if more and raw else None
+        cursor = ts_us_from_row(raw[-1]["ts"]) if more and raw else None
         return BarPage(rows, cursor, stale, integrity_degraded=dropped > 0, dropped=dropped)
 
 
@@ -259,8 +269,8 @@ def stored_bar(row: dict[str, object]) -> StoredBar:
     source = str(row.get("source") or "tape")  # NULL = pre-0003 legacy row, tape-built
     flow = source != "kline"
     return StoredBar(
-        ts_us=int(str(row["ts"])),
-        close_ts_us=int(str(close_ts)) if close_ts is not None else None,
+        ts_us=ts_us_from_row(row["ts"]),
+        close_ts_us=ts_us_from_row(close_ts) if close_ts is not None else None,
         open=_num(row["open"]), high=_num(row["high"]), low=_num(row["low"]),
         close=_num(row["close"]), volume=_num(volume), turnover=repr(float(vwap * volume)),
         confirmed=bool(row.get("is_closed")), trades=int(str(row.get("trade_count") or 0)),

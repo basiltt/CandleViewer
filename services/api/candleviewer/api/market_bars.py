@@ -21,8 +21,9 @@ Order of refusal (each before any storage read except where noted):
 
 The cursor is bound to `(bars, symbol, bar_type:param)` (`api.market_response`), so a klines
 cursor or one for another series is `invalid_cursor`. Ordering is by `ts` with a `ts` cursor
-until migration 0004 adds `(generation, index)`; the deployed dedup key `(ts, symbol,
-bar_param)` makes `ts` unique per series until then, so `last ts + 1` never skips a bar.
+(ties broken by `"index"`, `bars.reader`). Since migration 0004 (#2016) equal-`ts` rows ARE
+reachable: one large print yields bars 0, 1, 2 at one `ts`, and the `ts` cursor steps past
+that `ts`, so with `limit=1` bars 1 and 2 are dropped (known gap, #2017).
 TODO(#2017): order by `(generation, index)`, put both on every bar, pin the generation.
 """
 
@@ -276,7 +277,7 @@ def make_market_bars_router(
             if kept or not rows:
                 rows = kept
             else:
-                # Every fetched row shares the resume ts (pre-0004 equal-ts rows filling the
+                # Every fetched row shares the resume ts (equal-ts rows filling the
                 # page): progress must be strict, so serve the page and step past that ts.
                 # Its remaining siblings are skipped. TODO(#2017): resume by (generation, index).
                 rows = rows[:limit]
