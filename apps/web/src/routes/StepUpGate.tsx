@@ -55,7 +55,7 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
       });
       if (!response.ok) {
         // One generic message: never reveal which factor failed.
-        setError("That password or code did not work. Try again.");
+        setError("Invalid password or code.");
         setPassword("");
         return;
       }

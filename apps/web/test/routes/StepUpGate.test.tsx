@@ -58,9 +58,7 @@ describe("StepUpGate", () => {
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
     fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "That password or code did not work. Try again.",
-    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("Invalid password or code.");
     expect(screen.getByLabelText("Password")).toHaveValue("");
   });
 
