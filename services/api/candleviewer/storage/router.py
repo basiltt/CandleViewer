@@ -52,6 +52,11 @@ class RoutedRows:
     rows: list[Any]
     tier: ServedBy
 
+    @property
+    def sources(self) -> list[str]:
+        """`meta.sources` (22-api-openapi.yaml `DataMeta`): the tiers in this response."""
+        return {"hot": ["questdb"], "cold": ["parquet"], "both": ["questdb", "parquet"]}[self.tier]
+
 
 def _field(row: Any, name: str) -> Any:
     if isinstance(row, Mapping):

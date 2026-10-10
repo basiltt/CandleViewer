@@ -97,6 +97,7 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "alert.disarmed",
         "recorder.start",
         "recorder.stop",
+        "recorder.compact",
         "retention.change",
         "retention.purge",
         "flags.change",
