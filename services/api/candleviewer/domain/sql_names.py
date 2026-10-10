@@ -41,6 +41,8 @@ def ts_param(us: int) -> datetime:
 
     Exact to the microsecond (`EPOCH_NAIVE + timedelta`, never a float division).
     """
+    if isinstance(us, bool) or not isinstance(us, int):
+        raise TypeError("ts_param expects an int (epoch µs)")
     return EPOCH_NAIVE + timedelta(microseconds=us)
 
 
