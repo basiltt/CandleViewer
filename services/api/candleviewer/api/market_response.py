@@ -5,9 +5,10 @@ RFC 9457 problems carrying a catalogued `code`, the opaque bar cursor, `DataMeta
 null-not-zero delta rule and the response size ceiling (SR-E12-01).
 
 **Cursor.** Opaque to clients (OpenAPI `MarketCursor`). It encodes `v1`, the issuing route,
-symbol and series (interval, or `bar_type:param`) and the next page's first `ts` (µs); after
-migration 0004 the position becomes `(generation, index)` (TODO(#2017)). Every field is checked
-against the request on decode (`invalid_cursor` on any mismatch).
+symbol and series (interval, or `bar_type:param`) and the next page's first position: a `ts`
+(µs) for klines and time bars (`v1`), or the full stored key `(ts, generation, index)` for
+non-time bars (`v2`, #2017), whose `ts` may repeat. Every field is checked against the request
+on decode (`invalid_cursor` on any mismatch); a `v1` cursor is never accepted as `v2` or back.
 
 **Response ceiling (A5).** The 2 MiB check runs on the serialised page. That is bounded by
 construction: `limit <= 5000` rows of at most ~400 bytes each is ~2 MB, so a page is never
@@ -35,6 +36,8 @@ from candleviewer.bars.limits import RESPONSE_MAX_BYTES
 _PROBLEM_MEDIA: Final = "application/problem+json"
 _ERR_BASE: Final = "https://candleviewer.local/errors/"
 _CURSOR_TAG: Final = "v1:"
+_KEY_CURSOR_TAG: Final = "v2:"
+_KEY_PART_MAX: Final = 2**62  # generation/index bound: a LONG, with headroom; larger is forged
 _CURSOR_MAX_LEN: Final = 128
 _DELTA_FIELDS: Final = ("delta", "min_delta", "max_delta")
 
@@ -106,6 +109,48 @@ def decode_cursor(
     return ts_us
 
 
+def _decode_body(cursor: str, tag: str) -> str:
+    if not cursor or len(cursor) > _CURSOR_MAX_LEN or not cursor.isascii():
+        raise InvalidCursor("cursor is empty or too long")
+    try:
+        raw = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4)).decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError, ValueError) as exc:
+        raise InvalidCursor("cursor is not valid base64") from exc
+    body = raw.removeprefix(tag)
+    if body == raw:
+        raise InvalidCursor("cursor does not belong to this request")
+    return body
+
+
+def encode_key_cursor(scope: str, key: tuple[int, int, int]) -> str:
+    """Opaque non-time-bar cursor (#2017): the next page's first `(ts, generation, index)`.
+    Same trust model as `encode_cursor` (not a MAC; every field re-validated on decode)."""
+    ts_us, generation, index = key
+    # `index` is stored +1 so a NULL-index boundary row (`row_key` index -1) encodes as 0 and
+    # decodes back to -1: the server never issues a cursor it would refuse (#2181 security LOW).
+    raw = f"{_KEY_CURSOR_TAG}{scope}|{ts_us}|{generation}|{index + 1}".encode()
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def decode_key_cursor(
+    cursor: str, *, scope: str, end_us: int, start_us: int = 0
+) -> tuple[int, int, int]:
+    """`(ts, generation, index)` from a `v2` cursor issued for exactly this request, else
+    `InvalidCursor`. Length is checked here, before decoding (never `Query(max_length=)`)."""
+    parts = _decode_body(cursor, _KEY_CURSOR_TAG).rsplit("|", 3)
+    if len(parts) != 4 or parts[0] != scope:
+        raise InvalidCursor("cursor does not belong to this request")
+    nums = parts[1:]
+    if not all(n.isdigit() and n.isascii() and len(n) <= 19 for n in nums):
+        raise InvalidCursor("cursor does not belong to this request")
+    ts_us, generation, index = (int(n) for n in nums)
+    if not _TS_MIN_US <= ts_us <= _TS_MAX_US or not start_us <= ts_us <= end_us:
+        raise InvalidCursor("cursor position is outside this request")
+    if generation > _KEY_PART_MAX or index > _KEY_PART_MAX:
+        raise InvalidCursor("cursor position is outside this request")
+    return ts_us, generation, index - 1  # -1 = the NULL-index position (sorts first)
+
+
 def iso_us(ts_us: int) -> str:
     return datetime.fromtimestamp(ts_us / 1_000_000, tz=UTC).isoformat()
 
@@ -142,6 +187,10 @@ def serialize_bar(row: BarRowLike, *, include_delta: bool) -> dict[str, object]:
         "turnover": row.turnover,
         "confirm": row.confirmed,
     }
+    for name in ("index", "generation"):  # stored bars only (#2017); klines have neither
+        value = getattr(row, name, None)
+        if isinstance(value, int) and not isinstance(value, bool):
+            bar[name] = value
     close_ts = getattr(row, "close_ts_us", None)
     if isinstance(close_ts, int):
         bar["close_time"] = iso_us(close_ts)
@@ -204,7 +253,9 @@ __all__ = [
     "build_meta",
     "cursor_scope",
     "decode_cursor",
+    "decode_key_cursor",
     "encode_cursor",
+    "encode_key_cursor",
     "iso_us",
     "kline_response",
     "problem",

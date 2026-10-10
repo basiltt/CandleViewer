@@ -11,7 +11,7 @@ import pytest
 
 from candleviewer.bars.activity_builders import VolumeBarBuilder
 from candleviewer.bars.models import Bar, BarSpec
-from candleviewer.bars.reader import BarReader
+from candleviewer.bars.reader import BarReader, row_key
 from candleviewer.bars.rows import bar_row, row_checksum
 from candleviewer.bars.writer import BarWriter
 from candleviewer.domain.sql_names import ts_us_from_row
@@ -34,14 +34,10 @@ class _DedupStore:
             self.rows[tuple(r[k] for k in KEY)] = r  # NULL index is a valid key part
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
-        assert 'ORDER BY ts, "index"' in sql
-
-        def order(r: dict[str, object]) -> tuple[int, int]:
-            # QuestDB sorts NULL first in ASC; `ORDER BY ts, "index"`.
-            idx = r["index"]
-            return (ts_us_from_row(r["ts"]), -1 if idx is None else int(str(idx)))
-
-        return sorted(self.rows.values(), key=order)
+        # #2017: time keeps `ts, "index"`; non-time orders by the full key (ts first).
+        assert 'ORDER BY ts, "index"' in sql or 'ORDER BY ts, generation, "index"' in sql
+        # QuestDB sorts NULL first in ASC: `row_key` maps a NULL index to -1, same order.
+        return sorted(self.rows.values(), key=row_key)
 
 
 async def _sched(*_: object) -> None:
@@ -162,6 +158,11 @@ def test_range_query_bind_count_matches_placeholders() -> None:
         assert sorted(set(re.findall(r"\$(\d+)", sql))) == [str(i + 1) for i in range(len(params))]
         assert sql.endswith("LIMIT 5")
         assert all(isinstance(p, datetime) and p.tzinfo is None for p in params[2:])
+    sql, params = build_range_query("volume", SYM, "vol:1500", 0, 10, None, 5, at_key=(3, 1, 2))
+    assert sorted(set(re.findall(r"\$(\d+)", sql))) == [str(i + 1) for i in range(len(params))]
+    assert len(params) == 9 and params[7:] == (1, 2)
+    assert all(isinstance(p, datetime) and p.tzinfo is None for p in params[2:6])
+    assert all(type(p) is int for p in params[6:])  # generation, generation, index
 
 
 def test_ts_param_is_microsecond_exact_and_round_trips() -> None:
@@ -190,3 +191,101 @@ async def test_read_bars_cursor_and_rows_accept_datetime_ts_from_questdb() -> No
     assert page.next_cursor == 1_002  # int µs, usable for `after_us + 1`
     sb = stored_bar(page.rows[0])
     assert sb.ts_us == 1_000 and sb.close_ts_us == 2_000
+
+
+class _KeysetStore(_DedupStore):
+    """`_DedupStore` that also evaluates the #2017 keyset binds `(ts, gen, idx) >= key`."""
+
+    async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+        rows = await super().fetch(sql, *params)
+        if len(params) == 9:
+            key = (
+                ts_us_from_row(params[4]),
+                int(str(params[6])),
+                -1 if "IS NULL" in sql else int(str(params[8])),
+            )
+            rows = [r for r in rows if row_key(r) >= key]
+        return rows[: int(sql.rsplit("LIMIT ", 1)[1])]
+
+
+async def _walk(store: _DedupStore, limit: int) -> list[list[object]]:
+    reader, key, pages = BarReader(store, _sched), None, []
+    for _ in range(10):
+        page = await reader.read_bars(SYM, SPEC, 0, 2**55, limit + 1, at_key=key)
+        nxt = page.next_key
+        pages.append([r["index"] for r in page.rows if nxt is None or row_key(r) < nxt])
+        if (key := nxt) is None:
+            return pages
+    raise AssertionError("paging did not terminate")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("limit", "want"), [(1, [[0], [1], [2]]), (2, [[0, 1], [2]])])
+async def test_same_ts_rows_page_by_key_without_skip(limit: int, want: list[list[int]]) -> None:
+    b = _closed_bars()[0]
+    store = _KeysetStore()
+    for i in range(3):
+        store.rows[("same", i)] = _row(b, ts=1_000, index=i)
+    assert await _walk(store, limit) == want
+
+
+@pytest.mark.asyncio
+async def test_checksum_dropped_last_row_still_advances_the_key() -> None:
+    b = _closed_bars()[0]
+    store = _KeysetStore()
+    for i in range(3):
+        store.rows[("same", i)] = _row(b, ts=1_000, index=i)
+    store.rows[("same", 1)] = {**store.rows[("same", 1)], "close": 9.9}  # checksum now fails
+    assert await _walk(store, 1) == [[0], [], [2]]  # dropped row skipped, series continues
+
+
+@pytest.mark.asyncio
+async def test_null_index_kline_rows_are_still_served_on_bars_time() -> None:
+    spec = BarSpec(kind="time", interval_ms=60_000)
+    b = _closed_bars()[0]
+    store = _KeysetStore()
+    for i in range(2):
+        row = {**bar_row(b, spec, source="kline"), "ts": 60_000_000 * (i + 1), "index": None}
+        row["row_checksum"] = row_checksum(row)
+        store.rows[("k", i)] = row
+    page = await BarReader(store, _sched).read_bars(SYM, spec, 0, 2**55, 10)
+    assert [r["index"] for r in page.rows] == [None, None] and page.next_key is None
+
+
+def test_at_key_is_refused_for_time_bars_and_with_after_us() -> None:
+    from candleviewer.bars.reader import build_range_query
+
+    with pytest.raises(ValueError, match="at_key"):
+        build_range_query("time", SYM, "60000", 0, 10, None, 5, at_key=(1, 0, 0))
+    with pytest.raises(ValueError, match="at_key"):
+        build_range_query("volume", SYM, "vol:1500", 0, 10, 3, 5, at_key=(1, 0, 0))
+
+
+_T = 1_700_000_000_000_000
+
+
+@pytest.mark.asyncio
+async def test_null_index_boundary_row_on_a_non_time_table_pages_to_completion() -> None:
+    """#2181 security LOW: a legacy NULL-index row at a page boundary yields a cursor the
+    server accepts (encoded, decoded, resumed) and paging reaches the end, nothing skipped."""
+    from candleviewer.api.market_response import decode_key_cursor, encode_key_cursor
+    from candleviewer.bars.reader import build_range_query
+
+    b = _closed_bars()[0]
+    store = _KeysetStore()
+    store.rows[("a", 0)] = _row(b, ts=_T, index=0)
+    store.rows[("n", 0)] = _row(b, ts=_T + 1, index=None)  # NULL sorts first at ts 2_000
+    store.rows[("b", 1)] = _row(b, ts=_T + 1, index=1)
+    reader, key, pages = BarReader(store, _sched), None, []
+    for _ in range(10):
+        page = await reader.read_bars(SYM, SPEC, 0, 2**55, 2, at_key=key)
+        nxt = page.next_key
+        pages.append([r["index"] for r in page.rows if nxt is None or row_key(r) < nxt])
+        if nxt is None:
+            break
+        cursor = encode_key_cursor("bars|S|volume:1500", nxt)
+        key = decode_key_cursor(cursor, scope="bars|S|volume:1500", end_us=2**55)
+        assert key == nxt
+    assert pages == [[0], [None], [1]]
+    sql, params = build_range_query("volume", SYM, "vol:1500", 0, 10, None, 5, at_key=(_T, 0, -1))
+    assert '"index" IS NULL' in sql and params[8] == 0

@@ -1641,9 +1641,9 @@ export interface paths {
      *
      *     **Ordering and identity (#2014).** A bar's identity is `(series, generation, index)`
      *     (21 §4.8, 24 §3.1). The response serves exactly one generation: the series' current
-     *     generation, pinned for the whole request (ADR-0033 Decision 2), never a mix. `bars` is
-     *     ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire; until
-     *     migration 0004 the server orders by `t`, see `MarketCursor`). `t` MAY
+     *     generation, pinned for the whole request (ADR-0033 Decision 2), never a mix. Non-time
+     *     `bars` are ordered by the stored key `(t, generation, index)` ascending (#2017; for one
+     *     pinned generation this is `(generation, index)` order); time bars by `t`. `t` MAY
      *     repeat for non-time bars (an N-threshold print yields N volume bars or renko bricks with
      *     one open time; two tick bars can open in the same ms). Clients MUST key bars by
      *     `(generation, index)`, never by `t`. Every bar returned here carries `index` and
@@ -7425,7 +7425,7 @@ export interface components {
     LayoutId: string;
     /** @description Page size. */
     Limit: number;
-    /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
+    /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)` for non-time bars (the cursor carries the last position's `t`, `generation` and `index`, #2017); `/market/klines` and time bars use a `t` position (open time is unique there). Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
     MarketCursor: string;
     MethodId: string;
     OrderId: string;
@@ -10379,7 +10379,7 @@ export interface operations {
     parameters: {
       query: {
         bar_type: components["schemas"]["BarType"];
-        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
+        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)` for non-time bars (the cursor carries the last position's `t`, `generation` and `index`, #2017); `/market/klines` and time bars use a `t` position (open time is unique there). Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
         cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];
@@ -10600,7 +10600,7 @@ export interface operations {
   getKlines: {
     parameters: {
       query: {
-        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)`; until migration 0004 (#2016) the deployed DDL has no such columns and the server orders by `ts` with an opaque `ts`-based cursor. Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
+        /** @description The single cursor statement for `/market/klines` and `/market/bars`: an opaque, server-issued cursor from `meta.next_cursor`. Ordering and the cursor are by `(generation, index)` for non-time bars (the cursor carries the last position's `t`, `generation` and `index`, #2017); `/market/klines` and time bars use a `t` position (open time is unique there). Clients must treat the cursor as opaque and never parse it, so the switch is non-breaking. Malformed, expired or foreign -> `invalid_cursor`. A cursor is bound to the request that issued it (route, symbol, interval or `bar_type`+`param`); replaying it on a different request is `invalid_cursor`. Uncursored requests are served as the first page (see the route text). */
         cursor?: components["parameters"]["MarketCursor"];
         /** @description Inclusive start of the time window (RFC 3339 UTC). */
         from?: components["parameters"]["From"];

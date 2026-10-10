@@ -24,8 +24,8 @@ from candleviewer.api.market_bars import make_market_bars_router
 from candleviewer.bars.activity_builders import TickBarBuilder, VolumeBarBuilder
 from candleviewer.bars.metrics import bars_endpoint_422_no_data_recorded_total
 from candleviewer.bars.models import Bar, BarSpec, BarUpdate
-from candleviewer.bars.reader import BarReader
-from candleviewer.bars.rows import bar_param_for, bar_row
+from candleviewer.bars.reader import BarReader, row_key
+from candleviewer.bars.rows import bar_param_for, bar_row, row_checksum
 from candleviewer.bars.threshold_builders import DeltaBarBuilder, RangeBarBuilder
 from candleviewer.bars.time_builder import TimeBarBuilder
 from candleviewer.domain.sql_names import ts_us_from_row
@@ -89,19 +89,28 @@ _STORE = _rows()
 
 
 class _Fetch:
-    """Evaluates `build_range_query`'s params: (symbol, bar_param, start, to); limit is inlined."""
+    """Evaluates `build_range_query`'s params: (symbol, bar_param, start, to[, key x5]); limit is
+    inlined. The optional key binds are the #2017 keyset `(ts, generation, index) >= key`."""
 
     def __init__(self) -> None:
         self.calls = 0
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
         self.calls += 1
-        symbol, bar_param, start, to = params
+        symbol, bar_param, start, to = params[:4]
         start, to = ts_us_from_row(start), ts_us_from_row(to)
         limit = int(sql.rsplit("LIMIT ", 1)[1])
-        rows = [r for r in _STORE.get(str(bar_param), []) if r["symbol"] == symbol
-                and int(str(start)) <= int(str(r["ts"])) < int(str(to))]  # fmt: skip
-        return rows[: int(str(limit))]
+        key = None
+        if len(params) == 9:
+            key = (
+                ts_us_from_row(params[4]),
+                int(str(params[6])),
+                -1 if "IS NULL" in sql else int(str(params[8])),
+            )
+        rows = [r for r in sorted(_STORE.get(str(bar_param), []), key=row_key)
+                if r["symbol"] == symbol and start <= int(str(r["ts"])) < to
+                and (key is None or row_key(r) >= key)]  # fmt: skip
+        return rows[:limit]
 
 
 async def _noop(*a: object) -> None: ...
@@ -173,6 +182,8 @@ class TestEveryBarType:
         assert body["meta"]["count"] == len(ts) and body["meta"]["has_more"] is False
         bar = body["bars"][0]
         assert bar["delta"] is not None and bar["cvd"] is None  # tape flow; cvd never faked
+        # #2017 / 22-api: every stored bar carries its identity (index, generation).
+        assert all(isinstance(b["index"], int) and b["generation"] == 0 for b in body["bars"])
         if bar_type != "time":
             assert "close_time" in bar
 
@@ -429,21 +440,44 @@ class TestAdversarialRound:
         finally:
             rows[1] = original
 
-    def test_equal_ts_rows_second_is_skipped_at_a_page_boundary(self) -> None:
-        """L2 pin of CURRENT behaviour. The deployed dedup key (ts, symbol, bar_param) collapses
-        equal-ts rows at write time, so a `last ts + 1` cursor is safe today. If two rows did
-        share a ts across a page boundary, the second is skipped.
-        TODO(#2017): once 0004 keys bars by (generation, index), the cursor must carry
-        (generation, index); flip this test to assert both rows are served."""
-        rows = _STORE["tick:100"]
-        twin = {**rows[1], "ts": rows[0]["ts"]}
-        rows.insert(1, twin)
+    @pytest.mark.parametrize("limit", [1, 2])
+    def test_equal_ts_renko_bricks_are_each_served_once_across_pages(self, limit: int) -> None:
+        """#2017 (replaces the #2089 L2 skip pin): three renko bricks share one `ts` (index
+        0..2). Paging by `(ts, generation, index)` serves each exactly once, then has_more=false."""
+        rows = _STORE["renko:20"]
+        saved = list(rows)
+        ts = int(str(_STORE["renko:20"][0]["ts"]))
+        bricks = []
+        for i in range(3):
+            b = {**saved[0], "ts": ts, "index": i}
+            b["row_checksum"] = row_checksum(b)
+            bricks.append(b)
+        rows[:] = bricks
         try:
-            q = {**self._Q, "limit": 1}
-            seen = self._walk(q)
-            assert len(seen) == len(rows) - 1 and seen.count(_iso_t(rows[0])) == 1
+            client, cursor, got = _client(), None, []
+            q = {**_P, "bar_type": "renko", "param": "20", "limit": limit}
+            for _ in range(10):
+                body = client.get(
+                    "/market/bars", params=q if cursor is None else {**q, "cursor": cursor}
+                ).json()
+                KlineResponse.model_validate(body)
+                got.append([b["index"] for b in body["bars"]])
+                assert {b["generation"] for b in body["bars"]} <= {0}
+                assert len({b["t"] for b in body["bars"]}) <= 1  # t repeats; identity is index
+                cursor = body["meta"]["next_cursor"]
+                assert body["meta"]["has_more"] is (cursor is not None)
+                if cursor is None:
+                    break
+            assert got == ([[0], [1], [2]] if limit == 1 else [[0, 1], [2]])
         finally:
-            rows.remove(twin)
+            rows[:] = saved
+
+    def test_klines_v1_cursor_is_invalid_on_non_time_bars(self) -> None:
+        from candleviewer.api.market_response import cursor_scope, encode_cursor
+
+        v1 = encode_cursor(cursor_scope("bars", "BTCUSDT", "tick:100"), _T0)
+        _problem(_client().get("/market/bars", params={**self._Q, "cursor": v1}),
+                 400, "invalid_cursor")  # fmt: skip
 
     def test_recording_provider_not_wired_is_503_not_no_data_recorded(self) -> None:
         fetch = _Fetch()
@@ -454,9 +488,11 @@ class TestAdversarialRound:
         assert _client(recording_wired=False).get("/market/bars", params=time_q).status_code == 200
 
     def test_cursor_before_from_is_invalid_cursor(self) -> None:
-        from candleviewer.api.market_response import cursor_scope, encode_cursor
+        from candleviewer.api.market_response import cursor_scope, encode_key_cursor
 
-        early = encode_cursor(cursor_scope("bars", "BTCUSDT", "tick:100"), _T0 - 60_000_000)
+        early = encode_key_cursor(
+            cursor_scope("bars", "BTCUSDT", "tick:100"), (_T0 - 60_000_000, 0, 0)
+        )
         resp = _client().get("/market/bars", params={**self._Q, "cursor": early})
         _problem(resp, 400, "invalid_cursor")
 

@@ -105,3 +105,49 @@ def test_decode_cursor_rejects_position_before_from() -> None:
     with pytest.raises(mr.InvalidCursor):
         mr.decode_cursor(c, scope=_SCOPE, end_us=_HI, start_us=_LO + 120_000_000)
     assert mr.decode_cursor(c, scope=_SCOPE, end_us=_HI, start_us=_LO) == _LO + 60_000_000
+
+
+# --- #2017: non-time-bar `(ts, generation, index)` cursor ---------------------------------
+_SCOPE = "bars|BTCUSDT|renko:20"
+_TS = 1_700_000_000_000_000
+
+
+@pytest.mark.parametrize(
+    "key", [(_TS, 0, -1), (_TS, 0, 0), (_TS, 0, 2), (_TS, 7, 0), (_TS + 1, 2**40, 2**62 - 1)]
+)
+def test_key_cursor_round_trips_including_generation_rollover(key: tuple[int, int, int]) -> None:
+    c = mr.encode_key_cursor(_SCOPE, key)
+    assert len(c) <= 128 and mr.decode_key_cursor(c, scope=_SCOPE, end_us=_TS + 10) == key
+
+
+@pytest.mark.parametrize(
+    "cursor",
+    [
+        mr.encode_key_cursor("bars|BTCUSDT|renko:30", (_TS, 0, 1)),  # other param
+        mr.encode_key_cursor("bars|ETHUSDT|renko:20", (_TS, 0, 1)),  # other symbol
+        mr.encode_key_cursor("klines|BTCUSDT|renko:20", (_TS, 0, 1)),  # other route
+        mr.encode_cursor(_SCOPE, _TS),  # a v1 ts cursor is not a key cursor
+        mr.encode_key_cursor(_SCOPE, (_TS - 1, 0, 1)),  # before `from`
+        mr.encode_key_cursor(_SCOPE, (_TS, 0, 2**63)),  # index beyond a LONG
+        "",
+        "A" * 129,
+        "!!!",
+    ],
+)
+def test_key_cursor_rejects_foreign_or_forged(cursor: str) -> None:
+    with pytest.raises(mr.InvalidCursor):
+        mr.decode_key_cursor(cursor, scope=_SCOPE, end_us=_TS + 10, start_us=_TS)
+
+
+def test_key_cursor_rejects_non_numeric_parts() -> None:
+    import base64
+
+    for body in (f"v2:{_SCOPE}|{_TS}|-1|0", f"v2:{_SCOPE}|{_TS}|0", f"v2:{_SCOPE}|x|0|0"):
+        c = base64.urlsafe_b64encode(body.encode()).decode().rstrip("=")
+        with pytest.raises(mr.InvalidCursor):
+            mr.decode_key_cursor(c, scope=_SCOPE, end_us=_TS + 10)
+
+
+def test_v1_decoder_rejects_a_key_cursor() -> None:
+    with pytest.raises(mr.InvalidCursor):
+        mr.decode_cursor(mr.encode_key_cursor(_SCOPE, (_TS, 0, 0)), scope=_SCOPE, end_us=_TS + 1)
