@@ -227,12 +227,20 @@ class RulesManager:
             a in actor.granted_accounts for ver in row.versions for a in self._accounts(ver.ir)
         )
 
-    def _require_grants(self, rule: Rule, actor: Actor) -> None:
-        """C-12.4: a non-owner may only target accounts granted to them."""
+    async def _refuse_scope(self, rule_id: str, op: str, reason: str, actor: Actor) -> None:
+        """C-2.9: a refused rule mutation/arm is itself audited (write-ahead, before the raise)."""
+        await self._audit(
+            "rule.scope_refused",
+            {"rule_id": rule_id, "op": op, "reason": reason, "actor": actor.user_id},
+        )
+
+    async def _require_grants(self, rule: Rule, actor: Actor, op: str, rule_id: str) -> None:
+        """C-12.4: a non-owner may only target accounts granted to them. Refusals are audited."""
         if actor.is_owner:
             return
         if any(a.targets == "all_accounts" for a in rule.actions):
             # E35-X02 (f): fan-out to every account needs the widest grant (Owner); fail closed.
+            await self._refuse_scope(rule_id, op, "all_accounts_needs_owner", actor)
             raise RuleError(
                 403, "forbidden", "Targeting all accounts needs the widest grant (Owner)."
             )
@@ -240,9 +248,11 @@ class RulesManager:
         if not refs and not actor.granted_accounts:
             # An account-less rule resolves to the creator's granted accounts at runtime;
             # with no grants at all there is nothing it may legitimately touch (no vacuous pass).
+            await self._refuse_scope(rule_id, op, "no_grants", actor)
             raise RuleError(403, "forbidden", "You have no accounts this rule could apply to.")
         for a in refs:
             if a not in actor.granted_accounts:
+                await self._refuse_scope(rule_id, op, "account_not_granted", actor)
                 raise RuleError(
                     403, "forbidden", "You do not have access to one of the accounts in scope."
                 )
@@ -301,9 +311,13 @@ class RulesManager:
                 )
         return bad
 
-    async def _visible_row(self, rule_id: str, actor: Actor) -> RuleRow:
+    async def _visible_row(self, rule_id: str, actor: Actor, op: str | None = None) -> RuleRow:
+        """Row the actor may see. With `op` (a mutation/arm) an invisible row is a refusal and is
+        audited; plain reads/list filtering pass no `op` (that is scoping, not a refusal)."""
         row = await self._row(rule_id)
         if not self._visible(row, actor):
+            if op is not None:
+                await self._refuse_scope(rule_id, op, "rule_not_visible", actor)
             raise RuleError(404, "not_found", "That rule does not exist.")
         return row
 
@@ -405,7 +419,7 @@ class RulesManager:
     async def create(self, ir: dict[str, Any], actor: Actor, notes: str = "") -> dict[str, Any]:
         rid = str(uuid.uuid4())
         rule, h = self._validated({**ir, "mode": "disabled", "enabled": False}, rid)
-        self._require_grants(rule, actor)
+        await self._require_grants(rule, actor, "create", rid)
         if is_reserved_name(rule.name):
             raise RuleError(403, "system_rule_reserved", "The 'sys.' name prefix is reserved.")
         existing = await self._s.all()
@@ -456,7 +470,7 @@ class RulesManager:
         actor: Actor,
         notes: str = "",
     ) -> dict[str, Any]:
-        row = await self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor, "update")
         await self._guard_system(row, actor, "update")
         if expected_version != row.latest_version:
             self._metric("rule_save_conflicts_total", {})
@@ -474,7 +488,7 @@ class RulesManager:
         rule, h = self._validated(
             {**ir, "mode": row.mode, "enabled": row.mode != "disabled"}, rule_id
         )
-        self._require_grants(rule, actor)
+        await self._require_grants(rule, actor, "update", rule_id)
         if rule.name != row.name:
             await self._check_rename(row, rule.name, actor)
         existing = next((v for v in row.versions if v.ir_hash == h), None)
@@ -504,7 +518,7 @@ class RulesManager:
             raise RuleError(409, "name_taken", f"A rule named '{name}' already exists.")
 
     async def delete(self, rule_id: str, actor: Actor) -> None:
-        row = await self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor, "delete")
         await self._guard_system(row, actor, "delete")
         if row.mode == "armed":
             raise RuleError(
@@ -529,12 +543,12 @@ class RulesManager:
     async def set_active_version(
         self, rule_id: str, version_id: str, note: str, actor: Actor
     ) -> dict[str, Any]:
-        row = await self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor, "set_active_version")
         await self._guard_system(row, actor, "set_active_version")
         v = next((x for x in row.versions if x.id == version_id), None)
         if v is None:
             raise RuleError(404, "not_found", "That version does not exist.")
-        self._require_grants(Rule.model_validate(v.ir), actor)
+        await self._require_grants(Rule.model_validate(v.ir), actor, "set_active_version", rule_id)
         # Switching an armed rule to a different version must never keep it armed: arming
         # checks (live step-up, perms, flatten ack) only run via set_mode, so demote always.
         demote = row.mode == "armed" and v.id != row.active_version_id
@@ -640,7 +654,7 @@ class RulesManager:
                 "idempotency_key_required",
                 "Send an Idempotency-Key header so a retry cannot arm the rule twice.",
             )
-        row = await self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor, "set_mode")
         cache_key = f"{actor.user_id}:{rule_id}:{idempotency_key}:{target}"
         if cache_key in self._idem:
             self._idem.move_to_end(cache_key)

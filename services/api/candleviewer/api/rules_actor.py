@@ -35,10 +35,11 @@ _ACTIONS: dict[str, str] = {
     "rule.system_rule_refused": "rules.scope_denied",
     "rule.system_rule_tampered": "rules.scope_denied",
     "rule.import_refused": "rules.scope_denied",
+    "rule.scope_refused": "rules.scope_denied",
 }
 _DENIED = frozenset(
     {"rule.mode_refused", "rule.system_rule_refused", "rule.system_rule_tampered",
-     "rule.import_refused"}
+     "rule.import_refused", "rule.scope_refused"}
 )  # fmt: skip
 
 

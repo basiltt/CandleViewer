@@ -61,14 +61,13 @@ async def test_update_retargeting_to_ungranted_account_is_refused_and_not_persis
     m, store, audits = _mgr()
     rid = (await m.create(_ir(A1), MGR_A1))["id"]
     before = [v.ir_hash for v in (await store.get(rid)).versions]  # type: ignore[union-attr]
-    n_audits = len(audits)
     with pytest.raises(RuleError) as exc:
         await m.update(rid, _ir(A2), 1, MGR_A1)
     assert exc.value.status == 403 and exc.value.code == "forbidden"
     row = await store.get(rid)
     assert row is not None and row.latest_version == 1
     assert [v.ir_hash for v in row.versions] == before
-    assert len(audits) == n_audits  # no rule.updated for a refused edit
+    assert [a for a, _ in audits].count("rule.updated") == 0  # no update for a refused edit
 
 
 async def test_update_of_another_accounts_rule_is_refused_and_not_persisted() -> None:
@@ -126,3 +125,67 @@ async def test_set_active_version_to_ungranted_version_is_refused() -> None:
         await m.set_active_version(rid, v2, "n", MGR_A1)
     assert exc.value.status == 404
     assert row.active_version_id == active_before
+
+
+# ---- C-2.9: refusals are audited (write-ahead, one record each, no secrets) -------------------
+def _refusals(audits: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]]:
+    return [p for a, p in audits if a == "rule.scope_refused"]
+
+
+@pytest.mark.parametrize(
+    ("actor", "accts", "reason"),
+    [
+        (MGR_A1, (A2,), "account_not_granted"),
+        (NO_GRANTS, (), "no_grants"),
+    ],
+)
+async def test_require_grants_refusal_on_create_is_audited_once(
+    actor: Actor, accts: tuple[str, ...], reason: str
+) -> None:
+    m, store, audits = _mgr()
+    with pytest.raises(RuleError):
+        await m.create(_ir(*accts), actor)
+    (rec,) = _refusals(audits)
+    assert rec["op"] == "create" and rec["reason"] == reason and rec["actor"] == actor.user_id
+    assert set(rec) == {"rule_id", "op", "reason", "actor"}
+    assert await store.all() == []
+
+
+async def test_require_grants_refusal_on_update_is_audited_once() -> None:
+    m, _, audits = _mgr()
+    rid = (await m.create(_ir(A1), MGR_A1))["id"]
+    with pytest.raises(RuleError):
+        await m.update(rid, _ir(A2), 1, MGR_A1)
+    (rec,) = _refusals(audits)
+    assert (
+        rec["op"] == "update" and rec["rule_id"] == rid and rec["reason"] == "account_not_granted"
+    )
+
+
+async def test_all_accounts_target_refusal_is_audited() -> None:
+    m, _, audits = _mgr()
+    ir = _ir(A1)
+    ir["actions"][0]["targets"] = "all_accounts"
+    with pytest.raises(RuleError):
+        await m.create(ir, MGR_A1)
+    (rec,) = _refusals(audits)
+    assert rec["reason"] == "all_accounts_needs_owner"
+
+
+async def test_visible_refusal_on_mutation_and_arm_is_audited_but_reads_are_not() -> None:
+    m, _, audits = _mgr()
+    rid = (await m.create(_ir(A2), OWNER))["id"]
+    other = Actor("m2", "s3", frozenset({"rules:write"}), frozenset({A1}))
+    with pytest.raises(RuleError):
+        await m.update(rid, _ir(A1), 1, other)
+    with pytest.raises(RuleError):
+        await m.delete(rid, other)
+    with pytest.raises(RuleError):
+        await m.set_mode(rid, "simulate", other, "k1")
+    assert [r["op"] for r in _refusals(audits)] == ["update", "delete", "set_mode"]
+    assert all(r["reason"] == "rule_not_visible" for r in _refusals(audits))
+    n = len(audits)
+    with pytest.raises(RuleError):
+        await m.get(rid, other)
+    assert (await m.list_rules(other))["items"] == []
+    assert len(audits) == n  # reads / list filtering are scoping, not refusals
