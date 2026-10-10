@@ -56,6 +56,7 @@ from candleviewer.bars.metrics import (
 from candleviewer.bars.models import BarBuilder, BarSpec, BarUpdate
 from candleviewer.bars.renko_builder import RenkoBarBuilder
 from candleviewer.bars.state_store import StateStore, StoredState, Watermark
+from candleviewer.bars.threshold_builders import DeltaBarBuilder, RangeBarBuilder
 from candleviewer.bars.time_builder import TimeBarBuilder
 from candleviewer.bus.bus import Bus, Subscription
 from candleviewer.bus.models import QueuePolicy, Topic
@@ -97,11 +98,13 @@ def _log() -> structlog.stdlib.BoundLogger:
 
 
 def default_factory(spec: BarSpec, symbol: str) -> BarBuilder:
-    """Builders merged so far; range/delta (E12-S03) and renko (S04) extend this mapping."""
+    """time/tick/volume/delta: builders that need no instrument data. range and renko need
+    the tick size and are composed by `production_factory`."""
     kinds: dict[str, BuilderFactory] = {
         "time": TimeBarBuilder,
         "tick": TickBarBuilder,
         "volume": VolumeBarBuilder,
+        "delta": DeltaBarBuilder,
     }
     make = kinds.get(spec.kind)
     if make is None:
@@ -120,6 +123,20 @@ def renko_factory(
         return base(spec, symbol)
 
     return make
+
+
+def production_factory(
+    tick_size_of: Callable[[str], Decimal | None], *, renko_enabled: bool
+) -> BuilderFactory:
+    """The factory the app composes: `default_factory` + range (E12-S03, needs `tick_size_of`),
+    plus renko (E12-S04) only when the `bars_renko_enabled` flag is on (#2191)."""
+
+    def with_range(spec: BarSpec, symbol: str) -> BarBuilder:
+        if spec.kind == "range":
+            return RangeBarBuilder(spec, symbol, tick_size_of)
+        return default_factory(spec, symbol)
+
+    return renko_factory(tick_size_of, with_range) if renko_enabled else with_range
 
 
 class TapeSource(Protocol):

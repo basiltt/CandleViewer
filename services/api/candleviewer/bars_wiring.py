@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 import structlog
 
-from candleviewer.bars.builder_set import BarBuilderSet, default_factory, renko_factory
+from candleviewer.bars.builder_set import BarBuilderSet, production_factory
 from candleviewer.bars.emit import EmitRouter, WriterSink
 from candleviewer.bars.kline_rows import PrecedenceHealth
 from candleviewer.bars.state_store import StateStore
@@ -210,7 +210,7 @@ def wire_bars(
         StateStore(root),
         tape=StorageTape(ctx, now_us, tick_size),
         now_us=now_us,
-        factory=renko_factory(tick_size) if ctx.settings.bars_renko_enabled else default_factory,
+        factory=production_factory(tick_size, renko_enabled=ctx.settings.bars_renko_enabled),
     )
     ctx.bars.attach(builder_set)
     return BarsRuntime(builder_set, writer, root, sink_stop, sink_degraded)
