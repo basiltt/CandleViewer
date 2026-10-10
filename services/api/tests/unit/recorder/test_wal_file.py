@@ -155,3 +155,81 @@ def test_budget_and_chunk_reject_zero(tmp_path: Path) -> None:
 def test_dedup_sorted_orders_by_exch_ts_and_drops_duplicates() -> None:
     a, b, c = _rec(1, ts=T0 + 30), _rec(2, ts=T0 + 10), _rec(3, ts=T0 + 20)
     assert dedup_sorted([a, b, c, b, a]) == [b, c, a]
+
+
+# --- review round 2: checkpoint binding and run verification ---------------------------------
+
+
+def _write_checkpoint(tmp_path: Path, body: bytes) -> None:
+    (tmp_path / RUNS_DIR / "CHECKPOINT").write_bytes(body)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        b'{"ck": 3, "total": 999}',  # bound to another run set (stale)
+        b'{"ck": 999999999, "total": 10}',  # past EOF
+        b'{"ck": -1, "total": 10}',
+        b"999999999",  # legacy/garbage
+    ],
+)
+def test_invalid_checkpoint_restarts_full_replay(tmp_path: Path, body: bytes) -> None:
+    wal, _, _ = _wal(tmp_path, chunk=3)
+    wal.append([_rec(i) for i in range(10)])
+    wal.begin_replay()
+    _write_checkpoint(tmp_path, body)
+    got = [r.seq for _, r in wal.iter_replay()]
+    assert got == list(range(10))
+    assert wal.replay_complete() and wal.warnings
+
+
+def test_valid_checkpoint_is_honoured_without_warning(tmp_path: Path) -> None:
+    wal, _, _ = _wal(tmp_path, chunk=3)
+    wal.append([_rec(i) for i in range(10)])
+    wal.begin_replay()
+    wal.commit(7)
+    assert [r.seq for _, r in wal.iter_replay()] == [7, 8, 9]
+    assert wal.replay_complete() and not wal.warnings
+
+
+def test_empty_run_set_with_checkpoint_finishes_cleanly(tmp_path: Path) -> None:
+    wal, budget, _ = _wal(tmp_path)
+    wal.append([_rec(0)])
+    wal.begin_replay()
+    for run in (tmp_path / RUNS_DIR).glob("*.run"):
+        run.unlink()
+    budget.used = 0
+    (tmp_path / RUNS_DIR / "MANIFEST").write_bytes(b"{}")
+    wal.commit(0)
+    assert wal.verify_runs().corrupt_bytes == 0
+    assert list(wal.iter_replay()) == [] and wal.replay_complete()
+    wal.finish_replay()
+    assert not (tmp_path / RUNS_DIR).exists()
+
+
+def test_truncated_run_is_quarantined_with_its_windows(tmp_path: Path) -> None:
+    wal, budget, _ = _wal(tmp_path, chunk=2)
+    wal.append([_rec(0), _rec(1), _rec(2, symbol="ETHUSDT"), _rec(3, symbol="ETHUSDT")])
+    wal.begin_replay()
+    run = tmp_path / RUNS_DIR / "000001.run"
+    data = run.read_bytes()
+    run.write_bytes(data[: len(data) // 2])
+    used = budget.used
+    prep = wal.verify_runs()
+    assert prep.corrupt_bytes == len(data) // 2
+    assert prep.corrupt_windows == {"ETHUSDT": (T0 + 2, T0 + 3)}
+    assert any(p.name.endswith(".run.wal") for p in (tmp_path / CORRUPT_DIR).iterdir())
+    assert budget.used == used  # quarantined bytes stay counted
+    assert [r.seq for _, r in wal.iter_replay()] == [0, 1] and wal.replay_complete()
+
+
+def test_run_damaged_after_verification_is_not_reported_complete(tmp_path: Path) -> None:
+    wal, _, _ = _wal(tmp_path, chunk=5)
+    wal.append([_rec(i) for i in range(5)])
+    wal.begin_replay()
+    wal.verify_runs()
+    run = next((tmp_path / RUNS_DIR).glob("*.run"))
+    data = run.read_bytes()
+    run.write_bytes(data[: len(data) - 3])
+    list(wal.iter_replay())
+    assert not wal.replay_complete()

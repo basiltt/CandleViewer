@@ -20,6 +20,9 @@ from candleviewer.storage.questdb.ilp_writer import serialize_ilp_line
 from candleviewer.storage.questdb.schemas import ALL_SCHEMAS
 from tests.unit.recorder._writer_helpers import (
     T0,
+    FakeEvents,
+    FakeSink,
+    FakeStore,
     delta,
     liquidation,
     make_writer,
@@ -278,3 +281,33 @@ def test_writer_config_defaults_match_the_ticket(tmp_path: Path) -> None:
     assert (cfg.flush_rows, cfg.flush_interval_s, cfg.wal_max_bytes) == (10_000, 0.2, 1 << 30)
     assert cfg.counters_interval_s == 10.0
     assert StreamWriter.__name__ == "StreamWriter"
+
+
+def test_default_protected_paths_derive_from_settings(tmp_path: Path) -> None:
+    from candleviewer.recorder.writer import writer_config_from_settings
+    from candleviewer.settings import Settings
+
+    s = Settings(parquet_root=str(tmp_path / "parquet"))
+    cfg = writer_config_from_settings(s)
+    assert Path(s.parquet_root) in cfg.protected_paths
+    assert cfg.wal_dir == Path(s.recorder_wal_dir)
+    assert cfg.wal_max_bytes == s.recorder_wal_max_bytes
+
+
+async def test_wal_on_the_parquet_volume_is_refused_with_defaults(tmp_path: Path) -> None:
+    from candleviewer.recorder.writer import writer_config_from_settings
+    from candleviewer.settings import Settings
+
+    (tmp_path / "parquet").mkdir()
+    s = Settings(parquet_root=str(tmp_path / "parquet"))
+    cfg = writer_config_from_settings(s)
+    w = StreamWriter(
+        lambda _s: FakeSink(),
+        FakeStore(),
+        FakeEvents(),
+        cfg,
+        clock=lambda: 0.0,
+        wall_clock_us=lambda: T0,
+    )
+    with pytest.raises(RecorderWalVolumeError):
+        await w.open()

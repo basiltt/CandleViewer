@@ -51,6 +51,7 @@ RUNS_DIR = "runs"
 CORRUPT_DIR = "corrupt"
 _READY = "READY"
 _CHECKPOINT = "CHECKPOINT"
+_MANIFEST = "MANIFEST"
 _META = "META"
 _BINARY = getattr(os, "O_BINARY", 0)
 
@@ -186,6 +187,10 @@ class SpillWal:
         self._chunk_rows = chunk_rows
         self._fsync = fsync
         self._spill_windows: dict[str, list[int]] = {}
+        #: Frames merged by the last `iter_replay` (see `replay_complete`).
+        self.consumed = 0
+        #: Non-fatal anomalies for the writer to log (the WAL module does no logging).
+        self.warnings: list[str] = []
 
     # -- paths ---------------------------------------------------------------------------------
 
@@ -297,6 +302,7 @@ class SpillWal:
         last_good = 0
         last_ts: dict[str, int] = {}
         n_runs = 0
+        manifest: dict[str, dict[str, object]] = {}
         with self.replay_path.open("rb", buffering=_COPY_CHUNK) as fh:
             frames = read_frames(fh)
             while True:
@@ -314,6 +320,16 @@ class SpillWal:
                 data = b"".join(encode_frame(r) for r in chunk)
                 _write_atomic(run, data, self._fsync)
                 self._budget.used += len(data)
+                windows: dict[str, list[int]] = {}
+                for r in chunk:
+                    w = windows.setdefault(r.symbol, [r.exch_ts, r.exch_ts])
+                    w[0], w[1] = min(w[0], r.exch_ts), max(w[1], r.exch_ts)
+                manifest[run.name] = {
+                    "frames": len(chunk),
+                    "bytes": len(data),
+                    "crc": zlib.crc32(data),
+                    "windows": windows,
+                }
                 n_runs += 1
         prep = ReplayPrep(pending=n_runs > 0)
         corrupt = size - last_good
@@ -324,7 +340,8 @@ class SpillWal:
                 start = last_ts.get(symbol, lo)
                 if symbol not in last_ts or hi > start:
                     prep.corrupt_windows[symbol] = (start, max(hi, start + 1))
-        _write_atomic(self.runs_dir / _CHECKPOINT, b"0", self._fsync)
+        _write_atomic(self.runs_dir / _MANIFEST, orjson.dumps(manifest), self._fsync)
+        self.commit(0)
         _write_atomic(self.runs_dir / _READY, b"", self._fsync)
         # The good bytes now live in runs/; the corrupt bytes stay counted in corrupt/.
         self._budget.used -= last_good
@@ -347,21 +364,87 @@ class SpillWal:
         finally:
             os.close(fd)
 
-    def checkpoint(self) -> int:
+    def _manifest(self) -> dict[str, dict[str, object]]:
         try:
-            return int((self.runs_dir / _CHECKPOINT).read_text() or 0)
-        except (OSError, ValueError):
+            raw = orjson.loads((self.runs_dir / _MANIFEST).read_bytes())
+        except (OSError, orjson.JSONDecodeError):
+            return {}
+        return {str(k): dict(v) for k, v in dict(raw).items()}
+
+    def total(self) -> int:
+        """Frames in the (verified) runs: the range a valid checkpoint lives in."""
+        return sum(int(str(m["frames"])) for m in self._manifest().values())
+
+    def checkpoint(self) -> int:
+        """The committed merge index, or 0 when it is unreadable, bound to another run set,
+        negative or past the end. Restarting is safe (DEDUP UPSERT KEYS) and logged."""
+        total = self.total()
+        try:
+            raw = orjson.loads((self.runs_dir / _CHECKPOINT).read_bytes())
+            ck, bound = int(raw["ck"]), int(raw["total"])
+        except (OSError, orjson.JSONDecodeError, KeyError, TypeError, ValueError):
+            ck, bound = -1, -1
+        if bound != total or not 0 <= ck <= total:
+            if not (ck == 0 and bound == total):
+                self.warnings.append(
+                    f"replay checkpoint invalid (ck={ck}, bound={bound}, total={total}); "
+                    "restarting at 0"
+                )
             return 0
+        return ck
 
     def commit(self, merged_index: int) -> None:
-        """Durably record that merged records `[0, merged_index)` reached QuestDB."""
-        _write_atomic(self.runs_dir / _CHECKPOINT, str(merged_index).encode(), self._fsync)
+        """Durably record that merged records `[0, merged_index)` reached QuestDB. The value is
+        bound to the run set's total, so a stale checkpoint can never skip records."""
+        payload = orjson.dumps({"ck": merged_index, "total": self.total()})
+        _write_atomic(self.runs_dir / _CHECKPOINT, payload, self._fsync)
+
+    def verify_runs(self) -> ReplayPrep:
+        """Check every run against the manifest (size + CRC). A run that is missing, truncated
+        or altered is moved whole to `corrupt/` (still counted in the budget) and reported with
+        its symbols' windows. The checkpoint is then reset (the merge order changed)."""
+        manifest = self._manifest()
+        prep = ReplayPrep(pending=True)
+        listed = {p.name for p in self.runs_dir.glob("*.run")}
+        for name in sorted(set(manifest) | listed):
+            path = self.runs_dir / name
+            meta = manifest.get(name)
+            ok = meta is not None and path.exists()
+            if ok and meta is not None:
+                data = path.read_bytes()
+                ok = len(data) == int(str(meta["bytes"])) and zlib.crc32(data) == int(
+                    str(meta["crc"])
+                )
+            if ok:
+                continue
+            size = path.stat().st_size if path.exists() else 0
+            if path.exists():
+                self.corrupt_dir.mkdir(mode=0o700, exist_ok=True)
+                dest = self.corrupt_dir / f"{len(list(self.corrupt_dir.iterdir())):06d}.run.wal"
+                os.replace(path, dest)  # stays counted: corrupt/ is part of the budget
+            prep.corrupt_bytes += size
+            raw_windows = meta.get("windows") if meta is not None else None
+            windows = raw_windows if isinstance(raw_windows, dict) else {}
+            for symbol, (lo, hi) in windows.items():
+                old = prep.corrupt_windows.get(str(symbol))
+                lo, hi = int(lo), int(hi)
+                if old is not None:
+                    lo, hi = min(lo, old[0]), max(hi, old[1])
+                prep.corrupt_windows[str(symbol)] = (lo, max(hi, lo + 1))
+            manifest.pop(name, None)
+        if prep.corrupt_bytes or set(manifest) != listed:
+            _write_atomic(self.runs_dir / _MANIFEST, orjson.dumps(manifest), self._fsync)
+            self.commit(0)
+        return prep
 
     def iter_replay(self) -> Generator[tuple[int, WalRecord]]:
         """K-way merge of the runs in `exch_ts` order (stable), from the checkpoint onwards.
-        Yields `(merged_index, record)`; within one `exch_ts`, duplicate keys yield once."""
+        Yields `(merged_index, record)`; within one `exch_ts`, duplicate keys yield once.
+        `consumed` counts merged frames, so `replay_complete()` can prove every frame of every
+        run was read (a run that stops early never lets `runs/` be deleted)."""
         runs = sorted(self.runs_dir.glob("*.run"))
         start = self.checkpoint()
+        self.consumed = 0
         with contextlib.ExitStack() as stack:
             streams = [
                 (rec for rec, _ in read_frames(stack.enter_context(p.open("rb", buffering=65536))))
@@ -370,6 +453,7 @@ class SpillWal:
             ts: int | None = None
             seen: set[tuple[str, str, int, int, int]] = set()
             for i, rec in enumerate(heapq.merge(*streams, key=lambda r: r.exch_ts)):
+                self.consumed = i + 1
                 if rec.exch_ts != ts:
                     ts, seen = rec.exch_ts, set()
                 if rec.key in seen:
@@ -377,6 +461,10 @@ class SpillWal:
                 seen.add(rec.key)
                 if i >= start:
                     yield i, rec
+
+    def replay_complete(self) -> bool:
+        """True iff the last `iter_replay` read exactly the manifest's frame total."""
+        return self.consumed == self.total()
 
     def finish_replay(self) -> None:
         """Every run reached QuestDB: delete `runs/` and release its budget."""

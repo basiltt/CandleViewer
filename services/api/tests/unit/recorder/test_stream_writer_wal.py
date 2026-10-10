@@ -226,3 +226,40 @@ async def test_interrupted_replay_resumes_from_checkpoint(tmp_path: Path) -> Non
     ids = [r["trade_id"] for r in sink.rows("trades")]
     assert ids == [f"t{i}" for i in range(6)]  # exactly once, in exch_ts order
     assert not w2.is_spilling("trades") and w2.spill_bytes == 0
+
+
+async def test_stale_checkpoint_never_skips_rows_through_the_writer(tmp_path: Path) -> None:
+    w, sink, _, _, clock = await make_writer(tmp_path, flush_rows=2, replay_chunk_rows=2)
+    sink.down.add("*")
+    for i in range(6):
+        await w.on_trade(trade(i))
+    clock.advance(0.2)
+    await w.pump("trades")
+    sink.down.add("*")
+    await w.recover()  # builds runs/, write fails
+    runs = tmp_path / "wal" / "trades" / RUNS_DIR
+    (runs / "CHECKPOINT").write_bytes(b'{"ck": 999999999, "total": 6}')
+    sink.down.clear()
+    await w.recover()
+    assert [r["trade_id"] for r in sink.rows("trades")] == [f"t{i}" for i in range(6)]
+    assert not runs.exists() and not w.is_spilling("trades")
+
+
+async def test_truncated_run_becomes_a_gap_and_the_rest_replays(tmp_path: Path) -> None:
+    w, sink, store, events, clock = await make_writer(tmp_path, flush_rows=2, replay_chunk_rows=2)
+    sink.down.add("*")
+    for i in range(6):
+        await w.on_trade(trade(i))
+    clock.advance(0.2)
+    await w.pump("trades")
+    await w.recover()  # runs/ built; write still fails
+    runs = tmp_path / "wal" / "trades" / RUNS_DIR
+    victim = runs / "000001.run"
+    victim.write_bytes(victim.read_bytes()[:5])
+    sink.down.clear()
+    await w.recover()
+    assert [r["trade_id"] for r in sink.rows("trades")] == ["t0", "t1", "t4", "t5"]
+    assert w.pending_gaps()[("BTCUSDT", "trades")] == (T0 + 2, T0 + 3)
+    assert any(e.kind == "recorder_wal_corrupt" for e in events.events)
+    await w.flush_gaps()
+    assert store.gaps[0]["cause"] == "backpressure_drop"

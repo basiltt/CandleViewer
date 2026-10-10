@@ -51,6 +51,7 @@ from candleviewer.recorder.metrics import (
 )
 from candleviewer.recorder.models import RecorderSetChanged
 from candleviewer.recorder.wal import SpillWal, WalBudget, WalRecord
+from candleviewer.settings import Settings
 from candleviewer.storage.questdb.ilp_writer import serialize_ilp_line
 from candleviewer.storage.questdb.schemas import ALL_SCHEMAS
 
@@ -360,6 +361,30 @@ class WriterConfig:
     max_pending_symbols: int = 1024
     #: SR-096: paths the WAL must not share a device with (Postgres data, logs, the app).
     protected_paths: tuple[Path, ...] = ()
+
+
+def default_protected_paths(settings: Settings) -> tuple[Path, ...]:
+    """SR-096: the data roots the backend needs on a volume separate from the WAL. These are
+    the Parquet tier root, the audit WAL dir and the bars state root. The Postgres data dir is
+    not visible to the app (`CV_PG_DSN` is a DSN), so deploy docs put it under the data root."""
+    roots = [
+        Path(settings.parquet_root),
+        Path(settings.audit_wal_path).resolve().parent,
+        Path(settings.bars_state_root),
+    ]
+    return tuple(dict.fromkeys(p.expanduser() for p in roots))
+
+
+def writer_config_from_settings(settings: Settings, **overrides: object) -> WriterConfig:
+    """The only production construction path: WAL keys plus SR-096 protected paths, so
+    `check_wal_volume` is never vacuous by default."""
+    base: dict[str, object] = {
+        "wal_dir": Path(settings.recorder_wal_dir),
+        "wal_max_bytes": settings.recorder_wal_max_bytes,
+        "protected_paths": default_protected_paths(settings),
+    }
+    base.update(overrides)
+    return WriterConfig(**base)  # type: ignore[arg-type]  # keys are WriterConfig fields
 
 
 @dataclass(slots=True)
@@ -717,12 +742,40 @@ class StreamWriter:
                 self._publish_gauges()
 
     async def _replay_runs(self, lane: _Lane) -> bool:
+        """Verify the runs (a damaged run is quarantined and becomes a gap), then stream them.
+        True only once every frame of every run was read and committed."""
+        async with lane.wal_lock:
+            try:
+                verified = await asyncio.to_thread(lane.wal.verify_runs)
+            except OSError as exc:
+                lane.next_replay_at = self._clock() + self._cfg.replay_retry_s
+                logger().error("recorder_replay_io_failed", stream=lane.stream, error=str(exc))
+                return False
+        if verified.corrupt_bytes:
+            await self._corrupt(lane, verified.corrupt_bytes, verified.corrupt_windows)
         it = lane.wal.iter_replay()
         try:
             while True:
                 batch = await asyncio.to_thread(_take, it, self._cfg.flush_rows)
+                for msg in lane.wal.warnings:
+                    logger().warning(
+                        "recorder_replay_checkpoint_reset", stream=lane.stream, detail=msg
+                    )
+                lane.wal.warnings.clear()
                 if not batch:
-                    return True
+                    if lane.wal.replay_complete():
+                        return True
+                    # Frames were not all readable (changed after verification): keep runs/,
+                    # restart from 0 next time (DEDUP makes the re-send idempotent).
+                    logger().error(
+                        "recorder_replay_incomplete",
+                        stream=lane.stream,
+                        read=lane.wal.consumed,
+                        expected=lane.wal.total(),
+                    )
+                    await asyncio.to_thread(lane.wal.commit, 0)
+                    lane.next_replay_at = self._clock() + self._cfg.replay_retry_s
+                    return False
                 try:
                     await self._write(lane, [rec for _, rec in batch])
                 except Exception as exc:
