@@ -113,6 +113,13 @@ def parse_ddl_dir(dir_path: Path) -> list[TableDef]:
     return _apply_alters(list(latest.values()), dir_path)
 
 
+#: `ALTER TABLE t DEDUP ENABLE UPSERT KEYS(a, b, ...);` (re-keying, e.g. 0005).
+_ALTER_DEDUP_RE = re.compile(
+    r"ALTER\s+TABLE\s+(?P<table>\w+)\s+DEDUP\s+ENABLE\s+UPSERT\s+KEYS\s*\((?P<keys>[^)]*)\)\s*;",
+    re.IGNORECASE,
+)
+
+
 def _apply_alters(tables: list[TableDef], dir_path: Path) -> list[TableDef]:
     """Fold `ALTER TABLE ... ADD COLUMN` statements (applied in filename order) into the
     `TableDef`s they extend, so the drift guard sees the live column set."""
@@ -131,4 +138,9 @@ def _apply_alters(tables: list[TableDef], dir_path: Path) -> list[TableDef]:
                 by_name[table.name] = replace(
                     table, columns=(*table.columns, col), symbol_columns=symbols
                 )
+        for m in _ALTER_DEDUP_RE.finditer(text):
+            table = by_name.get(m.group("table").lower())
+            if table is not None:
+                keys = tuple(k.strip().strip('"').lower() for k in m.group("keys").split(","))
+                by_name[table.name] = replace(table, dedup_keys=keys)
     return [by_name[t.name] for t in tables]

@@ -94,6 +94,22 @@ _RECORD_GAP = sa.text(
     "cause) VALUES (CAST(:sid AS uuid), :symbol, CAST(:stream AS stream_kind), :gs, :ge, "
     ":cause) RETURNING id"
 )
+# E16-T03 StreamWriter: both target the symbol's live session (ix_recs_live), newest first.
+_ADD_COUNTERS = sa.text(
+    "UPDATE recording_sessions SET messages_received = messages_received + :rx, "
+    "messages_dropped = messages_dropped + :dropped, bytes_written = bytes_written + :bytes, "
+    "reconnect_count = reconnect_count + :reconnects WHERE id = "
+    "(SELECT id FROM recording_sessions WHERE symbol = :symbol "
+    "AND state IN ('starting','recording','degraded') ORDER BY started_at DESC LIMIT 1)"
+    " RETURNING 1"
+)
+_RECORD_LIVE_GAP = sa.text(
+    "INSERT INTO recording_gaps (recording_session_id, symbol, stream, gap_start, gap_end, "
+    "cause) SELECT s.id, :symbol, CAST(:stream AS stream_kind), :gs, :ge, :cause FROM "
+    "(SELECT id FROM recording_sessions WHERE symbol = :symbol "
+    "AND state IN ('starting','recording','degraded') ORDER BY started_at DESC LIMIT 1)"
+    " AS s RETURNING id"
+)
 # Pinned symbol -> infinite (NULL); else symbol-scoped; else default; else caller's hard default.
 _RESOLVE = sa.text(
     "SELECT retain_days FROM ("
@@ -203,6 +219,38 @@ class SqlAlchemyRecorderRepository:
             },
         )
         return int(rows[0]["id"])
+
+    async def add_session_counters(
+        self,
+        symbol: str,
+        *,
+        messages_received: int,
+        messages_dropped: int,
+        bytes_written: int,
+        reconnect_count: int,
+    ) -> bool:
+        """Add counter deltas to the symbol's live session (E16-T03). False = no live session."""
+        params = {
+            "symbol": symbol,
+            "rx": messages_received,
+            "dropped": messages_dropped,
+            "bytes": bytes_written,
+            "reconnects": reconnect_count,
+        }
+        return bool(await self._all(_ADD_COUNTERS, params))
+
+    async def record_live_gap(
+        self, *, symbol: str, stream: str, gap_start: datetime, gap_end: datetime, cause: str
+    ) -> bool:
+        """Insert a gap on the symbol's live session (E16-T03). False = no live session."""
+        params = {
+            "symbol": symbol,
+            "stream": stream,
+            "gs": gap_start,
+            "ge": gap_end,
+            "cause": cause,
+        }
+        return bool(await self._all(_RECORD_LIVE_GAP, params))
 
     async def resolve_policy(self, symbol: str, stream: str) -> int | None:
         """Retention days for (symbol, stream); `None` is the infinite sentinel (pinned)."""

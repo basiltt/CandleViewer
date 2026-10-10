@@ -53,6 +53,12 @@ class FeedMode(StrEnum):
     SYNTHETIC = "synthetic"
 
 
+class RecorderWalDirError(ValueError):
+    """`CV_RECORDER_WAL_DIR` is unsafe (relative, `..`, symlink, or outside the data dir)."""
+
+    code = "recorder_wal_dir_invalid"
+
+
 class Settings(BaseSettings):
     """Root application settings, populated from the environment only.
 
@@ -176,6 +182,10 @@ class Settings(BaseSettings):
     book_depth: int = 200
     recorder_retention_days: int = 30
     recorder_hot_days: int = 7
+    # E16-T03: StreamWriter spill WAL (bounded; SR-096 — a volume separate from the backend).
+    # Empty (default) = `<data dir>/recorder-wal`, data dir = parent of `parquet_root`.
+    recorder_wal_dir: str = ""
+    recorder_wal_max_bytes: int = Field(default=1 << 30, ge=1 << 20)
     # #2048: max concurrent DuckDB scans for the /market/klines cold tier (C-2.18).
     cold_kline_concurrency: int = 2
     # #2060: seconds between reloads of the klines hot-retention rule (rules are editable).
@@ -251,6 +261,27 @@ class Settings(BaseSettings):
                 "CV_QUESTDB_PG_PASSWORD must be set to a non-default value "
                 "(environment=live, storage_backend=real)"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _anchor_recorder_wal_dir(self) -> Settings:
+        """E16-T03 (SR-097 pattern): `CV_RECORDER_WAL_DIR` must be absolute, have no `..`
+        segment, not be a symlink, and resolve inside the data dir (the parent of
+        `parquet_root`). It is created with `mkdir(parents=True)`, so a traversal here would
+        create directories anywhere."""
+        root = Path(self.parquet_root).expanduser().resolve().parent
+        text = self.recorder_wal_dir.strip()
+        raw = Path(text).expanduser() if text else root / "recorder-wal"
+        if not raw.is_absolute():
+            raise RecorderWalDirError("CV_RECORDER_WAL_DIR must be an absolute path")
+        if ".." in raw.parts:
+            raise RecorderWalDirError("CV_RECORDER_WAL_DIR must not contain '..'")
+        if raw.is_symlink():
+            raise RecorderWalDirError("CV_RECORDER_WAL_DIR must not be a symlink")
+        resolved = raw.resolve()
+        if resolved == root or not resolved.is_relative_to(root):
+            raise RecorderWalDirError(f"CV_RECORDER_WAL_DIR must be inside the data dir {root}")
+        object.__setattr__(self, "recorder_wal_dir", str(resolved))
         return self
 
     @model_validator(mode="after")
