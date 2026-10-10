@@ -826,6 +826,10 @@ Layered, highest priority last: packaged defaults → `infra/compose/.env` → e
 | `CV_BOOK_DEPTH`                 | int    | `200`           | runtime | 1/50/200/500                                 |
 | `CV_RECORDER_RETENTION_DAYS`    | int    | `30`            | runtime | per-symbol override allowed                  |
 | `CV_RECORDER_HOT_DAYS`          | int    | `7`             | runtime | roll-off threshold                           |
+| `CV_RECORDER_AUTOSTART_DELAY_S` | int    | `60`            | runtime | chart open this long before auto-record      |
+| `CV_RECORDER_AUTOSTOP_GRACE_S`  | int    | `1800`          | runtime | linger after last reason; re-acquire cancels |
+| `CV_RECORDER_AUTORECORD_ENABLED`| bool   | `true`          | runtime | chart-open only; never gates position/manual |
+| `CV_RECORDER_MAX_SYMBOLS`       | int    | `20`            | runtime | manual add 422 / auto-start refused above    |
 | `CV_DISK_CAP_GB`                | int    | `500`           | runtime | pause auto-record at 90 %                    |
 | `CV_ORDER_RATE_PER_UID`         | int    | `8`             | runtime | below Bybit's 10/s for headroom              |
 | `CV_NATIVE_SL_DEADLINE_MS`      | int    | `3000`          | runtime | NakedPositionAlert threshold                 |

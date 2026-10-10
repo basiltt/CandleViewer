@@ -175,7 +175,7 @@ omit = [
   "candleviewer/observability/service.py",
   "candleviewer/oms/*",
   "candleviewer/paper/*",
-  "candleviewer/recorder/*",
+  "candleviewer/recorder/service.py",  # policy/models/errors: E16-T02, counted
   "candleviewer/replay/*",
   "candleviewer/risk/*",
   # candleviewer/rules/ir/* is implemented by E35-T01 and counted in the floor.
