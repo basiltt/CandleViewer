@@ -3433,6 +3433,7 @@ class Permission(StrEnum):
     # rules & alerts
     RULES_READ = "rules:read"
     RULES_WRITE = "rules:write"
+    RULES_ARM_LIVE = "rules:arm_live"   # dangerous; separate from rules:write
     ALERTS_READ = "alerts:read"
     ALERTS_WRITE = "alerts:write"
     # journal
@@ -3463,7 +3464,7 @@ class Scope(StrEnum):
 | Permission group                                                                                        | owner                           | manager                                                                | viewer                                |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------- |
 | `marketdata:read`, `instruments:read`                                                                   | ✔                               | ✔                                                                      | ✔                                     |
-| `replay:read`, `replay:write`, `recording:read`                                                         | ✔                               | ✔                                                                      | ✔ (own sessions)                      |
+| `replay:read`, `replay:write`, `recording:read`                                                         | ✔                               | ✔                                                                      | ✔ (read only; no `replay:write`)      |
 | `recording:write`                                                                                       | ✔ (step-up for purge/retention) | ✘                                                                      | ✘                                     |
 | `orders:read`, `positions:read`, `executions:read`                                                      | ✔                               | ✔ (granted accounts)                                                   | ✔ (granted accounts)                  |
 | `orders:write`, `positions:write`                                                                       | ✔                               | ✔ (granted accounts with the `trade` mode, and only `allowed_symbols`) | ✘                                     |
@@ -3477,7 +3478,7 @@ class Scope(StrEnum):
 | `admin:read`                                                                                            | ✔                               | ✘                                                                      | ✘                                     |
 | `audit:read`                                                                                            | ✔ (all, raw payloads)           | ✔ (own actions only, redacted)                                         | ✘                                     |
 
-**Arming a rule against live is not a separate permission.** It is `rules:write` plus the environment leg of the check plus the `live_trading` flag, restricted to `owner` with an elevated session. The same applies to placing a live order: one `orders:write` permission, gated by environment — never two permissions for one decision.
+The seed (`services/api/candleviewer/auth/rbac_seed.json`) defines **38 permission strings**. The `viewer` role is **read-only**: it holds only `*:read` permissions (13 in the seed) and no writes, self-scoped or otherwise; the self-scoped write rows above apply to `owner` and `manager` only. **Arming a rule against live is the separate, dangerous `rules:arm_live` permission** (owner only, via the wildcard grant; not held by `manager`), in addition to the environment leg of the check, the `live_trading` flag and an elevated session. Placing a live order remains a single `orders:write` permission gated by environment.
 
 **Authorization is a 4-tuple check** on every trading request: `(permission, account_id ∈ granted accounts, symbol ∈ allowed_symbols, environment enabled)`. All four must pass, and for the capabilities marked `(step-up)` in `04-security-program.md` §7.2.2 the session must additionally be elevated. The check lives in one `authorize()` function; endpoints never hand-roll it.
 
@@ -4161,7 +4162,7 @@ These are contract-test obligations created by this pass; they belong in the CI 
 
 | Test id                         | Asserts                                                                                                                                                    |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rbac_vocabulary_single_source` | The 36 permissions in `x-rbac`, the 21 §10.1 seed and the 24 §15.2 enum are identical, and no route uses an unlisted permission.                           |
+| `rbac_vocabulary_single_source` | The 38 permissions in `x-rbac`, the 21 §10.1 seed and the 24 §15.2 enum are identical, and no route uses an unlisted permission.                           |
 | `rbac_matrix_fixture`           | 04 §7.2.2 generates a fixture in which every row's `operationId` exists and carries the stated permission.                                                 |
 | `rule_ir_schema_parity`         | The 22 `RuleIr` projection equals the JSON Schema generated from the 24 §11.2 pydantic models.                                                             |
 | `rule_ir_round_trip`            | Compiling a rule's form model and its graph model yields the same `ir_hash` (`POST /rules/{ruleId}/compile`).                                              |

@@ -40,7 +40,7 @@ Each control was disabled on the scratch worktree and the named case failed, the
 | AC-SES-03 | refresh reuse | Stolen old refresh token | Replay after rotation | Family revoked incl. successor | Revoked | DEFENDED |
 | AC-SES-04 | SR-013 | Valid session | Refresh | Absolute expiry not extended | Unchanged | DEFENDED |
 | AC-SES-05 | U5 | Expired access token | Use after TTL | Rejected | Rejected | DEFENDED |
-| AC-SES-06 | U5 | Stolen access token, other IP/UA | Present token | Sessions are not bound to IP/UA | Accepted; detection only via refresh reuse | **DESIGN-DECISION to confirm** (Architect/Owner; residual risk: bearer theft undetected until refresh) |
+| AC-SES-06 | U5 | Stolen access token, other IP/UA | Present token | Sessions are not bound to IP/UA | Accepted; detection only via refresh reuse | **ACCEPTED DESIGN DECISION** (see F-2; Owner record 2026-10-09 on #1778) |
 | AC-SES-07 | forged token | Garbage/oversize tokens | Present | Rejected | Rejected | DEFENDED |
 | AC-CSRF-01 | TB-4 | Cross-site page | Cookie refresh with no / foreign / `null` Origin | 403, token not burned | 403, session intact | DEFENDED |
 | AC-CSRF-02 | TB-4 | Empty allow-list | Any origin | 403 (fail closed) | 403 | DEFENDED |
@@ -86,5 +86,10 @@ Each control was disabled on the scratch worktree and the named case failed, the
   CSRF controls are SameSite=Strict plus the Origin allow-list on cookie refresh (AC-CSRF-01/02/04).
   State-changing routes require a bearer header, which is not ambient. Residual risk acceptable only if
   that stays true; needs confirmation. Maps to TB-4.
-- **F-2 (design decision, Low-Medium):** AC-SES-06 above.
+- **F-2 (accepted design decision, Low-Medium):** AC-SES-06 above.
+  - STRIDE: Spoofing. Severity: Low-Medium. Owner: Architect + Owner. Tracking: #2145.
+  - Repro: present a valid access token from a different IP/user-agent; it is accepted until its
+    12 min TTL ends, and theft is detected only on refresh-token reuse (AC-SES-03).
+  - Decision: SR-012 stores IP and user agent on the session record for audit but does not bind to
+    them. Accepted by the Owner on #1778 (record 2026-10-09).
 - No P0/P1 finding. `docs/plan/32-risk-register.md` and sign-off comment are not done in this PR.
