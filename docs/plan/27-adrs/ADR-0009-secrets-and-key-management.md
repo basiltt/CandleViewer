@@ -67,3 +67,25 @@ Negative / risks:
 - Restore drill: restore a database backup on a machine without the KEK and confirm no key can be decrypted and the app refuses trading mode.
 - Rotation drill: full 90-day rotation executed once before Live enablement (R4) as a PRR item.
 - Pen-test before Live enablement covers key handling explicitly.
+
+## Amendment 1 (2026-10-10, E27-K01 #832)
+
+Refines Design §1; does not reverse it. Detail: `docs/plan/spikes/e27-kek.md`.
+- Injection is a **handle** (`CV_KEK_HANDLE`, default `/run/secrets/cv_kek`), not an environment
+  variable (env values are visible via `docker inspect` and `/proc/*/environ`).
+- WSL mechanism: the Windows launcher reads Credential Manager and pipes the KEK on stdin into
+  `wsl.exe`; inside WSL a fresh `0700` dir holds a `0600` FIFO written once, then unlinked, with a
+  nonce-acked handoff record. Docker Engine inside WSL is the supported engine; the launcher is the
+  only restart supervisor; WSL interop is disabled (`[interop] enabled=false`).
+- VPS custody: `systemd-creds` `LoadCredentialEncrypted` (TPM2 when available); `age` `0400` fallback.
+- SR-002 tightened: key/credential files are opened `O_NOFOLLOW` and must be exactly `0400` (FIFO
+  `0600`) owned by the service uid; an `age` identity is never stored beside its ciphertext.
+- Config: `CV_KEK_SOURCE` (`handle`|`file`|`none`), `CV_KEK_HANDLE`, `CV_KEK_VERSION`; `file` with
+  `CV_ENV=live` is fatal (`kek_source_not_permitted`).
+- Wrap-layer `kek_version` is separate from data-layer `key_version`; the wrapped DEK's AAD binds
+  `credential_id` and `kek_version` (SR-003). Each KEK version has a non-secret check value.
+- KEK unavailable ⇒ `Degraded`: signing, key add/verify/rotate refused (403) and the hourly C-2.8
+  withdrawal check fails (never skipped).
+- KEK types are private to `secrets`; other modules get metadata-only calls (C-3.2).
+- Break-glass (#2119) lives in `candleviewer.admin`, proves KEK possession through `secrets`, and in
+  `live` also requires an unused Owner recovery code; it audits before acting.
