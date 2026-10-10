@@ -75,7 +75,7 @@ async def skip_kill_cancel(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -
 
 async def issue_kill_cancel(i: Any, context: dict[str, Any], event: Any, _a: Any) -> None:
     """At most one exchange cancel per order, only if submitted (INV-B1-h): via the
-    chart's own `cancel_order` service (same `orderLinkId`, C-2.10), bounded by
+    chart's own `cancel_order` service (the same client order id, C-2.10), bounded by
     `CV_KILL_CANCEL_TIMEOUT`. Failure or timeout is audited, never raised: rolling
     back would un-kill the order. Reconciliation re-syncs the exchange (C-2.5).
 

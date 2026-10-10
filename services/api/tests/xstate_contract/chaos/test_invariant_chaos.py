@@ -64,9 +64,9 @@ def test_ledger_covers_every_catalogue_invariant() -> None:
     pending = {inv for inv, n, _t in ROWS if n in PENDING_CHARTS}
     assert covered | pending == {inv for inv, _n, _t in ROWS}
     assert covered.isdisjoint(pending)
-    assert all(
-        chart_for_number(n) is None for n in PENDING_CHARTS
-    ), "a pending chart has landed: drop it from PENDING_CHARTS"
+    assert all(chart_for_number(n) is None for n in PENDING_CHARTS), (
+        "a pending chart has landed: drop it from PENDING_CHARTS"
+    )
     assert len(covered) == len(LEDGER) >= 80
     assert {f for _i, _m, f in LEDGER} <= set(FAMILIES)
     assert set(FAMILIES) == {f for _i, _m, f in LEDGER}, "every family is exercised"
