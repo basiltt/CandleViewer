@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 from decimal import Decimal
 
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -96,13 +97,13 @@ def test_bi4_replay_is_deterministic(spec: BarSpec, tape: list[TradeEvent]) -> N
     assert run(spec, tape) == run(spec, list(tape))
 
 
-def test_bi1_volume_conserved_over_one_million_trades() -> None:
+def _bi1_volume_conserved(n_trades: int) -> None:
     rng = random.Random(42)  # noqa: S311 - seeded test data, not crypto
     spec = BarSpec(kind="volume", volume_threshold=Decimal("250"))
     b = VolumeBarBuilder(spec, SYM)
     total = Decimal(0)
     vols: dict[int, Decimal] = {}
-    for i in range(1_000_000):
+    for i in range(n_trades):
         q = Decimal(rng.randint(1, 4000)) / 1000
         total += q
         t = trade(T0 + i, "100", q, "buy" if i & 1 else "sell", seq=i)
@@ -110,3 +111,14 @@ def test_bi1_volume_conserved_over_one_million_trades() -> None:
             vols[u.bar.index] = u.bar.volume
     assert sum(vols.values()) == total
     assert max(vols.values()) <= Decimal("250")
+
+
+def test_bi1_volume_conserved_over_fifty_thousand_trades() -> None:
+    """PR-lane BI-1 sample; the 1M-trade run is in the nightly `harness` lane (#2177)."""
+    _bi1_volume_conserved(50_000)
+
+
+@pytest.mark.harness
+def test_bi1_volume_conserved_over_one_million_trades() -> None:
+    """Nightly `harness` lane: 1M trades (~100 s under coverage, #2177)."""
+    _bi1_volume_conserved(1_000_000)

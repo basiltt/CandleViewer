@@ -97,12 +97,26 @@ async def test_restart_resumes_mid_bar_bi5(tmp_path: Path) -> None:
 
 
 @settings(
-    max_examples=100, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
+    max_examples=10, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
 )
 @given(seed=st.integers(0, 10_000), cut=st.integers(1, 900), lag=st.integers(0, 60))
 async def test_restart_any_cut_point_bi5(
     tmp_path_factory: pytest.TempPathFactory, seed: int, cut: int, lag: int
 ) -> None:
+    """PR-lane BI-5 sample (10 examples); the 100-example sweep runs nightly (#2177)."""
+    trades = _tape(1_000, seed)
+    await _restart_matches(tmp_path_factory.mktemp("bi5"), trades, cut + 30, min(lag, cut))
+
+
+@pytest.mark.harness
+@settings(
+    max_examples=100, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
+)
+@given(seed=st.integers(0, 10_000), cut=st.integers(1, 900), lag=st.integers(0, 60))
+async def test_restart_any_cut_point_bi5_full_sweep(
+    tmp_path_factory: pytest.TempPathFactory, seed: int, cut: int, lag: int
+) -> None:
+    """Nightly `harness` lane: the full 100-example BI-5 sweep (~2 min under coverage, #2177)."""
     trades = _tape(1_000, seed)
     await _restart_matches(tmp_path_factory.mktemp("bi5"), trades, cut + 30, min(lag, cut))
 
