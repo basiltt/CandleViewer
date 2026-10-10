@@ -28,16 +28,16 @@ Measured on `main` at the merge base with semgrep 1.178.0. Every rule-file in `.
 `services/api`: **0 findings**. One pre-existing site was conformed instead of suppressed
 (`bars/reader.py:85`, `# nosec` gained `reason=`/`owner=`; comment-only change). Three
 **true positives** are excluded by enclosing function, with a `TODO(E12-X03 follow-up)` in
-the rule. They are listed under "Known findings" and are not counted as false positives.
+the rule. They are listed under "Known findings" and are not counted as false positives (all three are now fixed).
 
 | Rule | Fixture fire / clean lines | Findings on main | False positives | Precision |
 |---|---|---|---|---|
 | cv-bybit-category-required | 5 / 5 | 0 | 0 | 100 % |
-| cv-no-float-prices | 4 / 4 | 0 (2 TP excluded) | 0 | 100 % |
+| cv-no-float-prices | 4 / 4 | 0 (2 TP fixed: #2140, #2141) | 0 | 100 % |
 | cv-no-raw-sql-interpolation | 4 / 4 | 0 | 0 | 100 % |
 | cv-unbounded-query-window | 2 / 2 | 0 | 0 | 100 % |
 | cv-no-debug-probe-in-prod | 5 / 2 | 0 | 0 | 100 % |
-| cv-untrusted-exchange-response | 3 / 2 | 0 (1 TP excluded) | 0 | 100 % |
+| cv-untrusted-exchange-response | 3 / 2 | 0 (1 TP fixed: #2142) | 0 | 100 % |
 | cv-nosec-needs-reason-owner | 3 / 2 | 0 (1 conformed) | 0 | 100 % |
 
 **Retro-detection (test plan):** run on the history of `M8`. `cv-no-float-prices` would have
@@ -45,7 +45,11 @@ flagged the two float sites below when they landed, and `cv-untrusted-exchange-r
 have flagged `ingestion/clock.py` (E08). No past category omission, raw-SQL or probe issue exists
 in `bars/`/`ingestion/` history; this is recorded explicitly as the ticket asks.
 
-### Known findings (true positives, fix tickets required)
+### Known findings (true positives — all fixed 2026-10-10, exclusions removed)
+
+The three sites below were true positives on `main` when the rules landed (#2136). Each was
+exempted by its enclosing function only, fixed in its own PR, and the exemption deleted once the
+fix merged (#2140 → #2137, #2141 → #2138, #2142 → #2139). The rules now cover the whole files.
 
 | Rule | Site | Why it is real |
 |---|---|---|

@@ -20,19 +20,6 @@ rules:
         - docs/security/threat-models/E12-bars.md
         - docs/plan/security/ci-gates-e12.md
     patterns:
-      # TODO(#2137, #2138) E12-X03 follow-up: true positives on main at merge, NOT false positives. Two
-      # float-arithmetic sites predate this rule and need a code fix in their owning module
-      # (fix tickets #2137 and #2138, see ci-gates-e12.md "Known findings"):
-      #   TODO(#2137) storage/questdb/repository.py QuestDbRepository.write_trades: float(price) * float(qty)
-      #   TODO(#2138) bars/reader.py stored_bar: turnover=repr(vwap * volume) on floats
-      # Exempted by enclosing function only, so the rest of each file stays covered. Delete
-      # both pattern-not-inside entries in the fix PR.
-      - pattern-not-inside: |
-          async def write_trades(self, rows: Sequence[TradeRow]) -> None:
-              ...
-      - pattern-not-inside: |
-          def stored_bar(row: dict[str, object]) -> StoredBar:
-              ...
       - pattern-either:
           # float() of a price-like attribute/key in builder or ingestion code.
           - patterns:
