@@ -20,15 +20,6 @@ rules:
         - CONSTITUTION.md C-2.2, C-2.3
         - docs/plan/security/ci-gates-e12.md
     patterns:
-      # TODO(#2139) E12-X03 follow-up: TRUE POSITIVE on main at merge, not a false positive:
-      # ingestion/clock.py rest_client_fetcher reads the raw `/v5/market/time` envelope
-      # (`result`, `timeNano`, `timeSecond`) outside the adapter. It needs an adapter-side
-      # parser returning a domain server-time value (fix ticket #2139, see
-      # ci-gates-e12.md "Known findings"). Exempted by enclosing function only; delete this
-      # pattern-not-inside in the fix PR.
-      - pattern-not-inside: |
-          def rest_client_fetcher(...):
-              ...
       - pattern-either:
           - patterns:
               - pattern-either:
