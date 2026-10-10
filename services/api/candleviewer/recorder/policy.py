@@ -9,6 +9,19 @@ driven only via `statechart.gateway`. This class is the synchronous enforcer
 (C-2.21): it owns the trigger refs, the start delay and the grace deadline (checked
 by `tick()`, a 1 s evaluation driven by the caller — no per-symbol sleeps, no chart
 timers, so a restart re-derives deadlines). The chart only records.
+
+Cap (`CV_RECORDER_MAX_SYMBOLS`): manual adds are rejected (422); an auto-start is
+refused with a `RecorderCapRefused` warning, a metric and a denied audit record, then
+retried every tick. A `position_open` start may pre-empt one evictable symbol.
+
+Pin semantics (`set_pin`, audited `retention.change`): a pinned symbol's data is never
+deleted by retention (E16-T06), and a pinned symbol is never a pre-emption victim and
+is exempt from auto-eviction (E16-T07), like a manual entry. A pin alone does not start
+recording; it only protects a symbol that is recording or recorded.
+
+Warm-up gate: until `positions_reloaded()` is called, no stop decision is taken (grace
+expiry or pre-emption), because the position cache may not be authoritative yet
+(#2188 opens the gate after the startup reconcile).
 """
 
 from __future__ import annotations
@@ -386,8 +399,17 @@ class RecordingPolicy:
         s.error_attempts += 1
         s.retry_at = now + step
         await self._send_recording(symbol, "RETRY")
-        if self.leaf(symbol) in ("recording", "degraded", "lingering"):
+        interp = self._charts.get(symbol)
+        failed_stop = interp is not None and interp.context.get("direction") == "stopping"
+        if failed_stop and self.leaf(symbol) == "recording" and not self._desired(s):
+            # RETRY of a failed STOP: finish the stop (audited), never a new session.
+            await self._send_recording(symbol, "REASON_REMOVED", linger_until_us=None)
+            await self._send_recording(symbol, "LINGER_DUE", position_open=bool(s.positions))
+            await self._settle(symbol)
+        if self.leaf(symbol) in ("recording", "degraded", "lingering", "stopped"):
             s.error_attempts, s.retry_at = 0, None
+        if self.leaf(symbol) == "stopped":
+            await self._prune(symbol)
 
     async def _add(self, symbol: str, s: _Sym, reason: Reason) -> None:
         if self.leaf(symbol) == "error":
@@ -427,14 +449,20 @@ class RecordingPolicy:
         await self._bus.publish(self._refused_topic, ev)
 
     async def _preempt_for(self, symbol: str) -> bool:
-        """A position is money at risk: stop the lowest-priority evictable (chart-only or
-        lingering, non-manual, no position) symbol to make room. False if none exists."""
+        """A position is money at risk: stop the lowest-priority evictable symbol to make
+        room. Never a victim: manual, pinned, or holding a position. Never while the
+        warm-up gate is closed (the position cache is not authoritative yet). The slot
+        is freed only once the victim's stop audit succeeded (C-2.9). False -> the
+        requester is refused and queued (retried every tick)."""
+        if not self._positions_ready:
+            return False
         victims = [
             (0 if self.leaf(v) == "lingering" else 1, v)
             for v in self._active()
             if v != symbol
             and (vs := self._syms.get(v)) is not None
             and vs.manual is None
+            and not vs.pinned
             and not vs.positions
         ]
         if not victims:
@@ -447,6 +475,8 @@ class RecordingPolicy:
         vs.started_reasons.clear()
         await self._send_recording(victim, "LINGER_DUE", position_open=False)
         await self._settle(victim)
+        if self.leaf(victim) != "stopped":  # stop audit failed: victim stays, in `error`
+            return False
         recorder_cap_preempted_total.inc()
         await self._prune(victim)
         vs.linger_deadline = None

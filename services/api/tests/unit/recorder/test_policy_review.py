@@ -5,13 +5,13 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from xstate_statemachine import SimulatedClock
 
 import candleviewer.statechart.bindings.b11_recording as b11
 from candleviewer.recorder.errors import InvalidRecorderActorError, RecorderSymbolLimitError
 from candleviewer.recorder.models import SYSTEM_ACTOR
 from candleviewer.recorder.policy import PolicyConfig, RecordingPolicy, user_actor
 from candleviewer.statechart import build
+from candleviewer.statechart.factory import default_clock
 from tests.unit.recorder.conftest import FakeAudit, FakeBus, FakeClock
 
 OWNER = user_actor("owner-1")
@@ -46,7 +46,7 @@ async def test_two_policies_audit_to_their_own_sink_and_env(clock: FakeClock) ->
 
 
 async def test_b11_without_hook_refuses_unaudited_subscribe() -> None:
-    interp = (await build("recording", clock=SimulatedClock(), lane="platform")).interpreter
+    interp = (await build("recording", clock=default_clock(), lane="platform")).interpreter
     try:
         await interp.send({"type": "REASON_ADDED", "reason": "manual", "symbol": "X"}, wait=True)
         for _ in range(64):

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from xstate_statemachine import SimulatedClock
 
 from candleviewer.recorder.policy import RecordingPolicy
+from candleviewer.statechart.factory import default_clock
 from candleviewer.statechart.persistence import (
     ChainTripLatch,
     InMemoryDrainJournal,
@@ -33,7 +33,7 @@ def _restorer(journal: InMemoryDrainJournal) -> Restorer:
         pager=Pager(),
         latch=ChainTripLatch(),
         plugins=lambda: [],
-        clock=SimulatedClock(),
+        clock=default_clock(),
         lane="platform",
     )
 

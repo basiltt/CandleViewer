@@ -119,6 +119,8 @@ async def add_reason(_i: Any, context: dict[str, Any], event: Any, _a: Any) -> N
     if isinstance(reason, str) and reason not in reasons:
         reasons.append(reason)
     context["reasons"] = reasons
+    if context.get("direction") == "stopping":
+        context["direction"] = "started"  # a failed stop was abandoned: streams still up
 
 
 async def remove_reason(_i: Any, context: dict[str, Any], event: Any, _a: Any) -> None:
@@ -178,13 +180,25 @@ async def audit_kill(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None
 # --- services (idempotent under re-entry) ---------------------------------------------
 
 
+#: `context["direction"]`: the I/O the chart last attempted. The contract has a single
+#: recovery arm, `error --RETRY--> starting`, so a RETRY after a failed STOP re-enters
+#: `starting`; the streams were never unsubscribed (audit is write-ahead), so the
+#: subscribe service does no I/O and no start audit, and the owner completes the stop
+#: via `lingering -> LINGER_DUE -> stopping` (the only stop path B11 declares).
+
+
 async def subscribe_streams(_i: Any, context: dict[str, Any], _e: Any) -> dict[str, Any]:
+    if context.get("direction") == "stopping":
+        return {"resumed_after_failed_stop": True}
     await _call_hook(_i, "subscribe", context)
+    context["direction"] = "started"
     return {}
 
 
 async def unsubscribe_and_flush(_i: Any, context: dict[str, Any], _e: Any) -> dict[str, Any]:
+    context["direction"] = "stopping"
     await _call_hook(_i, "unsubscribe", context)
+    context["direction"] = "stopped"
     return {}
 
 
