@@ -226,8 +226,9 @@ class TestRefusals:
     def test_param_outside_sr_e12_03_bounds_is_400(self, bar_type: str, param: str) -> None:
         q = {**_P, "bar_type": bar_type, "param": param}
         body = _problem(_client().get("/market/bars", params=q), 400, "validation_failed")
-        # renko bounds are enforced inside from_wire (E12-S04), so the generic invalid-param text applies
-        assert ("between" in body["detail"]) or (bar_type == "renko" and "not valid" in body["detail"])
+        # renko bounds are enforced inside from_wire (E12-S04): generic invalid-param text
+        detail = body["detail"]
+        assert "between" in detail or (bar_type == "renko" and "not valid" in detail)
 
     @pytest.mark.parametrize(("bar_type", "param"), [("renko", "atr:14"), ("pnf", "10:3"),
                                                       ("heikin_ashi", "5")])  # fmt: skip
