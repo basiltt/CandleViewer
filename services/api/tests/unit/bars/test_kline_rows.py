@@ -20,6 +20,7 @@ from candleviewer.bars.kline_rows import (
 from candleviewer.bars.models import Bar, BarSpec
 from candleviewer.bars.rows import BarPersistError, row_checksum
 from candleviewer.bars.writer import BarWriter, SourceOverwriteRefused
+from candleviewer.domain.sql_names import ts_param, ts_us_from_row
 from candleviewer.exchange.base.models import KlineEvent
 from candleviewer.storage.questdb.ilp_writer import serialize_ilp_line
 from candleviewer.storage.questdb.schemas import BAR_SCHEMAS_BY_FAMILY
@@ -186,7 +187,8 @@ class _Conn:
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
         self.queries.append((sql, params))
-        sym, param, lo, hi = params
+        sym, param, lo_dt, hi_dt = params
+        lo, hi = ts_us_from_row(lo_dt), ts_us_from_row(hi_dt)  # the real server gets datetimes
         return [
             r for r in self.rows
             if r["symbol"] == sym and r["bar_param"] == param and lo <= r["ts"] <= hi  # type: ignore[operator]
@@ -217,7 +219,8 @@ async def test_fresh_writer_after_restart_refuses_kline_over_stored_tape_and_cou
     after = bars_source_overwrite_refused_total.labels("kline", "tape")._value.get()
     assert after == before + 2
     sql, params = conn.queries[0]
-    assert "$1" in sql and params == ("BTCUSDT", "5m", T0, T0 + 2 * W5)
+    assert "$1" in sql
+    assert params == ("BTCUSDT", "5m", ts_param(T0), ts_param(T0 + 2 * W5))
 
 
 async def test_stored_tape_lookup_empty_input_makes_no_query() -> None:
@@ -231,3 +234,24 @@ def test_submit_kline_bars_stored_check_is_mandatory() -> None:
 
     param = inspect.signature(submit_kline_bars).parameters["stored_higher"]
     assert param.default is inspect.Parameter.empty
+
+
+async def test_stored_tape_lookup_decodes_datetime_rows_and_binds_datetime() -> None:
+    """#2170: a real QuestDB returns `ts` as datetime and rejects int binds."""
+    from datetime import datetime
+
+    from candleviewer.bars.kline_rows import stored_tape_lookup
+    from candleviewer.domain.sql_names import ts_param
+
+    seen: list[tuple[object, ...]] = []
+
+    class _Conn:
+        async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+            seen.append(params)
+            return [{"ts": ts_param(1_700_000_000_000_001)}, {"ts": ts_param(5)}]
+
+    got = await stored_tape_lookup(_Conn())(  # type: ignore[arg-type]
+        "BTCUSDT", "time:1m", [1_700_000_000_000_001, 1_700_000_000_000_002]
+    )
+    assert got == {1_700_000_000_000_001}
+    assert all(isinstance(p, datetime) for p in seen[0][2:])

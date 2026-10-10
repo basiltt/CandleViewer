@@ -32,6 +32,7 @@ from candleviewer.bars.rows import (
 )
 from candleviewer.bars.spec import from_wire
 from candleviewer.bars.writer import SourceOverwriteRefused, bars_source_overwrite_refused_total
+from candleviewer.domain.sql_names import ts_param, ts_us_from_row
 from candleviewer.exchange.base.models import KlineEvent
 
 
@@ -190,7 +191,7 @@ async def submit_kline_bars(
     if rows:
         try:
             taken = await stored_higher(
-                symbol, bar_param_for(spec), [int(str(r["ts"])) for r in rows]
+                symbol, bar_param_for(spec), [ts_us_from_row(r["ts"]) for r in rows]
             )
         except TapePrecedenceUnknown as exc:
             bars_kline_refused_total.labels(REFUSE_PRECEDENCE_UNKNOWN).inc(len(rows))
@@ -206,10 +207,10 @@ async def submit_kline_bars(
         if health is not None:
             health.clear((symbol, interval))
         if taken:
-            refused = [r for r in rows if int(str(r["ts"])) in taken]
+            refused = [r for r in rows if ts_us_from_row(r["ts"]) in taken]
             bars_source_overwrite_refused_total.labels(KLINE_SOURCE, "tape").inc(len(refused))
             _log().info("kline_rows_refused_over_stored_tape", symbol=symbol, refused=len(refused))
-            rows = [r for r in rows if int(str(r["ts"])) not in taken]
+            rows = [r for r in rows if ts_us_from_row(r["ts"]) not in taken]
     if not rows:
         return 0
     try:
@@ -240,9 +241,11 @@ def stored_tape_lookup(conn: RowFetcher) -> StoredHigherSource:
     async def lookup(symbol: str, bar_param: str, ts: list[int]) -> set[int]:
         if not ts:
             return set()
-        rows = await conn.fetch(_STORED_HIGHER_SQL, symbol, bar_param, min(ts), max(ts))
+        rows = await conn.fetch(
+            _STORED_HIGHER_SQL, symbol, bar_param, ts_param(min(ts)), ts_param(max(ts))
+        )
         wanted = set(ts)
-        return {t for t in (int(str(r["ts"])) for r in rows) if t in wanted}
+        return {t for t in (ts_us_from_row(r["ts"]) for r in rows) if t in wanted}
 
     return lookup
 
