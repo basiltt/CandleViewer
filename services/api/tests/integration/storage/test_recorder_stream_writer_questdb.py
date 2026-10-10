@@ -24,6 +24,7 @@ from tests.integration.storage.test_questdb_hot_tier import (
     wait_for_row_count,
 )
 from tests.unit.recorder._writer_helpers import (
+    T0,
     FakeClock,
     FakeEvents,
     FakeStore,
@@ -41,7 +42,7 @@ _EXPECTED = {
     "orderbook_deltas": 2,
     "orderbook_snapshots": 1,
     "tickers": 1,
-    "liquidations": 1,
+    "liquidations": 2,
 }
 
 
@@ -54,17 +55,21 @@ async def test_stream_writer_rows_commit_on_real_questdb(
     conn = await _connect(host, pg_port)
     try:
         await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
-        ilp = IlpWriter(_AsyncpgTcpIlpTransport(host, ilp_port), ALL_SCHEMAS)
-        await ilp.start()
+        sinks = {
+            s: IlpWriter(_AsyncpgTcpIlpTransport(host, ilp_port), ALL_SCHEMAS) for s in STREAMS
+        }
+        for sink in sinks.values():
+            await sink.start()
         clock = FakeClock()
         writer = StreamWriter(
-            ilp,
+            sinks.__getitem__,
             FakeStore(),
             FakeEvents(),
             WriterConfig(wal_dir=tmp_path / "wal"),
             clock=clock,
             wall_clock_us=lambda: 0,
         )
+        await writer.open()
         writer.seed(["BTCUSDT"])
         await writer.on_trade(trade(1))
         await writer.on_trade(trade(2))
@@ -72,10 +77,13 @@ async def test_stream_writer_rows_commit_on_real_questdb(
         await writer.on_book_snapshot(snapshot(4))
         await writer.on_ticker(ticker(1))
         await writer.on_liquidation(liquidation(1))
+        # Same ts/side/price/size, next batch_index: a distinct print (QuestDB 0005 key).
+        await writer.on_liquidation(liquidation(2).model_copy(update={"ts_event": T0 + 1}))
         clock.advance(0.2)
         for stream in STREAMS:
             await writer.pump(stream)
-        await ilp.stop()
+        for sink in sinks.values():
+            await sink.stop()
         for table, n in _EXPECTED.items():
             await wait_for_row_count(conn, table, n)
             rows = await conn.fetch("SELECT * FROM wal_tables() WHERE name = $1", table)

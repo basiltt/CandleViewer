@@ -830,7 +830,7 @@ Layered, highest priority last: packaged defaults → `infra/compose/.env` → e
 | `CV_RECORDER_AUTOSTOP_GRACE_S`  | int    | `1800`          | runtime | linger after last reason; re-acquire cancels |
 | `CV_RECORDER_AUTORECORD_ENABLED`| bool   | `true`          | runtime | chart-open only; never gates position/manual |
 | `CV_RECORDER_MAX_SYMBOLS`       | int    | `20`            | runtime | manual add 422 / auto-start refused above    |
-| `CV_RECORDER_WAL_DIR`           | path   | `/data/recorder-wal` | process | StreamWriter spill WAL; must not share a volume with the backend/Postgres (SR-096) |
+| `CV_RECORDER_WAL_DIR`           | path   | `<data dir>/recorder-wal` | process | StreamWriter spill WAL; absolute, no `..`, inside the data dir; must not share a volume with Postgres/logs (SR-096) |
 | `CV_RECORDER_WAL_MAX_BYTES`     | int    | `1073741824`    | process | WAL cap (all streams); past it: drop + `backpressure_drop` gap |
 | `CV_DISK_CAP_GB`                | int    | `500`           | runtime | pause auto-record at 90 %                    |
 | `CV_ORDER_RATE_PER_UID`         | int    | `8`             | runtime | below Bybit's 10/s for headroom              |

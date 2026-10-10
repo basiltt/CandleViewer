@@ -1,41 +1,58 @@
 """Bounded on-disk spill WAL for the StreamWriter (E16-T03, ADR-0015 decision 8).
 
-One WAL per stream lane (`<CV_RECORDER_WAL_DIR>/<stream>/`), so a stalled stream never
-blocks another's replay. All lanes share one `WalBudget` (`CV_RECORDER_WAL_MAX_BYTES`, default
-1 GiB): an append that would exceed it is refused **per frame** and the caller records the
-refused frames as a `backpressure_drop` gap — the WAL itself never drops silently.
+Layout per stream lane (`<CV_RECORDER_WAL_DIR>/<stream>/`, dirs 0700, files 0600 where the
+platform supports it):
 
-Frame: `>I length` + `>I crc32(payload)` + orjson payload
-`{"t": stream, "s": symbol, "e": exch_ts, "q": seq, "u": sub, "r": row}`. A frame failing its
-CRC (or a torn tail) ends the read; the remainder is moved to `<wal>/corrupt/` and reported to
-the caller (`recorder_wal_corrupt`) — never skipped mid-file.
+- `spill.wal` + `spill.meta` — new spills. The writer appends one **batch** per call (one
+  write + one fsync per batch, never per event). `*.meta` holds `{symbol: [min_ts, max_ts]}`
+  so a corrupt tail can still be attributed to the symbols it held.
+- `replay.wal` + `replay.meta` — `spill.wal` rotated for replay.
+- `runs/` — an external sort of `replay.wal`: it is read in bounded chunks (`chunk_rows`
+  frames), and each chunk is sorted by `exch_ts` and written as `NNNNNN.run`. Then `READY`
+  is written and `replay.wal` is deleted. Replay is a `heapq.merge` (k-way) over buffered run
+  readers, so memory is O(runs + one batch), never the whole WAL. `CHECKPOINT` stores how many
+  merged records QuestDB has already committed, so a retried replay resumes from there.
+- `corrupt/` — the rest of a file after the first frame that fails CRC, or a torn frame. These
+  bytes stay counted in the budget, so quarantine cannot grow the disk past the cap.
 
-Two files per lane: new spills append to `spill.wal`; a replay first renames it to
-`replay.wal` (unless an interrupted replay left one), replays that, then deletes it. A replay
-that fails or is interrupted leaves `replay.wal` in place and is restarted from its start —
-safe because every QuestDB table declares `DEDUP UPSERT KEYS`.
+Frame: `>I length` + `>I crc32(payload)` + orjson
+`{"t": stream, "s": symbol, "e": exch_ts, "q": seq, "u": sub, "r": row}`.
 
-File I/O is synchronous here and always called through `asyncio.to_thread` by the writer
-(never on the event loop).
+The budget (`CV_RECORDER_WAL_MAX_BYTES`) is shared by every lane and counts spill, replay,
+runs and corrupt bytes. A frame that does not fit is refused, and the caller turns it into a
+`backpressure_drop` gap. While `runs/` is being built, the disk can briefly hold up to twice
+the replayed file's size (documented bound: 2x the cap).
+
+All methods are synchronous and are only ever called through `asyncio.to_thread`.
 """
 
 from __future__ import annotations
 
+import contextlib
+import heapq
 import os
+import shutil
 import struct
 import zlib
-from collections.abc import Iterator
-from dataclasses import dataclass
+from collections.abc import Callable, Generator, Iterator
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import BinaryIO
 
 import orjson
 
 _HEADER = struct.Struct(">II")
 #: Hard ceiling on one frame (a 500-level snapshot is ~40 KiB); larger = corrupt length.
 _MAX_FRAME = 8 * 1024 * 1024
+_COPY_CHUNK = 1 << 20
 SPILL_NAME = "spill.wal"
 REPLAY_NAME = "replay.wal"
+RUNS_DIR = "runs"
 CORRUPT_DIR = "corrupt"
+_READY = "READY"
+_CHECKPOINT = "CHECKPOINT"
+_META = "META"
+_BINARY = getattr(os, "O_BINARY", 0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,10 +98,30 @@ def _decode_payload(payload: bytes) -> WalRecord:
     )
 
 
+def read_frames(fh: BinaryIO) -> Iterator[tuple[WalRecord, int]]:
+    """Yield `(record, end_offset)` frame by frame from a buffered file. Stops silently at the
+    first torn or corrupt frame; the caller compares the last end offset to the file size."""
+    offset = fh.tell()
+    while True:
+        header = fh.read(_HEADER.size)
+        if len(header) < _HEADER.size:
+            return
+        length, crc = _HEADER.unpack(header)
+        if length > _MAX_FRAME:
+            return
+        payload = fh.read(length)
+        if len(payload) < length or zlib.crc32(payload) != crc:
+            return
+        try:
+            rec = _decode_payload(payload)
+        except (orjson.JSONDecodeError, KeyError, TypeError, ValueError):
+            return
+        offset += _HEADER.size + length
+        yield rec, offset
+
+
 class WalBudget:
-    """Shared byte budget across every lane's WAL files (single-threaded use: lanes only
-    mutate it under their own lock from `to_thread` calls that never overlap per lane; the
-    counter is a plain int updated atomically under the GIL)."""
+    """Byte budget shared by every lane's WAL files (spill, replay, runs, corrupt)."""
 
     def __init__(self, max_bytes: int) -> None:
         if max_bytes < 1:
@@ -94,24 +131,63 @@ class WalBudget:
 
 
 @dataclass(slots=True)
-class ReadResult:
-    records: list[WalRecord]
-    #: Bytes moved to `corrupt/` because a frame failed CRC or was torn (0 = clean).
+class ReplayPrep:
+    """Outcome of `begin_replay`."""
+
+    pending: bool
     corrupt_bytes: int = 0
+    #: symbol -> (start, end) exch_ts window lost to the quarantined tail.
+    corrupt_windows: dict[str, tuple[int, int]] = field(default_factory=dict)
+
+
+def _open_append(path: Path) -> int:
+    return os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | _BINARY, 0o600)
+
+
+def _write_atomic(path: Path, data: bytes, fsync: Callable[[int], None]) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | _BINARY, 0o600)
+    try:
+        os.write(fd, data)
+        fsync(fd)
+    finally:
+        os.close(fd)
+    os.replace(tmp, path)
+
+
+def _tree_bytes(path: Path) -> int:
+    if not path.exists():
+        return 0
+    if path.is_file():
+        return path.stat().st_size
+    return sum(p.stat().st_size for p in path.rglob("*.wal") if p.is_file()) + sum(
+        p.stat().st_size for p in path.rglob("*.run") if p.is_file()
+    )
 
 
 class SpillWal:
-    """The WAL of one stream lane. Not concurrency-safe: the lane serialises access."""
+    """The WAL of one stream lane. Not concurrency-safe: the lane serialises access.
 
-    def __init__(self, directory: Path, budget: WalBudget) -> None:
+    The constructor does no I/O; `open()` (via `to_thread`) creates the directory and
+    recovers the budget share of files a previous process left."""
+
+    def __init__(
+        self,
+        directory: Path,
+        budget: WalBudget,
+        *,
+        chunk_rows: int = 50_000,
+        fsync: Callable[[int], None] = os.fsync,
+    ) -> None:
+        if chunk_rows < 1:
+            raise ValueError("chunk_rows must be >= 1")
         self._dir = directory
         self._budget = budget
-        self._dir.mkdir(parents=True, exist_ok=True)
-        # Recover the budget share of files left by a previous process (startup replay).
-        for name in (SPILL_NAME, REPLAY_NAME):
-            path = self._dir / name
-            if path.exists():
-                budget.used += path.stat().st_size
+        self._chunk_rows = chunk_rows
+        self._fsync = fsync
+        self._spill_windows: dict[str, list[int]] = {}
+
+    # -- paths ---------------------------------------------------------------------------------
 
     @property
     def spill_path(self) -> Path:
@@ -121,13 +197,43 @@ class SpillWal:
     def replay_path(self) -> Path:
         return self._dir / REPLAY_NAME
 
+    @property
+    def runs_dir(self) -> Path:
+        return self._dir / RUNS_DIR
+
+    @property
+    def corrupt_dir(self) -> Path:
+        return self._dir / CORRUPT_DIR
+
+    def _meta(self, wal: Path) -> Path:
+        return wal.with_suffix(".meta")
+
+    # -- lifecycle -----------------------------------------------------------------------------
+
+    def open(self) -> None:
+        self._dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        with contextlib.suppress(OSError):
+            os.chmod(self._dir, 0o700)
+        if (self.runs_dir / _READY).exists():
+            recovered = _tree_bytes(self.runs_dir)
+        else:
+            shutil.rmtree(self.runs_dir, ignore_errors=True)  # torn run build: rebuilt
+            recovered = 0
+        recovered += _tree_bytes(self.spill_path) + _tree_bytes(self.replay_path)
+        recovered += _tree_bytes(self.corrupt_dir)
+        self._budget.used += recovered
+        self._spill_windows = self._load_meta(self.spill_path)
+
     def has_data(self) -> bool:
+        if (self.runs_dir / _READY).exists():
+            return True
         return any(p.exists() and p.stat().st_size > 0 for p in (self.spill_path, self.replay_path))
 
+    # -- spill (one write + one fsync per batch) -----------------------------------------------
+
     def append(self, records: list[WalRecord]) -> int:
-        """Append frames in order until the budget refuses one; return how many were
-        written (a prefix). fsync'd before returning so an acknowledged spill survives a
-        crash."""
+        """Append the longest prefix of `records` that fits the budget, with a single write
+        and a single fsync. Returns how many records were written."""
         chunks: list[bytes] = []
         size = 0
         for rec in records:
@@ -136,61 +242,142 @@ class SpillWal:
                 break
             chunks.append(frame)
             size += len(frame)
-        if chunks:
-            with self.spill_path.open("ab") as fh:
-                fh.write(b"".join(chunks))
-                fh.flush()
-                os.fsync(fh.fileno())
-            self._budget.used += size
+        if not chunks:
+            return 0
+        fd = _open_append(self.spill_path)
+        try:
+            os.write(fd, b"".join(chunks))
+            self._fsync(fd)
+        finally:
+            os.close(fd)
+        self._budget.used += size
+        for rec in records[: len(chunks)]:
+            w = self._spill_windows.setdefault(rec.symbol, [rec.exch_ts, rec.exch_ts])
+            w[0], w[1] = min(w[0], rec.exch_ts), max(w[1], rec.exch_ts)
+        # Advisory (not fsync'd): attributes a corrupt tail to the symbols it held.
+        self._meta(self.spill_path).write_bytes(orjson.dumps(self._spill_windows))
         return len(chunks)
 
-    def begin_replay(self) -> bool:
-        """Rotate `spill.wal` to `replay.wal` unless an interrupted replay is pending.
-        Returns whether there is anything to replay."""
-        if not self.replay_path.exists() and self.spill_path.exists():
-            os.replace(self.spill_path, self.replay_path)
-        return self.replay_path.exists()
+    def _load_meta(self, wal: Path) -> dict[str, list[int]]:
+        try:
+            raw = orjson.loads(self._meta(wal).read_bytes())
+        except (OSError, orjson.JSONDecodeError):
+            return {}
+        return {str(k): [int(v[0]), int(v[1])] for k, v in dict(raw).items()}
 
-    def read_replay(self) -> ReadResult:
-        """Decode `replay.wal`; on the first bad frame, quarantine the rest."""
-        data = self.replay_path.read_bytes()
-        records: list[WalRecord] = []
-        offset = 0
-        for rec, end in _iter_frames(data):
-            records.append(rec)
-            offset = end
-        corrupt = len(data) - offset
+    # -- replay: rotate -> external sort into runs -> k-way merge with checkpoint ---------------
+
+    def begin_replay(self) -> ReplayPrep:
+        """Make `runs/` ready for the next replay. Rotates `spill.wal` only if no replay is
+        pending, so frames spilled during a replay wait for the next round. On `OSError` the
+        partial `runs/` is removed and `replay.wal` stays as it was; the error propagates."""
+        if (self.runs_dir / _READY).exists():
+            return ReplayPrep(pending=True)
+        if not self.replay_path.exists():
+            if not self.spill_path.exists():
+                return ReplayPrep(pending=False)
+            os.replace(self.spill_path, self.replay_path)
+            if self._meta(self.spill_path).exists():
+                os.replace(self._meta(self.spill_path), self._meta(self.replay_path))
+            self._spill_windows = {}
+        try:
+            return self._build_runs()
+        except OSError:
+            self._discard_runs()
+            raise
+
+    def _discard_runs(self) -> None:
+        self._budget.used -= _tree_bytes(self.runs_dir)
+        shutil.rmtree(self.runs_dir, ignore_errors=True)
+
+    def _build_runs(self) -> ReplayPrep:
+        shutil.rmtree(self.runs_dir, ignore_errors=True)
+        self.runs_dir.mkdir(mode=0o700)
+        size = self.replay_path.stat().st_size
+        last_good = 0
+        last_ts: dict[str, int] = {}
+        n_runs = 0
+        with self.replay_path.open("rb", buffering=_COPY_CHUNK) as fh:
+            frames = read_frames(fh)
+            while True:
+                chunk: list[WalRecord] = []
+                for rec, end in frames:
+                    chunk.append(rec)
+                    last_good = end
+                    last_ts[rec.symbol] = max(last_ts.get(rec.symbol, rec.exch_ts), rec.exch_ts)
+                    if len(chunk) >= self._chunk_rows:
+                        break
+                if not chunk:
+                    break
+                chunk.sort(key=lambda r: r.exch_ts)
+                run = self.runs_dir / f"{n_runs:06d}.run"
+                data = b"".join(encode_frame(r) for r in chunk)
+                _write_atomic(run, data, self._fsync)
+                self._budget.used += len(data)
+                n_runs += 1
+        prep = ReplayPrep(pending=n_runs > 0)
+        corrupt = size - last_good
         if corrupt:
-            qdir = self._dir / CORRUPT_DIR
-            qdir.mkdir(exist_ok=True)
-            n = len(list(qdir.iterdir()))
-            (qdir / f"{n:06d}.wal").write_bytes(data[offset:])
-            with self.replay_path.open("r+b") as fh:
-                fh.truncate(offset)
-            self._budget.used -= corrupt
-        return ReadResult(records=records, corrupt_bytes=corrupt)
+            self._quarantine(last_good, corrupt)
+            prep.corrupt_bytes = corrupt
+            for symbol, (lo, hi) in self._load_meta(self.replay_path).items():
+                start = last_ts.get(symbol, lo)
+                if symbol not in last_ts or hi > start:
+                    prep.corrupt_windows[symbol] = (start, max(hi, start + 1))
+        _write_atomic(self.runs_dir / _CHECKPOINT, b"0", self._fsync)
+        _write_atomic(self.runs_dir / _READY, b"", self._fsync)
+        # The good bytes now live in runs/; the corrupt bytes stay counted in corrupt/.
+        self._budget.used -= last_good
+        self.replay_path.unlink()
+        self._meta(self.replay_path).unlink(missing_ok=True)
+        if not prep.pending:
+            self.finish_replay()
+        return prep
+
+    def _quarantine(self, offset: int, length: int) -> None:
+        self.corrupt_dir.mkdir(mode=0o700, exist_ok=True)
+        name = self.corrupt_dir / f"{len(list(self.corrupt_dir.iterdir())):06d}.wal"
+        fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _BINARY, 0o600)
+        try:
+            with self.replay_path.open("rb") as src:
+                src.seek(offset)
+                while block := src.read(_COPY_CHUNK):
+                    os.write(fd, block)
+            self._fsync(fd)
+        finally:
+            os.close(fd)
+
+    def checkpoint(self) -> int:
+        try:
+            return int((self.runs_dir / _CHECKPOINT).read_text() or 0)
+        except (OSError, ValueError):
+            return 0
+
+    def commit(self, merged_index: int) -> None:
+        """Durably record that merged records `[0, merged_index)` reached QuestDB."""
+        _write_atomic(self.runs_dir / _CHECKPOINT, str(merged_index).encode(), self._fsync)
+
+    def iter_replay(self) -> Generator[tuple[int, WalRecord]]:
+        """K-way merge of the runs in `exch_ts` order (stable), from the checkpoint onwards.
+        Yields `(merged_index, record)`; within one `exch_ts`, duplicate keys yield once."""
+        runs = sorted(self.runs_dir.glob("*.run"))
+        start = self.checkpoint()
+        with contextlib.ExitStack() as stack:
+            streams = [
+                (rec for rec, _ in read_frames(stack.enter_context(p.open("rb", buffering=65536))))
+                for p in runs
+            ]
+            ts: int | None = None
+            seen: set[tuple[str, str, int, int, int]] = set()
+            for i, rec in enumerate(heapq.merge(*streams, key=lambda r: r.exch_ts)):
+                if rec.exch_ts != ts:
+                    ts, seen = rec.exch_ts, set()
+                if rec.key in seen:
+                    continue
+                seen.add(rec.key)
+                if i >= start:
+                    yield i, rec
 
     def finish_replay(self) -> None:
-        """The replay landed: delete `replay.wal` and release its budget."""
-        if self.replay_path.exists():
-            self._budget.used -= self.replay_path.stat().st_size
-            self.replay_path.unlink()
-
-
-def _iter_frames(data: bytes) -> Iterator[tuple[WalRecord, int]]:
-    offset = 0
-    while offset + _HEADER.size <= len(data):
-        length, crc = _HEADER.unpack_from(data, offset)
-        start = offset + _HEADER.size
-        end = start + length
-        if length > _MAX_FRAME or end > len(data):
-            return
-        payload = data[start:end]
-        if zlib.crc32(payload) != crc:
-            return
-        try:
-            rec = _decode_payload(payload)
-        except (orjson.JSONDecodeError, KeyError, TypeError, ValueError):
-            return
-        yield rec, end
-        offset = end
+        """Every run reached QuestDB: delete `runs/` and release its budget."""
+        self._discard_runs()

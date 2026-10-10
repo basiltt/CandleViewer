@@ -16,7 +16,7 @@ NATURAL_KEY_BY_TABLE: dict[str, tuple[str, ...]] = {
     "orderbook_snapshots": ("ts", "symbol", "depth", "epoch_id"),
     "tickers": ("ts", "symbol"),
     "klines": ("ts", "symbol", "interval"),
-    "liquidations": ("ts", "symbol", "side", "price", "size"),
+    "liquidations": ("ts", "symbol", "side", "price", "size", "batch_index"),
     "open_interest": ("ts", "symbol", "interval", "source"),
     "funding_rates": ("ts", "symbol"),
 }

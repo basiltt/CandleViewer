@@ -2425,9 +2425,10 @@ CREATE TABLE liquidations (
   price     DOUBLE,
   size      DOUBLE,
   notional  DOUBLE,
-  stream    SYMBOL CAPACITY 8 CACHE    -- 'all' (allLiquidation, 1s aggregated) | 'legacy'
+  stream    SYMBOL CAPACITY 8 CACHE,   -- 'all' (allLiquidation, 1s aggregated) | 'legacy'
+  batch_index LONG                     -- print's position in its message (QuestDB 0005, E16-T03)
 ) TIMESTAMP(ts) PARTITION BY DAY WAL
-  DEDUP UPSERT KEYS(ts, symbol, side, price, size);
+  DEDUP UPSERT KEYS(ts, symbol, side, price, size, batch_index);
 ```
 
 No REST history exists for liquidations — depth is strictly bounded by recorder uptime; the UI must state this.

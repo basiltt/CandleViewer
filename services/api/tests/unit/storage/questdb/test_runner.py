@@ -67,6 +67,7 @@ async def test_run_migrations_applies_every_file_on_first_run() -> None:
         "0002_footprint_cells.sql",
         "0003_bars_integrity_columns.sql",
         "0004_bars_key_by_index.sql",
+        "0005_liquidations_batch_index.sql",
     ]
 
 
@@ -96,6 +97,7 @@ async def test_applied_migrations_reflects_recorded_filenames() -> None:
         "0002_footprint_cells.sql",
         "0003_bars_integrity_columns.sql",
         "0004_bars_key_by_index.sql",
+        "0005_liquidations_batch_index.sql",
     }
 
 

@@ -66,10 +66,14 @@ class FakeStore:
         self.counters: list[tuple[str, dict[str, int]]] = []
         self.gaps: list[dict[str, object]] = []
         self.fail = False
+        #: False = no live recording session (E16-T04 has not opened one yet).
+        self.session = True
 
     async def add_session_counters(self, symbol: str, **kw: int) -> bool:
         if self.fail:
             raise ConnectionError("pg down")
+        if not self.session:
+            return False
         self.counters.append((symbol, kw))
         return True
 
@@ -78,6 +82,8 @@ class FakeStore:
     ) -> bool:
         if self.fail:
             raise ConnectionError("pg down")
+        if not self.session:
+            return False
         self.gaps.append(
             {"symbol": symbol, "stream": stream, "start": gap_start, "end": gap_end, "cause": cause}
         )
@@ -92,14 +98,31 @@ class FakeEvents:
         self.events.append(event)
 
 
-def make_writer(
-    tmp_path: Path, **cfg: object
+class FsyncCounter:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def __call__(self, fd: int) -> None:
+        self.calls += 1
+
+
+async def make_writer(
+    tmp_path: Path, *, sink: FakeSink | None = None, **cfg: object
 ) -> tuple[StreamWriter, FakeSink, FakeStore, FakeEvents, FakeClock]:
-    sink, store, events, clock = FakeSink(), FakeStore(), FakeEvents(), FakeClock()
+    """A writer whose five lanes share one per-table `FakeSink` (it fails/delays per table)."""
+    sink = sink or FakeSink()
+    store, events, clock = FakeStore(), FakeEvents(), FakeClock()
     config = WriterConfig(wal_dir=tmp_path / "wal", **cfg)  # type: ignore[arg-type]
     w = StreamWriter(
-        sink, store, events, config, clock=clock, wall_clock_us=lambda: T0 + int(clock.t * 1e6)
+        lambda _stream: sink,
+        store,
+        events,
+        config,
+        clock=clock,
+        wall_clock_us=lambda: T0 + int(clock.t * 1e6),
+        fsync=FsyncCounter(),
     )
+    await w.open()
     w.seed(["BTCUSDT"])
     return w, sink, store, events, clock
 

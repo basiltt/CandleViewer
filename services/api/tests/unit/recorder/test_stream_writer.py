@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import re
 from pathlib import Path
 
 import pytest
@@ -33,11 +32,8 @@ DDL_DIR = Path(__file__).resolve().parents[5] / "backend" / "db" / "questdb"
 
 
 def _ddl_symbol_columns(table: str) -> set[str]:
-    """SYMBOL columns of `table` from the DDL text (independent of #2199's `TableDef` field)."""
-    text = "\n".join(p.read_text(encoding="utf-8") for p in sorted(DDL_DIR.glob("*.sql")))
-    body = re.search(rf"CREATE TABLE IF NOT EXISTS {table} \((.*?)\) TIMESTAMP", text, re.S)
-    assert body is not None, table
-    return set(re.findall(r"^\s*(\w+)\s+SYMBOL\b", body.group(1), re.M))
+    """SYMBOL columns from the DDL (#2199 `TableDef.symbol_columns`, ALTERs folded in)."""
+    return set({t.name: t for t in parse_ddl_dir(DDL_DIR)}[table].symbol_columns)
 
 
 def _changed(symbol: str, change: str) -> RecorderSetChanged:
@@ -55,7 +51,7 @@ def _changed(symbol: str, change: str) -> RecorderSetChanged:
 
 
 async def test_flush_exactly_at_10000_rows_without_waiting(tmp_path: Path) -> None:
-    w, sink, *_ = make_writer(tmp_path)
+    w, sink, *_ = await make_writer(tmp_path)
     for i in range(9_999):
         await w.on_trade(trade(i))
     await w.pump("trades")
@@ -67,7 +63,7 @@ async def test_flush_exactly_at_10000_rows_without_waiting(tmp_path: Path) -> No
 
 
 async def test_flush_exactly_at_200ms_with_one_row(tmp_path: Path) -> None:
-    w, sink, _, _, clock = make_writer(tmp_path)
+    w, sink, _, _, clock = await make_writer(tmp_path)
     await w.on_trade(trade(1))
     clock.advance(0.199)
     await w.pump("trades")
@@ -78,7 +74,7 @@ async def test_flush_exactly_at_200ms_with_one_row(tmp_path: Path) -> None:
 
 
 async def test_batch_is_capped_at_flush_rows(tmp_path: Path) -> None:
-    w, sink, *_ = make_writer(tmp_path)
+    w, sink, *_ = await make_writer(tmp_path)
     for i in range(10_005):
         await w.on_trade(trade(i))
     await w.pump("trades")
@@ -88,7 +84,7 @@ async def test_batch_is_capped_at_flush_rows(tmp_path: Path) -> None:
 
 async def test_slow_stream_does_not_delay_trades(tmp_path: Path) -> None:
     """Scenario: orderbook_deltas writes delayed by 2 s; trades keep their 200 ms cadence."""
-    w, sink, _, _, clock = make_writer(tmp_path, write_timeout_s=30.0)
+    w, sink, _, _, clock = await make_writer(tmp_path, write_timeout_s=30.0)
     release = asyncio.Event()
     original = sink.write_rows
 
@@ -112,13 +108,13 @@ async def test_slow_stream_does_not_delay_trades(tmp_path: Path) -> None:
 
 
 async def test_unrecorded_symbol_is_ignored(tmp_path: Path) -> None:
-    w, *_ = make_writer(tmp_path)
+    w, *_ = await make_writer(tmp_path)
     await w.on_trade(trade(1, symbol="ETHUSDT"))
     assert w.backlog_rows == 0
 
 
 async def test_set_changed_subscribes_and_unsubscribes(tmp_path: Path) -> None:
-    w, *_ = make_writer(tmp_path)
+    w, *_ = await make_writer(tmp_path)
     w.on_set_changed(_changed("ETHUSDT", "added"))
     await w.on_trade(trade(1, symbol="ETHUSDT"))
     assert w.backlog_rows == 1 and w.is_recording("ETHUSDT")
@@ -130,7 +126,7 @@ async def test_set_changed_subscribes_and_unsubscribes(tmp_path: Path) -> None:
 
 
 async def test_every_stream_routes_to_its_table(tmp_path: Path) -> None:
-    w, sink, _, _, clock = make_writer(tmp_path)
+    w, sink, _, _, clock = await make_writer(tmp_path)
     await w.on_trade(trade(1))
     await w.on_book_delta(delta(5))
     await w.on_book_snapshot(snapshot(4))
@@ -153,7 +149,7 @@ async def test_every_stream_routes_to_its_table(tmp_path: Path) -> None:
 
 
 async def test_prices_are_exact_decimal_text(tmp_path: Path) -> None:
-    w, sink, _, _, clock = make_writer(tmp_path)
+    w, sink, _, _, clock = await make_writer(tmp_path)
     await w.on_trade(trade(1))
     clock.advance(0.2)
     await w.pump("trades")
@@ -163,7 +159,7 @@ async def test_prices_are_exact_decimal_text(tmp_path: Path) -> None:
 
 async def test_rows_serialize_every_ddl_column_and_symbols_as_tags(tmp_path: Path) -> None:
     """#2198/#2199 parity: every SYMBOL column is a tag; no row key is a non-DDL column."""
-    w, sink, _, _, clock = make_writer(tmp_path)
+    w, sink, _, _, clock = await make_writer(tmp_path)
     await w.on_trade(trade(1))
     await w.on_book_delta(delta(5))
     await w.on_book_snapshot(snapshot(4))
@@ -188,7 +184,7 @@ async def test_rows_serialize_every_ddl_column_and_symbols_as_tags(tmp_path: Pat
 
 
 async def test_delta_seq_jump_is_observed_not_healed(tmp_path: Path) -> None:
-    w, *_ = make_writer(tmp_path)
+    w, *_ = await make_writer(tmp_path)
     await w.on_book_delta(delta(5))
     await w.on_book_delta(delta(9, prev=7))
     assert list(w.seq_jumps) == [("BTCUSDT", 5, 7)]
@@ -196,7 +192,7 @@ async def test_delta_seq_jump_is_observed_not_healed(tmp_path: Path) -> None:
 
 
 async def test_counters_written_every_10s_as_deltas(tmp_path: Path) -> None:
-    w, _, store, _, clock = make_writer(tmp_path)
+    w, _, store, _, clock = await make_writer(tmp_path)
     await w.start()
     try:
         await w.on_trade(trade(1))
@@ -221,7 +217,7 @@ async def test_counters_written_every_10s_as_deltas(tmp_path: Path) -> None:
 
 
 async def test_counters_retained_when_store_fails(tmp_path: Path) -> None:
-    w, _, store, _, _ = make_writer(tmp_path)
+    w, _, store, _, _ = await make_writer(tmp_path)
     await w.on_trade(trade(1))
     store.fail = True
     await w.flush_counters()
@@ -231,7 +227,7 @@ async def test_counters_retained_when_store_fails(tmp_path: Path) -> None:
 
 
 async def test_start_and_stop_drain_the_queue(tmp_path: Path) -> None:
-    w, sink, *_ = make_writer(tmp_path)
+    w, sink, *_ = await make_writer(tmp_path)
     await w.start()
     await w.on_trade(trade(1))
     await w.stop()
@@ -244,8 +240,41 @@ def test_wal_volume_check_refuses_shared_device(tmp_path: Path) -> None:
     check_wal_volume(tmp_path / "wal", [tmp_path / "missing"])
 
 
+async def test_open_refuses_wal_on_the_protected_volume(tmp_path: Path) -> None:
+    """SR-096 at start-up: `open()` (called by `start()`) refuses a shared volume."""
+    with pytest.raises(RecorderWalVolumeError):
+        await make_writer(tmp_path, protected_paths=(tmp_path,))
+
+
+async def test_open_passes_when_protected_paths_are_elsewhere(tmp_path: Path) -> None:
+    w, *_ = await make_writer(tmp_path, protected_paths=(tmp_path / "not-mounted",))
+    assert w.spill_bytes == 0
+
+
+async def test_liquidation_rows_carry_batch_index_for_dedup(tmp_path: Path) -> None:
+    """Two prints in one batch with equal side/price/size stay distinct (QuestDB 0005 key)."""
+    w, sink, _, _, clock = await make_writer(tmp_path)
+    await w.on_liquidation(liquidation(0))
+    await w.on_liquidation(liquidation(1).model_copy(update={"ts_event": T0}))
+    clock.advance(0.2)
+    await w.pump("liquidations")
+    rows = sink.rows("liquidations")
+    assert [r["batch_index"] for r in rows] == [0, 1] and rows[0]["ts"] == rows[1]["ts"]
+    ddl = {t.name: t for t in parse_ddl_dir(DDL_DIR)}["liquidations"]
+    assert "batch_index" in ddl.dedup_keys
+
+
+async def test_remove_clears_stale_update_id(tmp_path: Path) -> None:
+    w, *_ = await make_writer(tmp_path)
+    await w.on_book_delta(delta(5))
+    w.on_set_changed(_changed("BTCUSDT", "removed"))
+    w.on_set_changed(_changed("BTCUSDT", "added"))
+    await w.on_book_delta(delta(50))
+    assert list(w.seq_jumps) == []
+
+
 def test_writer_config_defaults_match_the_ticket(tmp_path: Path) -> None:
     cfg = WriterConfig(wal_dir=tmp_path)
     assert (cfg.flush_rows, cfg.flush_interval_s, cfg.wal_max_bytes) == (10_000, 0.2, 1 << 30)
     assert cfg.counters_interval_s == 10.0
-    assert isinstance(make_writer(tmp_path)[0], StreamWriter)
+    assert StreamWriter.__name__ == "StreamWriter"
