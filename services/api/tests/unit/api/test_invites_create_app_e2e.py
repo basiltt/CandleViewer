@@ -22,12 +22,14 @@ from fastapi.testclient import TestClient
 from candleviewer import app as app_module
 from candleviewer.app import create_app
 from candleviewer.auth.generated_permissions import Permission
+from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.invite_service import INVITE_TTL
 from candleviewer.auth.models import MfaEnrollRequest, MfaMethodKind
 from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
 from candleviewer.auth.totp import generate_code, time_step_for
 from tests.unit.api.test_step_up_router import _T0, _Clock
+from tests.unit.auth.auth_fakes import FakeUserRepository, make_user
 from tests.unit.auth.mfa_fakes import FakeMfaRepository
 from tests.unit.auth.session_fakes import FakeSessionRepository
 from tests.unit.auth.test_invite_service import GOOD_PW, FakeRepo
@@ -57,11 +59,16 @@ class _Resolver:
         return self.by_token.get(auth.removeprefix("Bearer "))
 
 
+_PW = "correct horse battery staple"
+
+
 class _World:
     def __init__(self) -> None:
         self.clock = _Clock()
         self.clock.now = _T0
         self.invites = FakeRepo()
+        self.users = FakeUserRepository()
+        self.hasher = Hasher(pepper="test-pepper")
         self.audit = _Writer()
         self.resolver = _Resolver()
         self.seeds: dict[str, bytes] = {}
@@ -73,7 +80,9 @@ class _World:
 
     def elevate(self, token: str, **kw: Any) -> Any:
         return self.client.post(
-            "/auth/step-up", headers=_h(token), json={"code": self.code(token), **kw}
+            "/auth/step-up",
+            headers=_h(token),
+            json={"code": self.code(token), "password": _PW, **kw},
         )
 
 
@@ -95,6 +104,7 @@ async def _login(w: _World, role: str, perms: frozenset[Permission]) -> str:
         method_id=str(res.method_id),
         code=generate_code(seed, time_step_for(w.clock.now.timestamp()) - 1),
     )
+    w.users.add(make_user(password_hash=await w.hasher.hash(_PW)).model_copy(update={"id": uid}))
     minted = await w.auth.sessions.mint(str(uid))
     token = minted.access_token
     w.seeds[token] = seed
@@ -108,6 +118,7 @@ async def _login(w: _World, role: str, perms: frozenset[Permission]) -> str:
 async def world(monkeypatch: pytest.MonkeyPatch) -> _World:
     w = _World()
     w.auth = AuthService(
+        w.users,
         mfa_repository=FakeMfaRepository(),
         totp_encryption_key=os.urandom(32),
         recovery_code_hmac_key=os.urandom(32),

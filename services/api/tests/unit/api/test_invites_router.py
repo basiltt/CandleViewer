@@ -20,6 +20,7 @@ from tests.unit.auth.test_invite_service import (
     FakeMfa,
     FakeRepo,
 )
+from tests.unit.auth.test_step_up import PASSWORD
 
 
 class _InvAuth:
@@ -54,7 +55,11 @@ _BODY = {"email": "ann@example.com", "username": "annie", "roles": ["viewer"]}
 
 
 def _elevate(c: TestClient, seed: bytes, clock: Any) -> None:
-    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    c.post(
+        "/auth/step-up",
+        headers=_H,
+        json={"code": _code(seed, clock), "password": PASSWORD, "action_class": "users"},
+    )
 
 
 async def test_create_user_requires_step_up_then_returns_link_once() -> None:

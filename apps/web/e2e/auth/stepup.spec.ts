@@ -40,10 +40,11 @@ test("E09-TC-C05 step-up with a TOTP code succeeds and the grace window is shown
   });
   await page.goto("/admin/users");
   const code = totp(OTP_SEED, T0.getTime());
+  await page.getByLabel("Password", { exact: true }).fill("e2e-step-up-pw");
   await page.getByLabel("Authenticator code").fill(code);
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByText(/Grace window/u)).toContainText("Grace window: 5:00 remaining");
-  expect(JSON.parse(sent)).toEqual({ code });
+  expect(JSON.parse(sent)).toEqual({ code, password: "e2e-step-up-pw" });
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
   await assertNoClientSecrets(page, [code, "step-up-marker-x"]);
   await guard.flush();
@@ -63,6 +64,7 @@ test("E09-TC-C06 after the window the grace countdown reaches zero (fake clock)"
     ),
   );
   await page.goto("/admin/users");
+  await page.getByLabel("Password", { exact: true }).fill("e2e-step-up-pw");
   await page.getByLabel("Authenticator code").fill("123456");
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByText(/Grace window/u)).toContainText("remaining");
@@ -77,9 +79,10 @@ test("E09-TC-C05 rejected code keeps the gate closed with an accessible error", 
   await stubSession(page, { role: "owner", elevatedUntil: () => null });
   await page.route("**/api/v1/auth/step-up", (r) => r.fulfill(json({}, 401)));
   await page.goto("/admin/users");
+  await page.getByLabel("Password", { exact: true }).fill("pw-a1");
   await page.getByLabel("Authenticator code").fill("000000");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("alert")).toHaveText("That code did not work. Try again.");
+  await expect(page.getByRole("alert")).toHaveText("Invalid password or code.");
   await expect(page.getByRole("dialog", { name: "Confirm it's you" })).toBeVisible();
 });
 

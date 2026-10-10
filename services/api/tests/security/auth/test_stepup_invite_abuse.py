@@ -19,12 +19,12 @@ from tests.unit.auth.test_invite_service import (
 from tests.unit.auth.test_invite_service import (
     Clock as InviteClock,
 )
-from tests.unit.auth.test_step_up import _code, _setup
+from tests.unit.auth.test_step_up import PASSWORD, _code, _setup
 
 
 async def test_ac_stepup_01_elevation_not_transplantable_across_session_or_action() -> None:
     svc, clock, seed, user, _ = await _setup()
-    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock), PASSWORD)
     with pytest.raises(StepUpRequired):  # other session of same user
         await svc.require_elevation("s2", "keys")
     with pytest.raises(StepUpRequired):  # other action class
@@ -36,11 +36,11 @@ async def test_ac_stepup_01_elevation_not_transplantable_across_session_or_actio
 async def test_ac_stepup_02_grace_cannot_be_extended_and_replay_refused() -> None:
     svc, clock, seed, user, _ = await _setup()
     code = _code(seed, clock)
-    await svc.step_up(str(user), "s1", "keys", code)
+    await svc.step_up(str(user), "s1", "keys", code, PASSWORD)
     clock.now += timedelta(minutes=4)
     await svc.require_elevation("s1", "keys")
     with pytest.raises(StepUpCodeInvalid):  # same code replayed to refresh the window
-        await svc.step_up(str(user), "s1", "keys", code)
+        await svc.step_up(str(user), "s1", "keys", code, PASSWORD)
     clock.now += timedelta(minutes=2)
     with pytest.raises(StepUpRequired):
         await svc.require_elevation("s1", "keys")
@@ -49,13 +49,13 @@ async def test_ac_stepup_02_grace_cannot_be_extended_and_replay_refused() -> Non
 async def test_ac_stepup_03_other_users_totp_code_does_not_elevate() -> None:
     svc, clock, seed, _user, _ = await _setup()
     with pytest.raises(StepUpCodeInvalid):
-        await svc.step_up(str(uuid.uuid4()), "s1", "keys", _code(seed, clock))
+        await svc.step_up(str(uuid.uuid4()), "s1", "keys", _code(seed, clock), PASSWORD)
 
 
 async def test_ac_stepup_04_unknown_session_cannot_elevate() -> None:
     svc, clock, seed, user, _ = await _setup()
     with pytest.raises(StepUpRequired):
-        await svc.step_up(str(user), "no-such-session", "keys", _code(seed, clock))
+        await svc.step_up(str(user), "no-such-session", "keys", _code(seed, clock), PASSWORD)
 
 
 def _svc() -> tuple[InviteService, FakeRepo, InviteClock]:

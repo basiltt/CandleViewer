@@ -7357,8 +7357,12 @@ paths:
     post:
       tags: [auth]
       operationId: authStepUp
-      summary: Elevate the current session for one action class by re-presenting TOTP
+      summary: Elevate the current session for one action class with password and TOTP
       description: >
+        Requires the caller's **password and a TOTP code** (owner decision #1778 AE). The
+        password is verified first (same Argon2id path and lockout counters as login), then the
+        code. A missing `password` is `422`; any wrong factor is the same `401 mfa_invalid`
+        and never reveals which one failed.
         Grants a **5-minute** server-side grace for `action_class` on the current session
         (24-internal-schemas.md section 15.2/15.3; the ticket value of 5 minutes supersedes the
         earlier 15). `live_enablement` and `killswitch` are no-grace classes: the response is
@@ -7375,9 +7379,10 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [code]
+              required: [code, password]
               properties:
                 code: { type: string, pattern: "^[0-9]{6}$" }
+                password: { type: string, minLength: 1, format: password, writeOnly: true }
                 action_class:
                   description: >
                     Optional cross-check. The server elevates the class its last
@@ -7404,6 +7409,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
   /users/{userId}/mfa/reset-preview:

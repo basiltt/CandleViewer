@@ -794,8 +794,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Elevate the current session for one action class by re-presenting TOTP
-     * @description Grants a **5-minute** server-side grace for `action_class` on the current session (24-internal-schemas.md section 15.2/15.3; the ticket value of 5 minutes supersedes the earlier 15). `live_enablement` and `killswitch` are no-grace classes: the response is `single_use: true` and no window is opened. Three consecutive invalid codes downgrade the session to read-only for 5 minutes (`403 session_read_only` on every write). Endpoints that require elevation return `403` with `code: step_up_required` until this succeeds. Always audited (`auth.step_up_granted`, `auth.step_up_failed`, `auth.session_readonly_downgrade`).
+     * Elevate the current session for one action class with password and TOTP
+     * @description Requires the caller's **password and a TOTP code** (owner decision #1778 AE). The password is verified first (same Argon2id path and lockout counters as login), then the code. A missing `password` is `422`; any wrong factor is the same `401 mfa_invalid` and never reveals which one failed. Grants a **5-minute** server-side grace for `action_class` on the current session (24-internal-schemas.md section 15.2/15.3; the ticket value of 5 minutes supersedes the earlier 15). `live_enablement` and `killswitch` are no-grace classes: the response is `single_use: true` and no window is opened. Three consecutive invalid codes downgrade the session to read-only for 5 minutes (`403 session_read_only` on every write). Endpoints that require elevation return `403` with `code: step_up_required` until this succeeds. Always audited (`auth.step_up_granted`, `auth.step_up_failed`, `auth.session_readonly_downgrade`).
      */
     post: operations["authStepUp"];
     delete?: never;
@@ -8712,6 +8712,8 @@ export interface operations {
            */
           action_class?: "keys" | "users" | "live_enablement" | "killswitch" | "risk_caps";
           code: string;
+          /** Format: password */
+          password: string;
         };
       };
     };
@@ -8738,6 +8740,7 @@ export interface operations {
       400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       403: components["responses"]["Forbidden"];
+      422: components["responses"]["UnprocessableEntity"];
       429: components["responses"]["RateLimited"];
     };
   };
