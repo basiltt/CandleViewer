@@ -23,7 +23,9 @@ INVARIANTS: dict[str, str] = {
     "INV-B14-a": "deferred:E08",
     "INV-B14-b": "deferred:E08",
     "INV-B14-c": "test_inv_b14_c_gap_always_drops_and_resnapshots",
-    "INV-B14-d": "deferred:E08",
+    "INV-B14-d": (
+        "test_e50_t14b_round5_fixes.py::test_oc08_property_inv_b14_d_buffer_never_exceeds_bound"
+    ),
     "INV-B14-e": "test_inv_b14_e_resync_count_exported",
 }
 

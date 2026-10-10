@@ -27,7 +27,7 @@ Publish = Callable[[object], Awaitable[None]]
 
 
 #: Receives lifecycle edges (`SUBSCRIBE`, `SNAPSHOT`, `SEQUENCE_GAP`,
-#: `SNAPSHOT_TIMEOUT`). Must not block: fire-and-forget only.
+#: `SNAPSHOT_TIMEOUT`, `BUFFER_OVERFLOW`). Must not block: fire-and-forget only.
 HealthSink = Callable[[str], Awaitable[None]]
 
 
@@ -112,9 +112,15 @@ class BookEngine:
         self._reason = reason
         await self.go_desynced()
         await self.request_snapshot()
-        # The chart only knows LIVE -> desynced; a failed (re)snapshot stays
-        # in its snapshot_pending, which the engine has just re-entered too.
-        await self._edge("SEQUENCE_GAP" if was_live else "SNAPSHOT_TIMEOUT")
+        # The chart knows LIVE -> desynced and (OC-08, #2204) a full pending
+        # buffer -> desynced; any other failed (re)snapshot stays in its
+        # snapshot_pending, which the engine has just re-entered too.
+        if was_live:
+            await self._edge("SEQUENCE_GAP")
+        elif reason == "buffer_overflow":
+            await self._edge("BUFFER_OVERFLOW")
+        else:
+            await self._edge("SNAPSHOT_TIMEOUT")
 
     async def _edge(self, event: str) -> None:
         if self.health_sink is not None:

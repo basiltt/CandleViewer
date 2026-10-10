@@ -21,7 +21,10 @@ CHART = Registry().get("reconciliation")
 
 INVARIANTS: dict[str, str] = {
     "INV-B19-a": "deferred:E45",
-    "INV-B19-b": "test_inv_b19_b_stale_lockout_locks_account",
+    "INV-B19-b": (
+        "test_e50_t14b_round5_fixes.py::"
+        "test_oc05_property_inv_b19_b_only_operator_resolved_clears_lockout"
+    ),
     "INV-B19-c": "deferred:E45",
     "INV-B19-d": "deferred:E45",
     "INV-B19-e": "deferred:E45",

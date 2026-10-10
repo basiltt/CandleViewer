@@ -1,5 +1,6 @@
 {
   "id": "oco",
+  "version": 1,
   "strictConfig": true,
   "maxIterations": 500,
   "actionErrorPolicy": "rollback",
@@ -223,7 +224,35 @@
       "on": {
         "CHILDREN_TERMINAL": {
           "target": "#oco.completed"
-        }
+        },
+        "LEG_A_FILL": [
+          {
+            "target": "#oco.overshoot",
+            "guard": "position_overshoots",
+            "actions": [
+              "record_fill_a"
+            ]
+          },
+          {
+            "actions": [
+              "record_fill_a"
+            ]
+          }
+        ],
+        "LEG_B_FILL": [
+          {
+            "target": "#oco.overshoot",
+            "guard": "position_overshoots",
+            "actions": [
+              "record_fill_b"
+            ]
+          },
+          {
+            "actions": [
+              "record_fill_b"
+            ]
+          }
+        ]
       }
     },
     "completed": {

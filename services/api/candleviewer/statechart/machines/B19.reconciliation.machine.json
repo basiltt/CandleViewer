@@ -1,5 +1,6 @@
 {
   "id": "reconciliation",
+  "version": 1,
   "strictConfig": true,
   "maxIterations": 500,
   "actionErrorPolicy": "rollback",
@@ -192,10 +193,17 @@
         "page_owner"
       ],
       "on": {
-        "RECONNECTED": {
-          "target": "#reconciliation.fetching",
+        "OPERATOR_RESOLVED": {
+          "target": "#reconciliation.idle",
           "actions": [
-            "reset_failures"
+            "audit_operator_resolved",
+            "reset_failures",
+            "unlock_account_for_new_orders"
+          ]
+        },
+        "RECONNECTED": {
+          "actions": [
+            "audit_reconnect_while_locked"
           ]
         }
       }

@@ -1,5 +1,6 @@
 {
   "id": "book",
+  "version": 1,
   "strictConfig": true,
   "maxIterations": 500,
   "actionErrorPolicy": "rollback",
@@ -14,6 +15,7 @@
     "last_seq": 0,
     "snapshot_seq": 0,
     "buffered_deltas": [],
+    "max_buffered_deltas": 1000,
     "resync_count": 0,
     "desynced_since_us": null
   },
@@ -38,9 +40,24 @@
             "replay_buffered_deltas_after_seq"
           ]
         },
-        "DELTA": {
+        "DELTA": [
+          {
+            "target": "#book.desynced",
+            "guard": "delta_buffer_full",
+            "actions": [
+              "audit_buffer_overflow"
+            ]
+          },
+          {
+            "actions": [
+              "buffer_delta"
+            ]
+          }
+        ],
+        "BUFFER_OVERFLOW": {
+          "target": "#book.desynced",
           "actions": [
-            "buffer_delta"
+            "audit_buffer_overflow"
           ]
         },
         "SNAPSHOT_TIMEOUT": {

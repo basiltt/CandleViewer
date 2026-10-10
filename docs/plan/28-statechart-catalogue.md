@@ -2391,7 +2391,35 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
       "on": {
         "CHILDREN_TERMINAL": {
           "target": "#oco.completed"
-        }
+        },
+        "LEG_A_FILL": [
+          {
+            "target": "#oco.overshoot",
+            "guard": "position_overshoots",
+            "actions": [
+              "record_fill_a"
+            ]
+          },
+          {
+            "actions": [
+              "record_fill_a"
+            ]
+          }
+        ],
+        "LEG_B_FILL": [
+          {
+            "target": "#oco.overshoot",
+            "guard": "position_overshoots",
+            "actions": [
+              "record_fill_b"
+            ]
+          },
+          {
+            "actions": [
+              "record_fill_b"
+            ]
+          }
+        ]
       }
     },
     "completed": {
@@ -2447,6 +2475,10 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `settling_b` | `*` | — | _(internal)_ | `defer` | — |
 | `settling_a` | `*` | — | _(internal)_ | `defer` | — |
 | `completing` | `CHILDREN_TERMINAL` | — | `completed` | — | — |
+| `completing` | `LEG_A_FILL` *(Corrected 2026-10-10, #2204, OC-03)* | `position_overshoots` | `overshoot` | `record_fill_a` | — |
+| `completing` | `LEG_A_FILL` *(Corrected 2026-10-10, #2204, OC-03)* | — | _(internal)_ | `record_fill_a` | — |
+| `completing` | `LEG_B_FILL` *(Corrected 2026-10-10, #2204, OC-03)* | `position_overshoots` | `overshoot` | `record_fill_b` | — |
+| `completing` | `LEG_B_FILL` *(Corrected 2026-10-10, #2204, OC-03)* | — | _(internal)_ | `record_fill_b` | — |
 
 ### B4.4 Invoked services
 
@@ -2494,11 +2526,13 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B4-b** | Reaching `completed` implies both children are terminal (`CHILDREN_TERMINAL` observed), never merely 'cancel requested'. |
 | **INV-B4-c** | `reduce_only_market_excess` is reduce-only by construction; the overshoot correction can never open a position. |
 | **INV-B4-d** | A fill on the other leg **during settlement** is applied, not dropped - this is what the wildcard deferral on the settling states buys (E33-S01 acceptance). |
+| **INV-B4-e** | *(Corrected 2026-10-10, #2204, OC-03)* A leg fill reaching `completing` (live or replayed from the defer buffer) is **consumed, never re-deferred**: it is recorded (`record_fill_a`/`record_fill_b`) and, if it overshoots the position, routed to `overshoot` for the reduce-only correction (B4.3). |
 
 ### B4.8 Implementation notes
 
 - Timing-light: no in-machine timers at all, which is why this rates the cleanest of the four algos.
 - **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `failed` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `racing.POSITION_FLAT` so a guard-denied event is audited, never silently deferred (C-07b).
+- **Corrected 2026-10-10 (#2204, OC-03, `docs/research/xstate/33-r5-findings-register.md` §6):** `completing` handled only `CHILDREN_TERMINAL`, so a late `LEG_A_FILL`/`LEG_B_FILL` correctly deferred by a settling state was replayed into `completing` and re-deferred forever (INV-B4-d broken). `completing` now records the fill on an unguarded internal arm and sends an overshooting fill to `overshoot` on a guarded first arm. Each `overshoot → completing → overshoot` lap needs another external fill, so this is not an invoke cycle. Chart `version: 1`; context shape unchanged, so no upcaster.
 
 ---
 
@@ -4866,6 +4900,11 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
             "bump_gap_count",
             "emit_gap_metric"
           ]
+        },
+        "STREAM_UNHEALTHY": {
+          "actions": [
+            "mark_stream_unhealthy"
+          ]
         }
       }
     },
@@ -4960,6 +4999,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `degraded` | `REASON_REMOVED` | `reasons_remain` | _(internal)_ | `remove_reason` | — |
 | `degraded` | `REASON_REMOVED` | — | `lingering` | `remove_reason` | — |
 | `degraded` | `GAP_DETECTED` | — | _(internal)_ | `bump_gap_count`, `emit_gap_metric` | — |
+| `degraded` | `STREAM_UNHEALTHY` *(Corrected 2026-10-10, #2204, OC-06)* | — | _(internal)_ | `mark_stream_unhealthy` | — |
 | `lingering` | `REASON_ADDED` | — | `recording` | `add_reason` | — |
 | `lingering` | `LINGER_DUE` | `position_open_for_symbol` | `recording` | — | — |
 | `lingering` | `LINGER_DUE` | — | `stopping` | — | — |
@@ -5006,7 +5046,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B11-a** | Recording stops only when `reasons` is empty **and** `position_open_for_symbol` is false. A position open for the symbol can never stop recording (ADR-0015). |
 | **INV-B11-b** | A reason re-added during `lingering` cancels the linger and returns to recording without a stream restart. |
 | **INV-B11-c** | Every gap is counted and metricised; coverage rows are written for captured intervals only. No interpolation, ever (C-2.14). |
-| **INV-B11-d** | `degraded` is entered on any unhealthy stream and exited only when **all** streams report healthy. |
+| **INV-B11-d** | `degraded` is entered on any unhealthy stream and exited only when **all** streams report healthy. *(Corrected 2026-10-10, #2204, OC-06)* A further `STREAM_UNHEALTHY` while `degraded` is consumed (internal `mark_stream_unhealthy`), never deferred, so `streams_healthy` always reflects every failed stream and a later `STREAM_HEALTHY` for one stream cannot exit `degraded` while another is still down. |
 
 ### B11.8 Implementation notes
 
@@ -5014,6 +5054,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 - **Corrected 2026-09-24 (R14-03 / R13-15 / R13-16, proven in `docs/research/xstate/battle-v0.9.1/contracts/g2_b11_fix.py` on both engines):** (1) `all_streams_healthy` and `reasons_remain` are event-aware (see B11.5) — without this B11 was a one-way trip into `degraded`; (2) `degraded` now handles `GAP_DETECTED` — previously root `onUnhandled: "defer"` swallowed gap telemetry exactly while degraded. Contract test: the G2 script lands in `stopped` with `gap_count_24h == 1`, both services run, `chain_trips == 0`.
 
 - **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR):** root `on.KILL` → existing `error` with `audit_kill` (C-04); `starting`/`stopping` now have a kill ancestor.
+- **Corrected 2026-10-10 (#2204, OC-06):** `degraded` had no `STREAM_UNHEALTHY` handler. A concurrent second stream failure was parked by `onUnhandled: "defer"`, so the health map went stale. A `STREAM_HEALTHY` for the first stream could then return the chart to `recording` while the second stream was still down, and the deferred failure replayed afterwards. `degraded` now handles `STREAM_UNHEALTHY` as an internal `mark_stream_unhealthy` arm: no re-entry and no second alert. Chart `version: 1`; context shape unchanged, so no upcaster.
 
 ---
 
@@ -5629,6 +5670,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
     "last_seq": 0,
     "snapshot_seq": 0,
     "buffered_deltas": [],
+    "max_buffered_deltas": 1000,
     "resync_count": 0,
     "desynced_since_us": null
   },
@@ -5653,9 +5695,24 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
             "replay_buffered_deltas_after_seq"
           ]
         },
-        "DELTA": {
+        "DELTA": [
+          {
+            "target": "#book.desynced",
+            "guard": "delta_buffer_full",
+            "actions": [
+              "audit_buffer_overflow"
+            ]
+          },
+          {
+            "actions": [
+              "buffer_delta"
+            ]
+          }
+        ],
+        "BUFFER_OVERFLOW": {
+          "target": "#book.desynced",
           "actions": [
-            "buffer_delta"
+            "audit_buffer_overflow"
           ]
         },
         "SNAPSHOT_TIMEOUT": {
@@ -5723,7 +5780,9 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 |---|---|---|---|---|---|
 | `init` | `SUBSCRIBE` | — | `snapshot_pending` | — | — |
 | `snapshot_pending` | `SNAPSHOT` | — | `live` | `install_snapshot`, `replay_buffered_deltas_after_seq` | — |
+| `snapshot_pending` | `DELTA` *(Corrected 2026-10-10, #2204, OC-08)* | `delta_buffer_full` | `desynced` | `audit_buffer_overflow` | — |
 | `snapshot_pending` | `DELTA` | — | _(internal)_ | `buffer_delta` | — |
+| `snapshot_pending` | `BUFFER_OVERFLOW` *(Corrected 2026-10-10, #2204, OC-08)* | — | `desynced` | `audit_buffer_overflow` | — |
 | `snapshot_pending` | `SNAPSHOT_TIMEOUT` | — | `snapshot_pending` | `bump_resync_count` | yes |
 | `live` | `DELTA` | — | _(internal)_ | `apply_delta` | — |
 | `live` | `SEQUENCE_GAP` | — | `desynced` | `stamp_desync` | — |
@@ -5732,7 +5791,9 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 ### B14.4 Guards
 
-_No guards. Every transition in this machine is unconditional._
+| Guard | Polarity | Contract |
+|---|---|---|
+| `delta_buffer_full` *(Corrected 2026-10-10, #2204, OC-08)* | pure predicate over `(context, event)` | `len(buffered_deltas) >= max_buffered_deltas`; no I/O; total; returns `True` (overflow ⇒ resync, fail-safe) on any internal error and logs at `ERROR` |
 
 ### B14.5 Actions
 
@@ -5741,6 +5802,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | Action |
 |---|
 | `apply_delta` |
+| `audit_buffer_overflow` *(Corrected 2026-10-10, #2204)* |
 | `buffer_delta` |
 | `bump_resync_count` |
 | `clear_buffer` |
@@ -5759,7 +5821,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B14-a** | **MUSTNOT-01 is absolute here.** Delta application, bar building and footprint aggregation are never executed by a statechart, in any form, including internal actions-only transitions. |
 | **INV-B14-b** | Health is published as a plain bool/enum on state entry; consumers read the flag, they do not call `matches()` (MUSTNOT-03 - even *gating* by querying an interpreter measured 12x a bool read). |
 | **INV-B14-c** | A sequence gap always drops state and re-snapshots; deltas are never applied across a gap (C-2.5, P5). |
-| **INV-B14-d** | Deltas buffered while awaiting a snapshot are replayed strictly after `snapshot_seq`, and the buffer is bounded (C-2.18). |
+| **INV-B14-d** | Deltas buffered while awaiting a snapshot are replayed strictly after `snapshot_seq`, and the buffer is bounded (C-2.18). *(Corrected 2026-10-10, #2204, OC-08)* The bound is the context value `max_buffered_deltas` (1 000, the same value as `book/resync.py` `BUFFER_BOUND`). A delta arriving with the buffer full, or an engine-side `BUFFER_OVERFLOW`, never grows the buffer: it writes `audit_buffer_overflow` and takes the resync path `desynced → snapshot_pending`, whose entry clears the buffer and requests a fresh snapshot (C-2.5). |
 | **INV-B14-e** | `resync_count` and `desynced_since_us` are exported; a symbol resyncing repeatedly is visible. |
 
 ### B14.7 Implementation notes
@@ -5767,6 +5829,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 - If a future reader is tempted to "just add an internal transition" for delta application because the contract names the action - that is precisely the failure MUSTNOT-01 exists to prevent.
 
 - **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-POLICY):** `onUnhandled` `"error"` → `"defer"` (same rationale as B13); no invoking state, so no KILL arm is needed.
+- **Corrected 2026-10-10 (#2204, OC-08):** the bounded buffer was prose only, and 1 000 `DELTA`s grew `buffered_deltas` 1:1. New context key `max_buffered_deltas`, guarded first arm `delta_buffer_full` on `snapshot_pending.DELTA` and a `BUFFER_OVERFLOW` edge, both → `desynced` with `audit_buffer_overflow`. The hot path still never sends `DELTA` to the interpreter (INV-B14-a). `BookEngine` enforces the same bound and now reports its overflow as `BUFFER_OVERFLOW` instead of the generic `SNAPSHOT_TIMEOUT`. Chart `version: 1`. The context shape changed, so an upcaster is registered (`book_upcasters.py`) that seeds `max_buffered_deltas` and has a golden-snapshot test.
 
 ---
 
@@ -6847,10 +6910,17 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "page_owner"
       ],
       "on": {
-        "RECONNECTED": {
-          "target": "#reconciliation.fetching",
+        "OPERATOR_RESOLVED": {
+          "target": "#reconciliation.idle",
           "actions": [
-            "reset_failures"
+            "audit_operator_resolved",
+            "reset_failures",
+            "unlock_account_for_new_orders"
+          ]
+        },
+        "RECONNECTED": {
+          "actions": [
+            "audit_reconnect_while_locked"
           ]
         }
       }
@@ -6889,7 +6959,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `reporting` | _always_ | — | `idle` | — | — |
 | `divergent` | `OPERATOR_RESOLVED` | — | `idle` | — | — |
 | `divergent` | `SWEEP_DUE` | — | `fetching` | — | — |
-| `stale_lockout` | `RECONNECTED` | — | `fetching` | `reset_failures` | — |
+| `stale_lockout` | `OPERATOR_RESOLVED` *(Corrected 2026-10-10, #2204, OC-05)* | — | `idle` | `audit_operator_resolved`, `reset_failures`, `unlock_account_for_new_orders` | — |
+| `stale_lockout` | `RECONNECTED` *(Corrected 2026-10-10, #2204, OC-05; was → `fetching`)* | — | _(internal)_ | `audit_reconnect_while_locked` | — |
 
 ### B19.4 Invoked services
 
@@ -6913,6 +6984,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 | Action |
 |---|
+| `audit_operator_resolved` *(Corrected 2026-10-10, #2204)* |
+| `audit_reconnect_while_locked` *(Corrected 2026-10-10, #2204)* |
 | `broadcast_recon_complete` |
 | `bump_failures` |
 | `defer` |
@@ -6934,19 +7007,21 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `store_divergences` |
 | `store_exchange_state` |
 | `store_remediations` |
+| `unlock_account_for_new_orders` *(Corrected 2026-10-10, #2204)* |
 
 ### B19.7 Invariants
 
 | ID | Invariant |
 |---|---|
 | **INV-B19-a** | Reconciliation must not share a failure mode with what it repairs: the supervisor starts this machine **before** the OMS accepts orders, and its own faults escalate to `stale_lockout` rather than retrying forever. |
-| **INV-B19-b** | `stale_lockout` locks the account for new orders and is cleared only by `OPERATOR_RESOLVED`. |
+| **INV-B19-b** | `stale_lockout` locks the account for new orders and is cleared only by `OPERATOR_RESOLVED`. *(Corrected 2026-10-10, #2204, OC-05)* The chart now enforces this: `OPERATOR_RESOLVED` is the only arm leaving `stale_lockout` (→ `idle`, audited, account unlocked); `RECONNECTED` while locked is recorded (`audit_reconnect_while_locked`) and never clears the lock or re-pages. |
 | **INV-B19-c** | Diffs are by `orderLinkId` (C-2.10); `Unknown` orders are resolved by lookup, never by blind resubmission. |
 | **INV-B19-d** | `auto_remediate` is a **context value**, not a separate machine - capabilities drive behaviour, not conditionals (24 §14.3). |
 | **INV-B19-e** | A crash during fetching is re-driven on restore by re-sending the triggering event; a machine parked mid-fetch with no live service is a silent hang, and is the single most consequential consequence of static restore (LC-19). E45-T06/T07 chaos-test exactly this. |
 | **INV-B19-f** | Every sweep persists a report, whether or not divergences were found. |
 
 - **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR):** root `on.KILL` → existing `stale_lockout` (account locked for new orders, owner paged) with `audit_kill` — fail-safe, never back to `idle` (C-04).
+- **Corrected 2026-10-10 (#2204, OC-05 / R10-C3):** `stale_lockout` handled only `RECONNECTED` (→ `fetching`), while `OPERATOR_RESOLVED` sat on `divergent`. That inverted INV-B19-b: a connectivity signal cleared a paged critical lockout with no operator in the loop and no distinct audit record, and a flapping link looped `fetching → stale_lockout`, re-paging the owner each lap. `stale_lockout` now leaves only on `OPERATOR_RESOLVED` (→ `idle`; `audit_operator_resolved`, `reset_failures`, `unlock_account_for_new_orders`). `RECONNECTED` there is an internal audit-only arm. The next `SWEEP_DUE`/`RECONNECTED` from `idle` re-reconciles. A KILL-induced lockout is cleared the same way, by the operator. Chart `version: 1`; context shape unchanged, so no upcaster.
 
 ---
 
@@ -7312,18 +7387,18 @@ There is no runtime switch. Every family runs on the pinned library from its fir
 | Machine id | States (top-level) | `machine_hash` |
 |---|---|---|
 | `alert` | 10 | `33a921e4d2fd…` |
-| `book` | 4 | `a483e363f64e…` |
+| `book` | 4 | `73121e4a182f…` |
 | `chase` | 13 | `bc6436827867…` |
 | `iceberg` | 13 | `aecfc7ca58b8…` |
 | `kill_switch` | 6 | `17b59ac92505…` |
 | `leg` | 12 | `a7d8fb5d8c3e…` |
 | `live_gate` | 3 | `780accfd0086…` |
-| `oco` | 11 | `fd7edafda40f…` |
+| `oco` | 11 | `e09f72c6a367…` |
 | `order` | 2 | `743dfaada4e3…` |
 | `paper_account` | 4 | `401363766fb6…` |
 | `position_protection` | 3 | `d95cda091fac…` |
-| `reconciliation` | 8 | `b3a706bdf71d…` |
-| `recording` | 8 | `2b7174e42a14…` |
+| `reconciliation` | 8 | `95c8954fe5e7…` |
+| `recording` | 8 | `94b98b086b28…` |
 | `replay` | 8 | `61dfccf1be37…` |
 | `risk_lockout` | 3 | `08f11db6dab6…` |
 | `rule_instance` | 11 | `a60ff42011cf…` |

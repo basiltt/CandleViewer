@@ -1,0 +1,10 @@
+{
+  "_comment": "Same context after upcast_book_v0_to_v1 (#2204, OC-08): bound seeded, nothing else touched.",
+  "symbol": "BTCUSDT",
+  "last_seq": 41,
+  "snapshot_seq": 40,
+  "buffered_deltas": [],
+  "max_buffered_deltas": 1000,
+  "resync_count": 3,
+  "desynced_since_us": null
+}

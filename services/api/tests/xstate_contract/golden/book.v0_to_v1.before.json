@@ -1,0 +1,9 @@
+{
+  "_comment": "B14 `book` context persisted at the pre-#2204 hash a483e363... (no max_buffered_deltas).",
+  "symbol": "BTCUSDT",
+  "last_seq": 41,
+  "snapshot_seq": 40,
+  "buffered_deltas": [],
+  "resync_count": 3,
+  "desynced_since_us": null
+}
