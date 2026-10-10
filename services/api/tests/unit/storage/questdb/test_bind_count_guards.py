@@ -87,7 +87,7 @@ def test_every_ts_bind_is_a_datetime_in_every_builder() -> None:
         assert ts_slots, q.sql
         for n in ts_slots:
             assert isinstance(q.params[n - 1], datetime), (q.sql, n)
-            assert q.params[n - 1].tzinfo is not None
+            assert q.params[n - 1].tzinfo is None  # PGWire needs naive UTC
 
 
 def test_ts_param_is_us_exact_and_ts_us_from_row_round_trips() -> None:
@@ -98,5 +98,8 @@ def test_ts_param_is_us_exact_and_ts_us_from_row_round_trips() -> None:
     assert tp(us).microsecond == 123_457
     assert ts_us_from_row(tp(us)) == us
     assert ts_us_from_row(us) == us
+    from datetime import UTC
+
+    assert ts_us_from_row(tp(us).replace(tzinfo=UTC)) == us  # aware also decodes
     with pytest.raises(TypeError):
         tp(True)
