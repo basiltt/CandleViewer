@@ -12,6 +12,7 @@ import json
 import os
 import tomllib
 from collections.abc import Callable
+from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
@@ -143,3 +144,55 @@ def test_corrupted_golden_gives_a_readable_first_divergence() -> None:
 
 
 Mutate = Callable[[], None]
+
+
+def _golden_vs_reference(name: str) -> None:
+    d, tape = tapes.TAPES[name], list(tape_of(name))
+    for label, spec in cf.live_cases().items():
+        want = [json.loads(x) for x in cf.read_golden(name, label)]
+        ref = cf.reference.build(spec, d.symbol, tape, cf.TICK).bars
+        assert len(want) == len(ref), f"{name}/{label}: {len(want)} golden vs {len(ref)} reference"
+        for g, r in zip(want, ref, strict=True):
+            row = cf.comparator.row(r)
+            if spec.kind == "time" and g["index"] == str(len(ref) - 1):
+                g, row = dict(g), dict(row)
+                g.pop("closed"), row.pop("closed")  # reference flushes the tail; documented
+            assert g == row, f"{name}/{label} bar {g['index']}: golden != independent reference"
+
+
+@pytest.mark.parametrize("name", LIGHT)
+def test_every_golden_matches_reference(name: str) -> None:
+    _golden_vs_reference(name)
+
+
+@pytest.mark.harness
+@pytest.mark.parametrize("name", sorted(HEAVY))
+def test_every_heavy_golden_matches_reference(name: str) -> None:
+    _golden_vs_reference(name)
+
+
+def _rows(name: str, label: str) -> list[dict[str, str]]:
+    return [json.loads(x) for x in cf.read_golden(name, label)]
+
+
+def test_thin_tape_has_empty_intervals() -> None:
+    rows = _rows("ethusdt-2026-09-03-thin", "time:1")
+    assert sum(r["gap_before"] == "true" for r in rows) >= 100
+
+
+def test_newlist_first_bar_is_partial_and_opens_at_the_listing_minute() -> None:
+    first = _rows("newlist-2026-09-04", "time:1")[0]
+    assert first["partial"] == "true"
+    assert int(first["open_time"]) == tapes.day_us("2026-09-04", "11:17:00")
+
+
+def test_edge_ticks_keep_one_exact_boundary_hit_per_builder_kind() -> None:
+    n = "edge-ticks"
+    assert any(r["volume"] == "50.000" and r["closed"] == "true" for r in _rows(n, "vol:50"))
+    assert any(
+        Decimal(r["high"]) - Decimal(r["low"]) == Decimal("2.0") for r in _rows(n, "range:20")
+    )
+    assert any(Decimal(r["high"]) - Decimal(r["low"]) == Decimal(3) for r in _rows(n, "renko:30"))
+    assert any(Decimal(r["delta"]) == Decimal(500) for r in _rows(n, "delta:500"))
+    assert any(r["trade_count"] == "100" for r in _rows(n, "tick:100"))
+    assert any(int(r["open_time"]) % 60_000_000 == 0 for r in _rows(n, "time:1"))

@@ -216,7 +216,7 @@ recorder captures replace it once E16 lands. Hence the 1.2 M-print day does not 
 
 **E12-Q02 bank** (`packages/fixtures/golden/bars/conformance/`, `MANIFEST.toml`): five *synthetic* tapes (seeded
 generator, exception #1778 A; dense is capped at 200k prints, not 1.2 M) plus a golden per (tape, pair) for the
-matrix through the live `BarBuilderSet`. `renko:atr:14` (ADR-0033) and `heikin_ashi:5` (not a builder) are recorded
+matrix through the live `BarBuilderSet`. The "gap" tape is a *hole plus late backfill* (150 prints missing, 80 re-delivered ~650 s late, dropped as `late_window` per §3.3c); it is not a sequence-gap detector test (that is F06/E08). `renko:atr:14` (ADR-0033) and `heikin_ashi:5` (not a builder) are recorded
 as rejected pairs. **Golden update workflow:** `make golden-update` (dry run + diff summary);
 `make golden-update WRITE=1 CV_GOLDEN_REASON="why"` writes; refused under CI, without a reason, or without a `BUILD_VERSIONS`
 bump for a changed kind. Review the `git diff --stat` in the PR.

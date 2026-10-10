@@ -26,6 +26,7 @@ class Plan:
     unbumped: list[str] = field(default_factory=list)
     summary: list[str] = field(default_factory=list)  # human diff summary
     manifest: str = ""
+    mismatches: list[str] = field(default_factory=list)  # live vs reference; blocks --write
 
 
 def _rel(p: Path) -> str:
@@ -61,6 +62,9 @@ def build(reason: str = "") -> Plan:
         results = cf.run(tape, d.symbol)
         gold: list[str] = []
         for label, spec in cf.live_cases().items():
+            rd = cf.reference_diffs(spec, d.symbol, tape, results[label])
+            if rd:
+                p.mismatches.append(f"{name}/{label}: {rd[0]}")
             ls = cf.lines(results[label])
             gp = cf.golden_path(name, label)
             p.files[_rel(gp)] = ("\n".join(ls) + "\n").encode()

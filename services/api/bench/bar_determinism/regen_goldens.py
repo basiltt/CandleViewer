@@ -49,6 +49,12 @@ def _conformance(write: bool, reason: str) -> int:
     p = cg.build(reason)
     for line in p.summary:
         print(f"conformance: {line}")
+    for m in p.mismatches:
+        print(f"conformance: DIFFERS FROM REFERENCE {m}", file=sys.stderr)
+    if p.mismatches:
+        if write:
+            print("refused: goldens must equal the independent reference", file=sys.stderr)
+        return 2 if write else 1
     if not p.changed:
         print("conformance goldens are up to date")
         return 0

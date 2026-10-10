@@ -6,6 +6,7 @@ properties that hold for any tape. Reuses the E12-T04 generator and comparator.
 from __future__ import annotations
 
 import asyncio
+import json
 from decimal import Decimal
 from itertools import pairwise
 
@@ -18,6 +19,7 @@ from bench.bar_determinism import comparator, generator, tapes
 from bench.bar_determinism.generator import TICK, GenConfig
 from candleviewer.bars import rows
 from candleviewer.bars.models import Bar, BarSpec
+from candleviewer.bars.time_builder import bars_late_trade_dropped_total
 from candleviewer.exchange.base.models import TradeEvent
 from candleviewer.ingestion.trade_stream import DedupeRing
 
@@ -39,10 +41,24 @@ def _equal(a: dict[str, list[str]], b: dict[str, list[str]]) -> None:
         assert not diffs, f"{k}:\n{comparator.render(diffs)}"
 
 
+def _updates_equal(tape: list[TradeEvent]) -> None:
+    """The FULL emitted update sequence (kind, amended, bar) must be identical for every
+    trade-driven kind: the lane applies one trade at a time whatever the publish burst size.
+    Time bars are compared on final bars only: their `close` updates are emitted by the clock
+    tick, which the runner drives once per burst, so bursts legitimately differ in WHEN a bar
+    closes (never in its content)."""
+    one = asyncio.run(cf.run_full(tape, SPECS, SYM, chunk=1))[1]
+    many = asyncio.run(cf.run_full(tape, SPECS, SYM, chunk=10_000))[1]
+    for label, spec in SPECS.items():
+        if spec.kind != "time":
+            assert one[label] == many[label], f"{label}: update sequence differs"
+
+
 def test_streaming_equals_batch_on_dense_prefix() -> None:
     """PR lane: first 3k prints of btcusdt-2026-09-01, 1-trade vs 10 000-trade chunks."""
     tape = tapes.read_tape("btcusdt-2026-09-01")[:3_000]
     _equal(lines_for(tape, 1, SPECS), lines_for(tape, 10_000, SPECS))
+    _updates_equal(tape)
 
 
 @pytest.mark.harness
@@ -50,6 +66,7 @@ def test_streaming_equals_batch_full_btcusdt_day() -> None:
     tape = tapes.read_tape("btcusdt-2026-09-01")
     one = lines_for(tape, 1, SPECS)
     _equal(one, lines_for(tape, 10_000, SPECS))
+    _updates_equal(tape)
     for label in SPECS:  # and both equal the committed golden, close timestamps included
         assert not comparator.compare_lines(cf.read_golden("btcusdt-2026-09-01", label), one[label])
 
@@ -92,27 +109,71 @@ def _t(ts_s: float, px: str = "100", qty: str = "1", seq: int = 0, tid: str | No
     )
 
 
+def _dropped(reason: str) -> float:
+    return float(bars_late_trade_dropped_total.labels(symbol=SYM, reason=reason)._value.get())
+
+
+def _full(tape: list[TradeEvent], spec: BarSpec) -> list[cf.Update]:
+    return asyncio.run(cf.run_full(tape, {"x": spec}, SYM, chunk=500))[1]["x"]
+
+
 def test_late_print_after_close_within_window_amends_the_closed_bar() -> None:
+    """§3.3c: applied to the historical bar and re-emitted as `close` with `amended=True`."""
     spec = SPECS["time:1"]
     tape = [_t(10, seq=0), _t(70, seq=1), _t(110, seq=2), _t(20, "105", "2", seq=3)]
     bars = _bars(tape, spec)
     assert [b.volume for b in bars[:2]] == [Decimal(3), Decimal(2)]  # late 2 landed in closed bar 0
     assert bars[0].high == Decimal(105) and bars[0].closed
+    kind, amended, row = _full(tape, spec)[-1]  # the late print's own emission
+    assert (kind, amended) == ("close", True)
+    assert json.loads(row)["index"] == "0" and json.loads(row)["high"] == "105"
 
 
-def test_late_print_beyond_60s_window_is_dropped_not_applied() -> None:
+def test_late_print_beyond_60s_window_is_dropped_and_counted_late_window() -> None:
     spec = SPECS["time:1"]
     tape = [_t(10, seq=0), _t(70, seq=1), _t(400, seq=2), _t(20, "105", "2", seq=3)]
+    before = (_dropped("late_window"), _dropped("empty_interval"))
     bars = _bars(tape, spec)
     assert bars[0].volume == Decimal(1) and bars[0].high == Decimal(100)
     assert sum(b.volume for b in bars) == Decimal(3)  # the dropped qty is not in any bar
+    assert _dropped("late_window") - before[0] == 1
+    assert _dropped("empty_interval") == before[1]
+    assert not any(a for _, a, _ in _full(tape, spec))  # nothing re-emitted as amended
 
 
-def test_late_print_into_empty_interval_is_dropped() -> None:
+def test_late_print_into_empty_interval_is_dropped_and_counted_empty_interval() -> None:
     spec = SPECS["time:1"]
-    tape = [_t(10, seq=0), _t(190, seq=1), _t(100, "105", "2", seq=2)]  # minute 1 had no bar
+    tape = [
+        _t(10, seq=0),
+        _t(150, seq=1),
+        _t(100, "105", "2", seq=2),
+    ]  # min 1: empty, in window
+    before = (_dropped("late_window"), _dropped("empty_interval"))
     bars = _bars(tape, spec)
     assert [b.volume for b in bars] == [Decimal(1), Decimal(1)] and bars[1].gap_before
+    assert _dropped("empty_interval") - before[1] == 1
+    assert _dropped("late_window") == before[0]
+
+
+def test_gap_tape_backfill_older_than_the_window_is_dropped_as_late_window() -> None:
+    """btcusdt-2026-09-02-gap (§3.3c): 80 backfilled prints arrive ~650 s after their event
+    time, far outside the 60 s amend window, so each is dropped and counted `late_window`;
+    the hole itself leaves empty intervals (`gap_before`). Compared with the same tape minus
+    the backfill (identical seed, hole only) the delta is exactly 80 and the bars are equal."""
+    tape = tapes.read_tape("btcusdt-2026-09-02-gap")
+    seed = int(tapes.TAPES["btcusdt-2026-09-02-gap"].build()[1]["seed"])
+    backfill = {f"{seed:x}-{q:x}" for q in range(20_000, 20_080)}
+    assert sum(t.trade_id in backfill for t in tape) == 80
+    hole_only = [t for t in tape if t.trade_id not in backfill]
+    spec = SPECS["time:1"]
+    c0 = _dropped("late_window")
+    hole = _bars(hole_only, spec)
+    c1 = _dropped("late_window")
+    full = _bars(tape, spec)
+    c2 = _dropped("late_window")
+    assert (c2 - c1) - (c1 - c0) == 80
+    assert cf.lines(full) == cf.lines(hole)  # dropped, so no bar changes
+    assert sum(b.gap_before for b in full) > 0
 
 
 def test_duplicate_trade_id_is_not_suppressed_by_builders_but_by_the_upstream_ring() -> None:
@@ -198,3 +259,13 @@ def test_properties_hold_for_arbitrary_tapes(cfg: GenConfig) -> None:
         if spec.kind == "delta":
             thr = Decimal(spec.param_value)
             assert all(abs(b.delta) >= thr for b in bars if b.closed), label
+            # first-crossing: replay the in-order tape; each bar must end exactly where |delta|
+            # first reaches the threshold (a builder closing one print late fails here).
+            run, n, want = Decimal(0), 0, []
+            for t in tape:
+                run += t.qty if t.side == "buy" else -t.qty
+                n += 1
+                if abs(run) >= thr:
+                    want.append((n, run))
+                    run, n = Decimal(0), 0
+            assert [(b.trade_count, b.delta) for b in bars if b.closed] == want, label

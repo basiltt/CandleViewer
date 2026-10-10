@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
-from bench.bar_determinism import comparator, tapes
+from bench.bar_determinism import comparator, reference, tapes
 from bench.bar_determinism.generator import TICK
 from candleviewer.bars.builder_set import BarBuilderSet, default_factory, renko_factory
 from candleviewer.bars.emit import BarEmission, EmitRouter
@@ -80,8 +80,9 @@ def rejected_cases() -> dict[str, str]:
 
 
 def _base(spec: BarSpec, symbol: str) -> BarBuilder:
-    # The shipped wiring registers time/tick/volume (+ renko behind a flag); range and delta
-    # builders exist but are not in `default_factory` yet, so the runner composes them here.
+    # TODO(#2191): production `default_factory` lacks range/delta (and renko is flag-gated), so
+    # the runner composes them here. Until #2191 lands, 2 of the 9 pairs do not use the
+    # production factory; the set, bus, lanes and every builder class are still production code.
     if spec.kind == "range":
         return RangeBarBuilder(spec, symbol, lambda _s: TICK)
     if spec.kind == "delta":
@@ -98,11 +99,15 @@ class _Sink:
 
     def __init__(self) -> None:
         self.latest: dict[str, dict[int, Bar]] = {}
+        #: Every update in emission order: (kind, amended, canonical bar row).
+        self.updates: dict[str, list[tuple[str, bool, str]]] = {}
 
     async def emit(self, emission: BarEmission) -> None:
-        d = self.latest.setdefault(emission.spec.spec_hash, {})
+        h = emission.spec.spec_hash
+        d, seq = self.latest.setdefault(h, {}), self.updates.setdefault(h, [])
         for u in emission.updates:
             d[u.bar.index] = u.bar
+            seq.append((u.kind, u.amended, comparator.line(u.bar)))
 
 
 class _Clock:
@@ -125,6 +130,9 @@ async def _settle(bus: Bus, s: BarBuilderSet) -> None:
     raise AssertionError("lanes did not settle")
 
 
+Update = tuple[str, bool, str]
+
+
 async def run_set(
     tape: Sequence[TradeEvent],
     specs: dict[str, BarSpec],
@@ -132,6 +140,17 @@ async def run_set(
     chunk: int = 4_000,
     tick: bool = True,
 ) -> dict[str, list[Bar]]:
+    """Final bars per spec label (latest emission per index)."""
+    return (await run_full(tape, specs, symbol, chunk, tick))[0]
+
+
+async def run_full(
+    tape: Sequence[TradeEvent],
+    specs: dict[str, BarSpec],
+    symbol: str,
+    chunk: int = 4_000,
+    tick: bool = True,
+) -> tuple[dict[str, list[Bar]], dict[str, list[Update]]]:
     """Publish `tape` to the bus in `chunk`-sized bursts; after each burst settle and (when
     `tick`) drive the set's clock to the burst's last trade time, as the live ticker would."""
     bus, sink, clock = Bus(), _Sink(), _Clock()
@@ -151,14 +170,29 @@ async def run_set(
                 clock.t = max(clock.t, burst[-1].ts_event)
                 await s.tick()
         await s.stop()
-    return {
+    finals = {
         label: [b for _, b in sorted(sink.latest.get(spec.spec_hash, {}).items())]
         for label, spec in specs.items()
     }
+    return finals, {label: sink.updates.get(sp.spec_hash, []) for label, sp in specs.items()}
 
 
 def run(tape: Sequence[TradeEvent], symbol: str, chunk: int = 4_000) -> dict[str, list[Bar]]:
     return asyncio.run(run_set(tape, live_cases(), symbol, chunk))
+
+
+def reference_diffs(
+    spec: BarSpec, symbol: str, tape: Sequence[TradeEvent], bars: Sequence[Bar]
+) -> list[comparator.Diff]:
+    """Live bars vs the independent reference (`bar_determinism.reference`, written from the
+    spec text). The reference flushes time bars past the last bucket, so the time tail's `closed`
+    flag is the one documented, ignored difference."""
+    ref = reference.build(spec, symbol, list(tape), TICK).bars
+    diffs = comparator.compare(ref, bars)
+    last = len(ref) - 1
+    return [
+        d for d in diffs if not (spec.kind == "time" and d.field == "closed" and d.position == last)
+    ]
 
 
 def lines(bars: Sequence[Bar]) -> list[str]:
@@ -209,4 +243,16 @@ def explain(
     return f"first divergence: {d}{more}\n  triggering {trigger or 'trade: <none; bar missing>'}"
 
 
-__all__ = ["CASES", "Case", "Decimal", "explain", "live_cases", "run", "run_set"]
+__all__ = [
+    "CASES",
+    "TICK",
+    "Case",
+    "Decimal",
+    "comparator",
+    "explain",
+    "live_cases",
+    "reference",
+    "run",
+    "run_full",
+    "run_set",
+]

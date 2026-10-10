@@ -224,7 +224,10 @@ TAPES: dict[str, TapeDef] = {
         "btcusdt-2026-09-02-gap",
         "BTCUSDT",
         "BTCUSDT 2026-09-02 (deliberate WS sequence gap)",
-        "150-print live gap, 80 recovered by late REST backfill",
+        (
+            "hole + late backfill: 150 prints never arrive live; 80 arrive ~650 s late, outside "
+            "the 60 s amend window, so dropped as late_window"
+        ),
         _gap,
         heavy=True,
     ),
