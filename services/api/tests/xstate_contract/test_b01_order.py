@@ -11,6 +11,8 @@ one exchange cancel and one audit, `protection` region untouched.
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
@@ -38,7 +40,8 @@ LIVE = tuple(
     for p, _n in walk(CHART)
     if p.startswith("lifecycle.") and p.split(".", 1)[1] not in TERMINALS
 )
-_REAL_KILL_ACTIONS = ("mark_halted_by_kill", "issue_kill_cancel")
+_REAL_KILL_ACTIONS = ("mark_halted_by_kill", "issue_kill_cancel", "skip_kill_cancel")
+_UNSUBMITTED = ("draft", "validated")
 _SL_ACTIONS = {"request_fallback_sl", "arm_sl_deadline", "raise_naked_position_alert"}
 
 INVARIANTS: dict[str, str] = {
@@ -49,7 +52,7 @@ INVARIANTS: dict[str, str] = {
     "INV-B1-e": "test_inv_b1_e_unknown_resolved_only_by_recon",
     "INV-B1-f": "test_inv_b1_f_sl_present_only_from_exchange_read",
     "INV-B1-g": "deferred:E29",
-    "INV-B1-h": "test_inv_b1_h_kill_from_any_live_state_cancels_once_and_audits",
+    "INV-B1-h": "test_inv_b1_h_kill_at_most_one_cancel_only_if_submitted",
     "INV-B1-i": "test_inv_b1_i_kill_never_touches_protection_property",
 }
 
@@ -93,11 +96,15 @@ def test_b01_killed_is_final_terminal_with_cancel_and_audit() -> None:
     assert CHART["context"]["halted_by_kill"] is False
 
 
-def _restore_real(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+def _restore_real(monkeypatch: pytest.MonkeyPatch, *, hang: bool = False) -> list[str]:
+    """Real KILL actions; `cancel_order` records each call (and hangs if *hang*,
+    to keep a parked `cancel_pending` invoke in flight)."""
     cancels: list[str] = []
 
     async def _cancel(*_a: object, **_k: object) -> None:
         cancels.append("cancel_order")
+        if hang:
+            await asyncio.Event().wait()
 
     for name in _REAL_KILL_ACTIONS:
         monkeypatch.setitem(b01.ACTIONS, name, getattr(b01, name))
@@ -106,34 +113,71 @@ def _restore_real(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 @pytest.mark.parametrize("state", LIVE)
-async def test_inv_b1_h_kill_from_any_live_state_cancels_once_and_audits(
+async def test_inv_b1_h_kill_at_most_one_cancel_only_if_submitted(
     state: str, charts: Charts, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     rec = instrument("order", monkeypatch, "async_def")
-    cancels = _restore_real(monkeypatch)
+    in_flight = state == "cancel_pending"
+    cancels = _restore_real(monkeypatch, hang=in_flight)
     res = await park("order", CHART, f"lifecycle.{state}", charts)
     interp = res.interpreter
     try:
+        await settle()
+        before = len(cancels)  # 1 for the parked cancel_pending invoke, else 0
         await interp.send("KILL", wait=True)
         await settle()
-        assert "order.lifecycle.killed" in interp.current_state_ids
         assert interp.context["halted_by_kill"] is True
-        assert cancels == ["cancel_order"]
-        assert rec.actions.count("audit_kill") == 1
         assert interp.error is None
+        if in_flight:  # reuse the in-flight cancel: no second call
+            assert before == 1 and len(cancels) == 1
+            assert "order.lifecycle.cancel_pending" in interp.current_state_ids
+            assert rec.actions.count("audit_kill_cancel_in_flight") == 1
+            return
+        assert "order.lifecycle.killed" in interp.current_state_ids
+        assert rec.actions.count("audit_kill") == 1
+        assert len(cancels) == (0 if state in _UNSUBMITTED else 1)
+        assert rec.actions.index("audit_kill") < rec.actions.index("emit_terminal")
     finally:
         await interp.stop()
 
 
-async def test_b01_kill_cancel_failure_is_audited_not_rolled_back(
+async def test_b01_kill_audit_is_write_ahead_of_cancel(
     charts: Charts, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    rec = instrument("order", monkeypatch, "async_def")
+    _restore_real(monkeypatch)
+    order: list[str] = []
+
+    async def _audit(*_a: object, **_k: object) -> None:
+        order.append("audit_kill")
+
+    async def _cancel(*_a: object, **_k: object) -> None:
+        order.append("cancel_order")
+
+    monkeypatch.setitem(b01.ACTIONS, "audit_kill", _audit)
+    monkeypatch.setitem(b01.SERVICES, "cancel_order", _cancel)
+    res = await park("order", CHART, "lifecycle.submitted", charts)
+    try:
+        await res.interpreter.send("KILL", wait=True)
+        await settle()
+        assert order == ["audit_kill", "cancel_order"]
+        assert rec.actions.count("emit_terminal") == 1
+    finally:
+        await res.interpreter.stop()
+
+
+@pytest.mark.parametrize("exc", [TimeoutError(), RuntimeError("exchange down")])
+async def test_b01_kill_cancel_timeout_or_failure_is_audited(
+    exc: BaseException, charts: Charts, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`asyncio.timeout` raises TimeoutError at the await; simulated directly so no
+    wall clock is involved (C-13.7). The kill proceeds either way."""
     instrument("order", monkeypatch, "async_def")
     _restore_real(monkeypatch)
     seen: list[str] = []
 
     async def _boom(*_a: object, **_k: object) -> None:
-        raise RuntimeError("exchange down")
+        raise exc
 
     async def _hook(name: str, _ctx: dict[str, object]) -> None:
         seen.append(name)
@@ -145,10 +189,20 @@ async def test_b01_kill_cancel_failure_is_audited_not_rolled_back(
         await res.interpreter.send("KILL", wait=True)
         await settle()
         assert "order.lifecycle.killed" in res.interpreter.current_state_ids
-        assert seen == ["kill_cancel_failed"]
+        want = "kill_cancel_timeout" if isinstance(exc, TimeoutError) else "kill_cancel_failed"
+        assert seen == [want]
         await res.interpreter.stop()
     finally:
         b01.set_audit_hook(None)
+
+
+async def test_b01_kill_cancel_uses_config_timeout() -> None:
+    import inspect
+
+    from candleviewer.statechart.config import CV_KILL_CANCEL_TIMEOUT
+
+    assert CV_KILL_CANCEL_TIMEOUT > 0
+    assert "asyncio.timeout(CV_KILL_CANCEL_TIMEOUT)" in inspect.getsource(b01.issue_kill_cancel)
 
 
 @pytest.mark.parametrize("state", TERMINALS)

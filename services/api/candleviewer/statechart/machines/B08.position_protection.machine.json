@@ -98,6 +98,12 @@
           "on": {
             "TIGHTEN_SL": [
               {
+                "guard": "amend_locked",
+                "actions": [
+                  "audit_amend_refused_frozen"
+                ]
+              },
+              {
                 "target": "#position_protection.sl.amending",
                 "guard": "tightens_only"
               },
@@ -108,6 +114,12 @@
               }
             ],
             "LOOSEN_SL": [
+              {
+                "guard": "amend_locked",
+                "actions": [
+                  "audit_amend_refused_frozen"
+                ]
+              },
               {
                 "target": "#position_protection.sl.amending",
                 "guard": "explicit_audited_override"
@@ -183,63 +195,13 @@
               "target": "#position_protection.sl.flat"
             }
           }
-        },
-        "frozen": {
-          "tags": [
-            "frozen",
-            "kill_halted"
-          ],
-          "entry": [
-            "audit_kill",
-            "publish_frozen_flag"
-          ],
-          "on": {
-            "TIGHTEN_SL": {
-              "actions": [
-                "audit_amend_refused_frozen"
-              ]
-            },
-            "LOOSEN_SL": {
-              "actions": [
-                "audit_amend_refused_frozen"
-              ]
-            },
-            "KILL": {
-              "actions": [
-                "audit_frozen_event"
-              ]
-            },
-            "POSITION_OPENED": {
-              "actions": [
-                "audit_frozen_event"
-              ]
-            },
-            "SL_DEADLINE": {
-              "actions": [
-                "audit_frozen_event"
-              ]
-            },
-            "WATCHDOG_MISS": {
-              "actions": [
-                "audit_frozen_event"
-              ]
-            },
-            "SL_OBSERVED": {
-              "actions": [
-                "audit_frozen_event"
-              ]
-            },
-            "POSITION_FLAT": {
-              "actions": [
-                "audit_frozen_event"
-              ]
-            }
-          }
         }
       },
       "on": {
         "KILL": {
-          "target": "#position_protection.sl.frozen"
+          "actions": [
+            "audit_kill_sl_continues"
+          ]
         }
       }
     },
@@ -275,6 +237,35 @@
             ],
             "POSITION_FLAT": {
               "target": "#position_protection.watchdog.idle"
+            }
+          }
+        }
+      }
+    },
+    "amend_lock": {
+      "initial": "open",
+      "states": {
+        "open": {
+          "on": {
+            "KILL": {
+              "target": "#position_protection.amend_lock.frozen"
+            }
+          }
+        },
+        "frozen": {
+          "tags": [
+            "frozen",
+            "kill_halted"
+          ],
+          "entry": [
+            "audit_kill",
+            "publish_frozen_flag"
+          ],
+          "on": {
+            "KILL": {
+              "actions": [
+                "audit_frozen_event"
+              ]
             }
           }
         }

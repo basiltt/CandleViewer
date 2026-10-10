@@ -301,6 +301,23 @@ def rule_kill_ancestor(file: str, chart: dict) -> list[Finding]:
 #: Catalogue §1.3c SL-protection exception (#1650, owner decision #1778 item X):
 #: the only chart-level marker that may satisfy C-04 with a non-terminal KILL target.
 SL_PROTECTION_TAG = "cv:slProtection"
+#: Explicit allowlist: the tag alone is not enough (review #2133).
+SL_PROTECTION_CHART_IDS: frozenset[str] = frozenset({"position_protection"})
+#: PENDING COORDINATOR DECISION (#2133 review item 2) — NOT part of the §1.3c
+#: exception. Pre-existing charts whose KILL already targets a non-final halted
+#: state, surfaced when the KILL-is-final check landed. Exact (chart id, target
+#: leaf) pairs only, so no new chart/state can hide here. Delete an entry (or the
+#: whole set) to make the rule strict for that chart; never add one silently.
+KILL_NONFINAL_PENDING_DECISION: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("rule_instance", "kill_switched"),
+        ("alert", "disabled"),
+        ("recording", "error"),
+        ("replay", "error"),
+        ("kill_switch", "engaged_incomplete"),
+        ("reconciliation", "stale_lockout"),
+    }
+)
 FROZEN_STATE = "frozen"
 #: Recovery arms a `frozen` state may carry (catalogue B8 names none today).
 FROZEN_ALLOWED_EXIT_EVENTS: frozenset[str] = frozenset({"RECONCILED", "RESUME"})
@@ -312,15 +329,16 @@ def _is_sl_protection(chart: dict) -> bool:
 
 
 def _kill_frozen_exception(file: str, chart: dict) -> list[Finding]:
-    """CV-LINT-KILL-ANCESTOR, §1.3c SL-protection exception (C-04, C-2.6).
+    """CV-LINT-KILL-ANCESTOR, KILL-target rule + §1.3c SL-protection exception.
 
-    A KILL arm may target a non-final state named `frozen` only when the chart
-    root carries `meta["cv:slProtection"] = true`; that `frozen` state must not
-    invoke, time out or run `always`, and its arms are internal (no target)
-    except the catalogue recovery events. Untagged charts get no exception."""
+    Every `KILL` arm that carries a target must land in a `type: final` state,
+    except when ALL of: the chart id is in `SL_PROTECTION_CHART_IDS`, the root
+    carries `meta["cv:slProtection"] = true`, and the target leaf is named
+    `frozen` (which must then satisfy `_frozen_shape`). No other chart, tag or
+    state name opts out (C-04, C-2.6; #1650 review)."""
     findings: list[Finding] = []
     states = dict(_walk_states(chart))
-    tagged = _is_sl_protection(chart)
+    excepted = chart.get("id") in SL_PROTECTION_CHART_IDS and _is_sl_protection(chart)
     for state_path, state in states.items():
         on = state.get("on")
         if not isinstance(on, dict) or "KILL" not in on:
@@ -331,23 +349,25 @@ def _kill_frozen_exception(file: str, chart: dict) -> list[Finding]:
                 continue
             dest_path = dest.lstrip("#").split(".", 1)[-1] if dest.startswith("#") else dest
             node = states.get(dest_path)
-            if dest_path.rsplit(".", 1)[-1] != FROZEN_STATE or not isinstance(node, dict):
-                continue
-            if node.get("type") == "final":
+            if not isinstance(node, dict) or node.get("type") == "final":
                 continue
             where = f"{state_path}.on.KILL"
-            if not tagged:
-                findings.append(
-                    Finding(
-                        "CV-LINT-KILL-ANCESTOR",
-                        file,
-                        where,
-                        f"non-terminal KILL target {FROZEN_STATE!r} is allowed only on a chart "
-                        f'tagged meta["{SL_PROTECTION_TAG}"] = true (C-04, §1.3c)',
-                    )
-                )
+            if excepted and dest_path.rsplit(".", 1)[-1] == FROZEN_STATE:
+                findings.extend(_frozen_shape(file, dest_path, node))
                 continue
-            findings.extend(_frozen_shape(file, dest_path, node))
+            if (chart.get("id"), dest_path) in KILL_NONFINAL_PENDING_DECISION:
+                continue
+            findings.append(
+                Finding(
+                    "CV-LINT-KILL-ANCESTOR",
+                    file,
+                    where,
+                    f"KILL target {dest!r} is not a final state; only a chart in "
+                    f"{sorted(SL_PROTECTION_CHART_IDS)} tagged "
+                    f'meta["{SL_PROTECTION_TAG}"] = true may target a non-final '
+                    f"{FROZEN_STATE!r} (C-04, §1.3c)",
+                )
+            )
     return findings
 
 

@@ -24,7 +24,8 @@
     "recon_misses": 0,
     "_fault": null,
     "sl_deadline_us": null,
-    "halted_by_kill": false
+    "halted_by_kill": false,
+    "kill_skip_cancel": false
   },
   "states": {
     "lifecycle": {
@@ -49,7 +50,13 @@
                   "set_local_reject"
                 ]
               }
-            ]
+            ],
+            "KILL": {
+              "target": "#order.lifecycle.killed",
+              "actions": [
+                "skip_kill_cancel"
+              ]
+            }
           }
         },
         "validated": {
@@ -60,6 +67,12 @@
           "on": {
             "SEND": {
               "target": "#order.lifecycle.submitting"
+            },
+            "KILL": {
+              "target": "#order.lifecycle.killed",
+              "actions": [
+                "skip_kill_cancel"
+              ]
             }
           }
         },
@@ -258,7 +271,13 @@
                   "audit_guard_denied"
                 ]
               }
-            ]
+            ],
+            "KILL": {
+              "actions": [
+                "mark_halted_by_kill",
+                "audit_kill_cancel_in_flight"
+              ]
+            }
           }
         },
         "amend_pending": {
@@ -462,8 +481,8 @@
           "entry": [
             "persist_event",
             "mark_halted_by_kill",
-            "issue_kill_cancel",
             "audit_kill",
+            "issue_kill_cancel",
             "emit_terminal"
           ],
           "tags": [

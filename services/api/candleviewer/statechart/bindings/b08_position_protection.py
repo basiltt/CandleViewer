@@ -5,11 +5,13 @@ Stubs only: business logic is owned by E32 (native-SL invariant). Guards are pur
 total and return `False` (catalogue A6 — `tightens_only` is deny-polarity, INV-B8-b);
 actions are `async def` (CV-C67); services are idempotent `async def` with no I/O.
 
-KILL semantics (owner decision #1778 item X): `sl.on.KILL` → `sl.frozen`, which is
-NOT terminal and never touches the native stop-loss (C-2.6, C-4.14). `frozen` entry
-audits and publishes a plain `bool` (C-2.20) that synchronous order code consults;
-nothing on a hot path queries the interpreter. No action in this module cancels,
-amends or detaches an SL.
+KILL semantics (owner decision #1778 item X, fix round #2133): KILL never touches
+the `sl` region's attach path — `sl.on.KILL` is an internal audit arm, so an
+in-flight attach / verify / fallback / page always runs to completion (C-2.6,
+C-4.14). KILL moves the parallel `amend_lock` region `open` → `frozen` (NOT
+terminal): entry audits and publishes a plain `bool` (C-2.20); the
+`amend_locked` guard then refuses (audited) every TIGHTEN/LOOSEN in `protected`.
+No action in this module cancels, amends or detaches an SL.
 """
 
 from __future__ import annotations
@@ -37,16 +39,22 @@ def set_audit_hook(hook: AuditHook | None) -> None:
 
 
 #: Plain-bool frozen flags keyed by (account_id, symbol) — C-2.20: published on
-#: state entry, read by synchronous code; never an interpreter query.
-_FROZEN: dict[tuple[str | None, str | None], bool] = {}
+#: state entry, read by synchronous code; never an interpreter query. Never an
+#: anonymous entry: a context without both ids is not published (audited).
+#: TODO(#2157): re-publish on snapshot restore (entry actions do not re-run);
+#: until then the chart-local `context["frozen"]` (snapshotted) is authoritative
+#: for `amend_locked`, and E32 moves this map to its owning registry.
+_FROZEN: dict[tuple[str, str], bool] = {}
 
 
-def _key(context: dict[str, Any]) -> tuple[str | None, str | None]:
+def _key(context: dict[str, Any]) -> tuple[str, str] | None:
     acc, sym = context.get("account_id"), context.get("symbol")
-    return (None if acc is None else str(acc)), (None if sym is None else str(sym))
+    if acc is None or sym is None:
+        return None
+    return str(acc), str(sym)
 
 
-def is_frozen(account_id: str | None, symbol: str | None) -> bool:
+def is_frozen(account_id: str, symbol: str) -> bool:
     return _FROZEN.get((account_id, symbol), False)
 
 
@@ -76,7 +84,24 @@ async def audit_kill(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None
 
 async def publish_frozen_flag(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
     context["frozen"] = True
-    _FROZEN[_key(context)] = True
+    key = _key(context)
+    if key is None:
+        await _hook("frozen_flag_unkeyed", context)
+        return
+    _FROZEN[key] = True
+
+
+async def audit_kill_sl_continues(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
+    """`sl` region KILL: recorded only; the attach path keeps running (C-2.6)."""
+    await _hook("kill_sl_path_continues", context)
+
+
+def amend_locked(context: dict[str, Any], _event: Any) -> bool:
+    """True once KILL froze amendments. Total: any error → locked (deny polarity)."""
+    try:
+        return context.get("frozen") is True
+    except Exception:
+        return True
 
 
 async def audit_amend_refused_frozen(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
@@ -112,10 +137,12 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "audit_frozen_event": audit_frozen_event,
     "audit_guard_denied": audit_guard_denied,
     "audit_kill": audit_kill,
+    "audit_kill_sl_continues": audit_kill_sl_continues,
     "publish_frozen_flag": publish_frozen_flag,
 }
 
 GUARDS: dict[str, Callable[..., bool]] = {
+    "amend_locked": amend_locked,
     "attach_attempts_left": _deny_guard,
     "exchange_reports_sl": _deny_guard,
     "explicit_audited_override": _deny_guard,

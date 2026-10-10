@@ -7,21 +7,24 @@ idempotent `async def` with no I/O. Owning epics replace bodies, never names.
 
 KILL semantics (owner decision #1778 item X, option a): root `lifecycle.on.KILL`
 lands in the final `lifecycle.killed`, whose entry marks the order
-`halted_by_kill`, issues the exchange cancel through the same `cancel_order`
-service the `cancel_pending` invoke uses, and audits. The cancel outcome is NOT
+`halted_by_kill`, audits (write-ahead, C-2.9), then issues the exchange cancel
+through the same `cancel_order` service the `cancel_pending` invoke uses —
+skipped for never-submitted `draft`/`validated`; `cancel_pending` keeps its
+in-flight cancel instead of sending a second one. The cancel outcome is NOT
 trusted here — reconciliation re-syncs the true exchange state (C-2.10, C-2.5).
 The `protection` region is untouched by KILL (C-2.6): it only audits.
 """
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 import structlog
 
 from candleviewer.statechart.bindings import register_binding_module
-from candleviewer.statechart.config import register_event_schemas
+from candleviewer.statechart.config import CV_KILL_CANCEL_TIMEOUT, register_event_schemas
 
 
 def logger() -> Any:
@@ -65,15 +68,36 @@ async def mark_halted_by_kill(_i: Any, context: dict[str, Any], _e: Any, _a: Any
     context["halted_by_kill"] = True
 
 
+async def skip_kill_cancel(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
+    """`draft`/`validated` KILL: never submitted, so there is nothing to cancel."""
+    context["kill_skip_cancel"] = True
+
+
 async def issue_kill_cancel(i: Any, context: dict[str, Any], event: Any, _a: Any) -> None:
-    """Exchange cancel via the chart's own `cancel_order` service (same `orderLinkId`,
-    C-2.10). A failure is audited, never raised: rolling back would un-kill the order.
-    Reconciliation owns the true exchange state afterwards (C-2.5)."""
+    """At most one exchange cancel per order, only if submitted (INV-B1-h): via the
+    chart's own `cancel_order` service (same `orderLinkId`, C-2.10), bounded by
+    `CV_KILL_CANCEL_TIMEOUT`. Failure or timeout is audited, never raised: rolling
+    back would un-kill the order. Reconciliation re-syncs the exchange (C-2.5).
+
+    E29: route through the audited OMS cancel service instead of calling the
+    binding's service from an action (review #2133)."""
+    if context.get("kill_skip_cancel"):
+        await _hook("kill_no_cancel_unsubmitted", context)
+        return
     try:
-        await SERVICES["cancel_order"](i, context, event)
+        async with asyncio.timeout(CV_KILL_CANCEL_TIMEOUT):
+            await SERVICES["cancel_order"](i, context, event)
+    except TimeoutError:
+        logger().error("b01_kill_cancel_timeout")
+        await _hook("kill_cancel_timeout", context)
     except Exception as exc:  # audited; reconciliation re-syncs
         logger().error("b01_kill_cancel_failed", error=type(exc).__name__)
         await _hook("kill_cancel_failed", context)
+
+
+async def audit_kill_cancel_in_flight(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
+    """`cancel_pending` KILL: the in-flight cancel is reused; no second cancel."""
+    await _hook("kill_cancel_in_flight", context)
 
 
 async def audit_kill(_i: Any, context: dict[str, Any], _e: Any, _a: Any) -> None:
@@ -126,10 +150,12 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     **{name: _noop_action for name in _STUB_ACTIONS},
     "audit_guard_denied": audit_guard_denied,
     "audit_kill": audit_kill,
+    "audit_kill_cancel_in_flight": audit_kill_cancel_in_flight,
     "audit_kill_ignored_terminal": audit_kill_ignored_terminal,
     "audit_kill_protection_retained": audit_kill_protection_retained,
     "issue_kill_cancel": issue_kill_cancel,
     "mark_halted_by_kill": mark_halted_by_kill,
+    "skip_kill_cancel": skip_kill_cancel,
 }
 
 GUARDS: dict[str, Callable[..., bool]] = {

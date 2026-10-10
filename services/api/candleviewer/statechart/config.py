@@ -48,6 +48,11 @@ CV_SERVICE_POOL: Final[dict[Lane, int]] = {
 #: detector the wrapper has for the CV-C51 unsatisfiable-cycle hang.
 CV_START_TIMEOUT: Final[float] = 5.0
 
+#: Bound on the B1 `killed` entry's exchange cancel (#1650). No cancel timeout
+#: existed elsewhere in the repo; E29 may replace it with the OMS cancel budget.
+#: On timeout the kill proceeds (audited); reconciliation re-syncs (C-2.5).
+CV_KILL_CANCEL_TIMEOUT: Final[float] = 5.0
+
 #: `maxIterations` default sized against the descent plateau
 #: (`limit + 3`, CV-C62); individual chart JSON may declare its own value
 #: when the descent plateau requires it, but every chart must set the key
