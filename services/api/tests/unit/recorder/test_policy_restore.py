@@ -40,6 +40,7 @@ def _restorer(journal: InMemoryDrainJournal) -> Restorer:
 
 async def _lingering_snapshot(clock: FakeClock) -> tuple[SealedSnapshot, InMemoryDrainJournal]:
     p = RecordingPolicy(bus=FakeBus(), audit=FakeAudit(), env="demo", now=clock)
+    p.positions_reloaded()
     await p.on_position_opened("ETHUSDT", "p1")
     await p.on_position_closed("ETHUSDT", "p1")
     assert p.leaf("ETHUSDT") == "lingering"
@@ -61,6 +62,7 @@ async def test_policy_restore_in_grace_reacquire_opens_no_duplicate_session(
     env, journal = await _lingering_snapshot(clock)
     bus, audit = FakeBus(), FakeAudit()
     p = RecordingPolicy(bus=bus, audit=audit, env="demo", now=clock)
+    p.positions_reloaded()
     try:
         await p.restore(_restorer(journal), KEY, env)
         assert p.leaf("ETHUSDT") == "lingering"
@@ -77,6 +79,7 @@ async def test_policy_restore_grace_deadline_survives_restart(clock: FakeClock) 
     env, journal = await _lingering_snapshot(clock)
     audit = FakeAudit()
     p = RecordingPolicy(bus=FakeBus(), audit=audit, env="demo", now=clock)
+    p.positions_reloaded()
     try:
         await p.restore(_restorer(journal), KEY, env)
         clock.advance(1_800)
@@ -94,6 +97,7 @@ async def test_policy_restore_refuses_tampered_snapshot(clock: FakeClock) -> Non
         seal=env.seal,
     )  # fmt: skip
     p = RecordingPolicy(bus=FakeBus(), audit=FakeAudit(), env="demo", now=clock)
+    p.positions_reloaded()
     try:
         with pytest.raises(RestoreRefusedError):
             await p.restore(_restorer(journal), KEY, bad)

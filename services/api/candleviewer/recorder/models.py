@@ -61,3 +61,14 @@ class RecorderSetChanged(BaseModel):
     priority: int
     auto_evictable: bool
     ts_event: int
+
+
+class RecorderCapRefused(BaseModel):
+    """Warning event on `{env}.recorder.cap_refused`: a desired start was refused by
+    `CV_RECORDER_MAX_SYMBOLS`; it stays queued and is retried every tick."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    symbol: str
+    reason: Reason
+    ts_event: int

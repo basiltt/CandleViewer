@@ -29,6 +29,11 @@ from candleviewer.recorder.errors import (
     InvalidRecorderActorError,
     RecorderSymbolLimitError,
 )
+from candleviewer.recorder.metrics import (
+    recorder_b11_error_total,
+    recorder_cap_preempted_total,
+    recorder_cap_refused_total,
+)
 from candleviewer.recorder.models import (
     PRECEDENCE,
     PRIORITY,
@@ -36,6 +41,7 @@ from candleviewer.recorder.models import (
     Actor,
     EffectiveEntry,
     Reason,
+    RecorderCapRefused,
     RecorderSetChanged,
 )
 from candleviewer.statechart import build
@@ -50,6 +56,9 @@ _ACTIVE: Final = frozenset({"starting", "recording", "degraded", "lingering"})
 _SYMBOL_RE: Final = re.compile(r"^[A-Z0-9]{2,30}$")
 _SETTLE_YIELDS: Final = 64
 Change = Literal["added", "removed", "reason_changed"]
+#: Backoff between `RETRY`s of a B11 machine in `error` (same shape as
+#: `ingestion.clock._STEP_RETRY_BACKOFF_S`); the last step repeats.
+_RETRY_BACKOFF_S: Final = (1.0, 2.0, 4.0, 8.0, 16.0, 30.0)
 
 
 def user_actor(user_id: str | None) -> Actor:
@@ -71,8 +80,13 @@ def logger() -> structlog.stdlib.BoundLogger:
     return structlog.get_logger(__name__)  # type: ignore[no-any-return]  # structlog returns Any
 
 
+_BusEvent = RecorderSetChanged | RecorderCapRefused
+
+
 class BusPublisher(Protocol):
-    async def publish(self, topic: Topic, event: RecorderSetChanged) -> None: ...
+    async def publish(
+        self, topic: Topic, event: RecorderSetChanged | RecorderCapRefused
+    ) -> None: ...
 
 
 AuditState = Mapping[str, str | bool | None]
@@ -93,6 +107,7 @@ class AuditSink(Protocol):
         reason: str,
         after_state: AuditState,
         env: str,
+        outcome: str = "success",
     ) -> None: ...
 
 
@@ -138,6 +153,12 @@ class _Sym:
     pinned: bool = False
     linger_deadline: float | None = None
     started_reasons: set[Reason] = field(default_factory=set)  # reasons sent to B11
+    #: Reasons refused by the cap (warned once each; retried every tick until started).
+    refused: set[Reason] = field(default_factory=set)
+    #: Set when this symbol is evicted for a position; the stop audit carries it.
+    stop_cause: str | None = None
+    error_attempts: int = 0
+    retry_at: float | None = None
     #: Actor of the latest manual change (adder or remover) for the next audit record.
     last_actor: Actor = SYSTEM_ACTOR
 
@@ -177,6 +198,12 @@ class RecordingPolicy:
         self.refusals = _Refusals()
         self._lock = asyncio.Lock()
         self._topic = Topic(env=env, domain="recorder", detail="set_changed")
+        self._refused_topic = Topic(env=env, domain="recorder", detail="cap_refused")
+        #: Warm-up gate (restart race): until the OMS position cache is authoritative,
+        #: no grace expiry may stop a symbol (it could still hold a live position).
+        #: Closed on construction; opened by `positions_reloaded()` (E16-T03/T04 wiring
+        #: calls it after the startup reconcile).
+        self._positions_ready = False
 
     # --- public triggers ---------------------------------------------------------------
 
@@ -295,21 +322,32 @@ class RecordingPolicy:
     def _at_cap(self) -> bool:
         return len(self._active()) >= self._cfg.max_symbols
 
+    def positions_reloaded(self) -> None:
+        """Open the warm-up gate: the position cache now reflects the exchange."""
+        self._positions_ready = True
+
     async def tick(self) -> None:
-        """The 1 s evaluation tick: only symbols with a due start delay or grace deadline
-        are reconciled (no sends/locks for the rest; fake clock in tests)."""
+        """The 1 s evaluation tick: only symbols with a due start (delay elapsed or a
+        cap-refused start), grace deadline or error retry are reconciled."""
         for symbol in [sym for sym, s in self._syms.items() if self._due(sym, s)]:
             await self._reconcile(symbol)
 
     def _due(self, symbol: str, s: _Sym) -> bool:
-        if s.linger_deadline is not None and self._now() >= s.linger_deadline:
-            return True
-        return "chart_open" not in s.started_reasons and "chart_open" in self._desired(s)
+        now = self._now()
+        if self.leaf(symbol) == "error":
+            return s.retry_at is None or now >= s.retry_at
+        if s.linger_deadline is not None and now >= s.linger_deadline:
+            return self._positions_ready
+        return bool(self._desired(s) - s.started_reasons)
 
     async def _reconcile(self, symbol: str) -> None:
         async with self._lock:
             s = self._syms.get(symbol)
             if s is None:
+                return
+            if self.leaf(symbol) == "error":
+                await self._retry_error(symbol, s)
+                await self._publish(symbol)
                 return
             want = self._desired(s)
             if self._cfg.autorecord_enabled and s.charts and self.leaf(symbol) == "lingering":
@@ -319,7 +357,7 @@ class RecordingPolicy:
             for reason in sorted(s.started_reasons - want, key=PRECEDENCE.index):
                 await self._remove(symbol, s, reason)
             leaf = self.leaf(symbol)
-            if leaf == "lingering" and s.linger_deadline is not None:
+            if leaf == "lingering" and s.linger_deadline is not None and self._positions_ready:
                 if self._now() >= s.linger_deadline:
                     await self._send_recording(
                         symbol, "LINGER_DUE", position_open=bool(s.positions)
@@ -339,11 +377,26 @@ class RecordingPolicy:
         if interp is not None:
             await interp.stop()
 
+    async def _retry_error(self, symbol: str, s: _Sym) -> None:
+        """B11 `error --RETRY--> starting` with bounded backoff (audit outage, C-2.9)."""
+        now = self._now()
+        if s.retry_at is not None and now < s.retry_at:
+            return
+        step = _RETRY_BACKOFF_S[min(s.error_attempts, len(_RETRY_BACKOFF_S) - 1)]
+        s.error_attempts += 1
+        s.retry_at = now + step
+        await self._send_recording(symbol, "RETRY")
+        if self.leaf(symbol) in ("recording", "degraded", "lingering"):
+            s.error_attempts, s.retry_at = 0, None
+
     async def _add(self, symbol: str, s: _Sym, reason: Reason) -> None:
-        if symbol not in self._charts:
-            if reason != "manual" and self._at_cap():
-                logger().warning("recorder_autostart_refused", symbol=symbol, reason=reason)
+        if self.leaf(symbol) == "error":
+            return  # retried by `_retry_error`; the chart keeps its reasons
+        if symbol not in self._active() and reason != "manual" and self._at_cap():
+            if reason != "position_open" or not await self._preempt_for(symbol):
+                await self._refuse(symbol, s, reason)
                 return
+        if symbol not in self._charts:
             interp = (await build(MACHINE, clock=default_clock(), lane=LANE)).interpreter
             self._register(symbol, interp)
         streams = list(s.manual.streams) if s.manual else []
@@ -351,7 +404,54 @@ class RecordingPolicy:
             symbol, "REASON_ADDED", reason=reason, symbol=symbol, streams=streams
         ):
             s.started_reasons.add(reason)
+            s.refused.discard(reason)
             s.linger_deadline = None
+
+    async def _refuse(self, symbol: str, s: _Sym, reason: Reason) -> None:
+        """Cap refusal: warning event + metric + audit, once per (symbol, reason) until it
+        starts; `_due` keeps it queued so every tick retries it."""
+        if reason in s.refused:
+            return
+        s.refused.add(reason)
+        recorder_cap_refused_total.labels(reason=reason).inc()
+        logger().warning("recorder_cap_refused", symbol=symbol, reason=reason, env=self._env)
+        await self._audit_emit(
+            "recorder.start",
+            symbol,
+            SYSTEM_ACTOR,
+            reason="cap_refused",
+            extra={"trigger": reason},
+            outcome="denied",
+        )
+        ev = RecorderCapRefused(symbol=symbol, reason=reason, ts_event=int(self._now() * 1e6))
+        await self._bus.publish(self._refused_topic, ev)
+
+    async def _preempt_for(self, symbol: str) -> bool:
+        """A position is money at risk: stop the lowest-priority evictable (chart-only or
+        lingering, non-manual, no position) symbol to make room. False if none exists."""
+        victims = [
+            (0 if self.leaf(v) == "lingering" else 1, v)
+            for v in self._active()
+            if v != symbol
+            and (vs := self._syms.get(v)) is not None
+            and vs.manual is None
+            and not vs.positions
+        ]
+        if not victims:
+            return False
+        victim = min(victims)[1]
+        vs = self._syms[victim]
+        vs.stop_cause = "cap_preempted"
+        for r in list(vs.started_reasons):
+            await self._send_recording(victim, "REASON_REMOVED", reason=r, linger_until_us=None)
+        vs.started_reasons.clear()
+        await self._send_recording(victim, "LINGER_DUE", position_open=False)
+        await self._settle(victim)
+        recorder_cap_preempted_total.inc()
+        await self._prune(victim)
+        vs.linger_deadline = None
+        await self._publish(victim)
+        return True
 
     async def _remove(self, symbol: str, s: _Sym, reason: Reason) -> None:
         deadline = self._now() + self._cfg.autostop_grace_s
@@ -453,6 +553,12 @@ class RecordingPolicy:
         """B11 side effects for THIS policy's charts. Audit is write-ahead and raises if
         unavailable, so the service fails and the chart goes to `error` (C-2.9)."""
         symbol = str(context.get("symbol") or "")
+        if name == "error":
+            recorder_b11_error_total.labels(env=self._env).inc()
+            logger().error(
+                "recorder_b11_error", symbol=symbol, env=self._env, error=context.get("error")
+            )
+            return
         if name not in ("subscribe", "unsubscribe"):
             logger().info("recorder_b11_event", hook=name, symbol=symbol, env=self._env)
             return
@@ -461,13 +567,16 @@ class RecordingPolicy:
         held = [r for r in PRECEDENCE if isinstance(raw, list) and r in raw]
         reason: Reason = held[0] if held else self._published.get(symbol, "chart_open")
         actor = s.last_actor if reason == "manual" else SYSTEM_ACTOR
+        cause = s.stop_cause if name == "unsubscribe" else None
         await self._audit_emit(
             "recorder.start" if name == "subscribe" else "recorder.stop",
             symbol,
             actor,
-            reason=reason,
+            reason=cause or reason,
             extra={"trigger_ref": ",".join(s.refs(reason)) or None},
         )
+        if name == "unsubscribe":
+            s.stop_cause = None
 
     async def _audit_emit(
         self,
@@ -477,6 +586,7 @@ class RecordingPolicy:
         *,
         reason: str,
         extra: Mapping[str, str | bool | None],
+        outcome: str = "success",
     ) -> None:
         await self._audit.emit(
             action,
@@ -487,6 +597,7 @@ class RecordingPolicy:
             reason=reason,
             after_state={"symbol": symbol, "reason": reason, "actor": actor.id, **extra},
             env=self._env,
+            outcome=outcome,
         )
 
     # --- lifecycle ---------------------------------------------------------------------
