@@ -52,3 +52,9 @@ def test_factory_refuses_unknown_kinds_with_the_typed_error(renko: bool) -> None
     spec = BarSpec.model_construct(kind="pnf")  # type: ignore[call-arg]  # bypass kind validation
     with pytest.raises(BarSpecError, match="not available yet"):
         _make(renko=renko)(spec, SYM)
+
+
+def test_range_with_unknown_symbol_is_refused_with_typed_error() -> None:
+    make = production_factory(lambda _s: None, renko_enabled=False)
+    with pytest.raises(BarSpecError, match="No tick size"):
+        make(BarSpec(kind="range", range_ticks=20), SYM)
