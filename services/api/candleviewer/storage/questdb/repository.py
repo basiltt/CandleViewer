@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Sequence
+from decimal import Decimal
 
 from candleviewer.storage.models import TierHint, TimeRange
 from candleviewer.storage.questdb.ilp_writer import IlpWriter
@@ -84,7 +85,7 @@ class QuestDbMarketDataRepository:
                 "side": row.side,
                 "price": float(row.price),
                 "size": float(row.qty),
-                "notional": float(row.price) * float(row.qty),
+                "notional": float(Decimal(row.price) * Decimal(row.qty)),
                 "trade_id": row.trade_id,
             }
             for row in rows

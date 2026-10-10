@@ -54,6 +54,18 @@ async def test_write_trades_maps_row_fields_and_computes_notional() -> None:
 
 
 @pytest.mark.asyncio
+async def test_write_trades_notional_uses_decimal_product_not_float_product() -> None:
+    # float(0.1) * float(3) == 0.30000000000000004; the Decimal product is exactly 0.3.
+    assert float("0.1") * float("3") != 0.3
+    writer = _FakeWriter()
+    repo = QuestDbMarketDataRepository(writer, _FakeReader())  # type: ignore[arg-type]
+    await repo.write_trades(
+        [TradeRow(ts_us=1_000, symbol="BTCUSDT", price="0.1", qty="3", side="buy", trade_id="t1")]
+    )
+    assert writer.written["trades"][0]["notional"] == 0.3
+
+
+@pytest.mark.asyncio
 async def test_write_book_snapshot_serialises_bids_asks_as_json() -> None:
     writer = _FakeWriter()
     repo = QuestDbMarketDataRepository(writer, _FakeReader())  # type: ignore[arg-type]
