@@ -2,8 +2,7 @@
 
 Findings are defined in docs/research/xstate/33-r5-findings-register.md §6. Only fixes PRESENT
 in the committed machine JSON are asserted green (OC-01/02/04/07/10, OC-09 narrowed). OC-03/05/06/08
-are NOT in the JSON (#2204): each has a strict xfail asserting the CORRECT chart, so the gap
-is visible and the fixing PR flips it (XPASS(strict) -> remove the marker). No machine JSON or
+landed in #2204 and their former strict xfails now run as regular tests. No machine JSON or
 `machine_hashes.lock` change belongs in this file; everything runs through the factory (C-2.19).
 """
 
@@ -206,27 +205,24 @@ async def test_oc_09_no_sl_amend_while_naked_or_verifying(
         await interp.stop()
 
 
-# ----------------------------------------------------------------------------- #2204 gaps
-_GAP = "OC-0{n} not in committed JSON — #2204"
+# ----------------------------------------------------------------------------- #2204 fixes
+# OC-03/05/06/08 landed in #2204 (catalogue *Corrected 2026-10-10*); the former strict
+# xfails are now regular tests. Behavioural traces: test_e50_t14b_round5_fixes.py.
 
 
-@pytest.mark.xfail(strict=True, reason=_GAP.format(n=3))
 def test_oc_03_b04_completing_absorbs_late_leg_fills() -> None:
     on = CHARTS["B04"]["states"]["completing"]["on"]
     assert {"LEG_A_FILL", "LEG_B_FILL"} <= set(on)
 
 
-@pytest.mark.xfail(strict=True, reason=_GAP.format(n=5))
 def test_oc_05_b19_stale_lockout_handles_operator_resolved() -> None:
     assert "OPERATOR_RESOLVED" in CHARTS["B19"]["states"]["stale_lockout"]["on"]
 
 
-@pytest.mark.xfail(strict=True, reason=_GAP.format(n=6))
 def test_oc_06_b11_degraded_handles_stream_unhealthy() -> None:
     assert "STREAM_UNHEALTHY" in CHARTS["B11"]["states"]["degraded"]["on"]
 
 
-@pytest.mark.xfail(strict=True, reason=_GAP.format(n=8))
 def test_oc_08_b14_delta_buffer_is_bounded() -> None:
     text = json.dumps(CHARTS["B14"]).lower()
     assert any(k in text for k in ("max_buffered", "buffer_bound", "buffer_limit", "overflow"))

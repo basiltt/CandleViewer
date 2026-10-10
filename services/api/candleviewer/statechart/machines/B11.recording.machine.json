@@ -1,5 +1,6 @@
 {
   "id": "recording",
+  "version": 1,
   "strictConfig": true,
   "maxIterations": 500,
   "actionErrorPolicy": "rollback",
@@ -143,6 +144,11 @@
           "actions": [
             "bump_gap_count",
             "emit_gap_metric"
+          ]
+        },
+        "STREAM_UNHEALTHY": {
+          "actions": [
+            "mark_stream_unhealthy"
           ]
         }
       }

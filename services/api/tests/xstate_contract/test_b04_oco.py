@@ -24,6 +24,10 @@ INVARIANTS: dict[str, str] = {
     "INV-B4-b": "test_inv_b4_b_completed_only_via_children_terminal",
     "INV-B4-c": "deferred:E33",
     "INV-B4-d": "deferred:E33",
+    "INV-B4-e": (
+        "test_e50_t14b_round5_fixes.py::"
+        "test_oc03_property_b4_3_no_fill_is_ever_parked_in_completing"
+    ),
 }
 
 

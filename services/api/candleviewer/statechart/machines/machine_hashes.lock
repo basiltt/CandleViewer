@@ -5,8 +5,8 @@
       "version": null
     },
     "book": {
-      "hash": "a483e363f64e69f28559ce0e9d3c480e99d7289dbce026aea7a664ad342b8f8d",
-      "version": null
+      "hash": "73121e4a182f168f15289b74f7894db4aaf9432acbb9623ef6adef4c85e8fce4",
+      "version": 1
     },
     "chase": {
       "hash": "bc6436827867487a26c116ccbf41ca1d681aeb405faab1dbd565a6bf60eb280d",
@@ -29,8 +29,8 @@
       "version": null
     },
     "oco": {
-      "hash": "fd7edafda40fc1b25974fbd5ac49f8b274e2944de44323bdcee2e3c3f2c56850",
-      "version": null
+      "hash": "e09f72c6a367df565e4f89a056463faf653d3bbd8c60a9ed526456862e9ae6ba",
+      "version": 1
     },
     "order": {
       "hash": "743dfaada4e382a4c29d40a582e454285aa3f4d5142b1ade45603086c8087255",
@@ -45,12 +45,12 @@
       "version": null
     },
     "reconciliation": {
-      "hash": "b3a706bdf71d28608839e79a6da2ee2d983ba7661c9a55e76f50a935e87a22ee",
-      "version": null
+      "hash": "95c8954fe5e7d4184466b121b5370847240fb82aee806b38203e02a049c2e4b2",
+      "version": 1
     },
     "recording": {
-      "hash": "2b7174e42a14631ca0429a28322d046993f0456b8fb1e7254c703daef06b6dc7",
-      "version": null
+      "hash": "94b98b086b282493e4b227e326e35807691edec85956c506e51cdd1f6607499a",
+      "version": 1
     },
     "replay": {
       "hash": "61dfccf1be3798287858298fc8ae9e8ec798512a835b895ea9adee7e4aac9c83",

@@ -11,6 +11,7 @@ the submodule.
 
 from __future__ import annotations
 
+import candleviewer.statechart.book_upcasters  # registers B14 upcaster (#2204)
 import candleviewer.statechart.session_upcasters  # noqa: F401  (registers B16 upcaster)
 from candleviewer.statechart.config import SNAPSHOT_V
 from candleviewer.statechart.errors import (

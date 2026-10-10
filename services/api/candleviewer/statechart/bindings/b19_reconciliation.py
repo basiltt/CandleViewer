@@ -31,6 +31,9 @@ async def _idempotent_service(*_args: object, **_kwargs: object) -> None:
 
 ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "audit_kill": _noop_action,
+    # OC-05 (#2204): stale_lockout leaves only on OPERATOR_RESOLVED (INV-B19-b).
+    "audit_operator_resolved": _noop_action,
+    "audit_reconnect_while_locked": _noop_action,
     "broadcast_recon_complete": _noop_action,
     "bump_failures": _noop_action,
     "emit_recon_metrics": _noop_action,
@@ -51,6 +54,7 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "store_divergences": _noop_action,
     "store_exchange_state": _noop_action,
     "store_remediations": _noop_action,
+    "unlock_account_for_new_orders": _noop_action,
 }
 
 GUARDS: dict[str, Callable[..., bool]] = {
