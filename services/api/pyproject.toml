@@ -145,9 +145,10 @@ markers = [
   "chaos: nightly storage chaos scenarios (E07-Q04, C-13.6) - docker-dependent ones skip without the stack",
   "roundtrip: E35-Q02 10 000-document rule IR property run - executed by the rule-roundtrip lane, deselected from the py lane",
   "perf: wall-clock budget assertion (C-13.9) — enforced in CI, deselected by the orchestrator's local verify_pr gate on shared laptops",
+  "harness: E12-T04 heavy determinism-harness runs (100k trades, full adversarial matrix) — nightly only (bar-determinism-nightly), deselected from the PR lane",
   "fuzz: E08-X02 long Hypothesis parser-fuzz session — nightly only, deselected from the PR lane",
 ]
-addopts = "-m \"not fuzz and not perf\" --strict-markers --cov=candleviewer --cov-branch --cov-fail-under=85"
+addopts = "-m \"not fuzz and not perf and not harness\" --strict-markers --cov=candleviewer --cov-branch --cov-fail-under=85"
 testpaths = ["tests"]
 
 [tool.coverage.run]

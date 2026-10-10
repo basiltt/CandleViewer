@@ -20,7 +20,8 @@ from bench.bar_determinism import generator, invariants
 from bench.bar_determinism.generator import GenConfig
 from candleviewer.exchange.base.models import TradeEvent
 
-PR_GATE_N = 100_000
+PR_GATE_N = 10_000  # default run (PR lane)
+HARNESS_N = 100_000  # `-m harness`, nightly
 PR_GATE_SEED = 12004
 _TAPES: dict[tuple[int, int], list[TradeEvent]] = {}
 
@@ -46,6 +47,14 @@ def test_bi_invariants_hold_on_pr_gate_tape(label: str) -> None:
     assert not v, invariants.report(v)
 
 
+@pytest.mark.harness
+@pytest.mark.parametrize("label", list(invariants.STANDARD_SPECS))
+def test_bi_invariants_hold_on_100k_tape(label: str) -> None:
+    spec = invariants.STANDARD_SPECS[label]
+    v = invariants.check(label, spec, tape(PR_GATE_SEED, HARNESS_N), seed=PR_GATE_SEED)
+    assert not v, invariants.report(v)
+
+
 ADVERSARIAL: dict[str, dict[str, Any]] = {
     "huge_prints": {"p_huge": 0.05, "threshold_lots": 5_000},
     "exact_hits": {"p_exact": 0.2, "threshold_lots": 250},
@@ -55,12 +64,26 @@ ADVERSARIAL: dict[str, dict[str, Any]] = {
 }
 
 
+@pytest.mark.harness
 @pytest.mark.parametrize("pattern", list(ADVERSARIAL))
 @pytest.mark.parametrize("label", list(invariants.STANDARD_SPECS))
 def test_bi_invariants_hold_on_adversarial_tapes(label: str, pattern: str) -> None:
     seed = 500 + list(ADVERSARIAL).index(pattern)
     t = tape(seed, 3_000, **ADVERSARIAL[pattern])
     v = invariants.check(label, invariants.STANDARD_SPECS[label], t, seed=seed, cuts=5)
+    assert not v, invariants.report(v)
+
+
+@pytest.mark.parametrize("pattern", list(ADVERSARIAL))
+def test_bi_invariants_hold_on_small_adversarial_tapes(pattern: str) -> None:
+    """PR lane: every adversarial pattern, one spec per builder kind, 1k trades."""
+    seed = 900 + list(ADVERSARIAL).index(pattern)
+    t = tape(seed, 1_000, **ADVERSARIAL[pattern])
+    v = [
+        x
+        for lbl in PR_GATE_SPECS
+        for x in invariants.check(lbl, invariants.STANDARD_SPECS[lbl], t, seed=seed)
+    ]
     assert not v, invariants.report(v)
 
 
@@ -137,7 +160,7 @@ def test_harness_package_has_no_network_imports() -> None:
 
 
 def test_fixed_bi5_cuts_hit_a_renko_reversal_and_a_volume_split() -> None:
-    t = tape(PR_GATE_SEED, 20_000)
+    t = tape(PR_GATE_SEED, PR_GATE_N)
     for label in ("renko:10", "volume:0.25"):
         assert invariants.fixed_cuts(invariants.make_builder, invariants.STANDARD_SPECS[label], t)
 

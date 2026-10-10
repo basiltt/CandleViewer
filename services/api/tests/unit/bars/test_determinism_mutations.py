@@ -23,17 +23,26 @@ from candleviewer.domain.primitives import TsUs
 from candleviewer.exchange.base.models import TradeEvent
 
 SEED = 4242
-TAPE = generate(
-    GenConfig(
-        seed=SEED,
-        n=4_000,
-        p_exact=0.05,
-        p_huge=0.01,
-        p_reversal=0.02,
-        threshold_lots=250,
-        jump_ticks=60,
-    )
-)
+_TAPE: list[TradeEvent] = []
+
+
+def tape() -> list[TradeEvent]:
+    """Generated on first use, never at import/collection time."""
+    if not _TAPE:
+        _TAPE.extend(
+            generate(
+                GenConfig(
+                    seed=SEED,
+                    n=4_000,
+                    p_exact=0.05,
+                    p_huge=0.01,
+                    p_reversal=0.02,
+                    threshold_lots=250,
+                    jump_ticks=60,
+                )
+            )
+        )
+    return _TAPE
 
 
 class Mutant:
@@ -80,31 +89,31 @@ def test_mutant_time_bar_off_by_one_boundary_is_caught() -> None:
     def shift(t: TradeEvent) -> TradeEvent:
         return t.model_copy(update={"ts_event": t.ts_event - 1}) if t.ts_event % step == 0 else t
 
-    assert any(t.ts_event % step == 0 for t in TAPE)
+    assert any(t.ts_event % step == 0 for t in tape())
     got = caught(
-        "time:1m", spec, lambda s: Mutant(invariants.make_builder(s), on_input=shift), TAPE
+        "time:1m", spec, lambda s: Mutant(invariants.make_builder(s), on_input=shift), tape()
     )
     assert "REF" in got
 
 
 def test_mutant_time_bar_off_by_one_fails_the_golden_file() -> None:
     spec = goldens.GOLDEN_SPECS["time-1m"]
-    tape = goldens.load_tape()
+    day = goldens.load_tape()
     step = 60_000_000
-    on_edge = [t.ts_event - t.ts_event % step for t in tape]
-    tape = [
+    on_edge = [t.ts_event - t.ts_event % step for t in day]
+    edged = [
         t.model_copy(update={"ts_event": e}) if i % 7 == 0 else t
-        for i, (t, e) in enumerate(zip(tape, on_edge, strict=True))
+        for i, (t, e) in enumerate(zip(day, on_edge, strict=True))
     ]
 
     def shift(t: TradeEvent) -> TradeEvent:
         return t.model_copy(update={"ts_event": t.ts_event - 1}) if t.ts_event % step == 0 else t
 
-    good = [comparator.line(b) for b in invariants.run(invariants.make_builder, spec, tape)]
+    good = [comparator.line(b) for b in invariants.run(invariants.make_builder, spec, edged)]
     bad = [
         comparator.line(b)
         for b in invariants.run(
-            lambda s: Mutant(invariants.make_builder(s), on_input=shift), spec, tape
+            lambda s: Mutant(invariants.make_builder(s), on_input=shift), spec, edged
         )
     ]
     diffs = comparator.compare_lines(good, bad)
@@ -125,10 +134,10 @@ def test_mutant_endpoint_only_min_delta_is_caught(monkeypatch: pytest.MonkeyPatc
         self.max_d = max(Decimal(0), self.delta)
 
     spec = invariants.STANDARD_SPECS["delta:2"]
-    clean = invariants.check("delta:2", spec, TAPE, seed=SEED)
+    clean = invariants.check("delta:2", spec, tape(), seed=SEED)
     assert not clean
     monkeypatch.setattr(time_builder._Draft, "fold", endpoint_only)
-    v = invariants.check("delta:2", spec, TAPE, seed=SEED)
+    v = invariants.check("delta:2", spec, tape(), seed=SEED)
     assert "BI-3" in {x.invariant for x in v}, invariants.report(v)
 
 
@@ -144,7 +153,7 @@ class _NoSplitVolume(VolumeBarBuilder):
 
 def test_mutant_missing_volume_split_is_caught() -> None:
     spec = invariants.STANDARD_SPECS["volume:0.25"]
-    got = caught("volume:0.25", spec, lambda s: _NoSplitVolume(s, "BTCUSDT"), TAPE)
+    got = caught("volume:0.25", spec, lambda s: _NoSplitVolume(s, "BTCUSDT"), tape())
     assert "BI-1" in got
 
 
@@ -170,7 +179,7 @@ def test_mutant_phantom_range_bars_are_caught() -> None:
         shift = [0]
         return Mutant(invariants.make_builder(s), on_output=lambda u: _phantom(u, width, shift))
 
-    got = caught("range:20", spec, factory, TAPE)
+    got = caught("range:20", spec, factory, tape())
     assert "BI-1" in got
 
 
@@ -210,5 +219,5 @@ def test_mutant_renko_double_allocation_is_caught() -> None:
     def factory(s: BarSpec) -> BarBuilder:
         return Mutant(invariants.make_builder(s), on_output=_double_allocate)
 
-    got = caught("renko:10", spec, factory, TAPE)
+    got = caught("renko:10", spec, factory, tape())
     assert "BI-1" in got
