@@ -87,9 +87,14 @@ def _gateway(svc: SessionService, hub: RevocationHub) -> FastAPI:
     return app
 
 
-def _auth(ws: Any, token: str) -> dict[str, Any]:
-    ws.send_json({"t": "auth", "id": "a", "p": {"access_token": token}})
-    out: dict[str, Any] = ws.receive_json()
+def _auth(ws: Any, token: str, attempts: int = 1) -> dict[str, Any]:
+    """`hello` then `attempts` x `auth` (§4.3: a failure closes on the 3rd attempt)."""
+    ws.send_json({"t": "hello", "id": "h"})
+    assert ws.receive_json()["t"] == "welcome"
+    out: dict[str, Any] = {}
+    for _ in range(attempts):
+        ws.send_json({"t": "auth", "id": "a", "p": {"access_token": token}})
+        out = ws.receive_json()
     return out
 
 
@@ -104,15 +109,15 @@ def test_s1_postgres_outage_fails_closed_at_service_and_gateway_then_recovers() 
         repo.down = True
         with pytest.raises(ConnectionError):
             asyncio.run(svc.require_active(sid))  # fail closed, never a granted session
-        with client.websocket_connect("/ws") as ws:
-            bye = _auth(ws, minted.access_token)
+        with client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+            bye = _auth(ws, minted.access_token, attempts=3)
             assert (bye["t"], bye["p"]["reason"]) == ("bye", "auth_failed")
             with pytest.raises(WebSocketDisconnect) as exc:
                 ws.receive_json()
             assert exc.value.code == CLOSE_TOKEN_EXPIRED
         repo.down = False  # recovery needs no manual step
         assert asyncio.run(svc.require_active(sid)).id is not None
-        with client.websocket_connect("/ws") as ws:
+        with client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
             assert _auth(ws, minted.access_token)["t"] == "auth_ok"
 
 
@@ -176,7 +181,7 @@ def test_s3_gateway_restart_closes_old_sockets_and_requires_reauth_on_new_gatewa
     minted = asyncio.run(svc.mint(str(uuid.uuid4())))
     old_hub = RevocationHub()
     with TestClient(_gateway(svc, old_hub)) as old:
-        with old.websocket_connect("/ws") as ws:
+        with old.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
             assert _auth(ws, minted.access_token)["t"] == "auth_ok"
             asyncio.run(svc.revoke(str(minted.session_id), reason="logout"))
             assert old.portal is not None
@@ -185,10 +190,12 @@ def test_s3_gateway_restart_closes_old_sockets_and_requires_reauth_on_new_gatewa
             assert bye["t"] == "bye" and bye["p"]["code"] == CLOSE_TOKEN_EXPIRED
     # "Restart": a brand-new gateway + hub. The revoked session must not resume.
     with TestClient(_gateway(svc, RevocationHub())) as new:
-        with new.websocket_connect("/ws") as ws:
-            assert _auth(ws, minted.access_token)["p"]["reason"] == "auth_failed"
+        with new.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+            assert _auth(ws, minted.access_token, attempts=3)["p"]["reason"] == "auth_failed"
         # an unauthenticated frame on the new gateway gets nothing carried over
-        with new.websocket_connect("/ws") as ws:
+        with new.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+            ws.send_json({"t": "hello", "id": "h"})
+            assert ws.receive_json()["t"] == "welcome"
             ws.send_json({"t": "sub", "id": "s", "p": {"topics": ["book.X"]}})
             assert ws.receive_json()["t"] == "err"
 
