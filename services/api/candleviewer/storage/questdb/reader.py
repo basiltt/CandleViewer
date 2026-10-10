@@ -18,6 +18,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol, cast
 
+from candleviewer.domain.sql_names import assert_bind_count
 from candleviewer.storage.models import TimeRange
 from candleviewer.storage.sql_identifiers import checked_identifier
 
@@ -28,6 +29,27 @@ class QueryBuilder:
 
     sql: str
     params: tuple[object, ...]
+
+
+#: Callers page with `limit + 1` over a validated `limit <= MAX_LIMIT`.
+#: `storage` may not import `bars` (import-linter), so the cap is mirrored here and a unit test pins
+#: it to `bars.limits.MAX_LIMIT + 1`.
+_MAX_QUERY_LIMIT = 5_001
+
+
+def _inline_limit(limit: int) -> int:
+    """QuestDB PGWire has no `LIMIT $n` bind slot (#2168), so the int is inlined.
+
+    Only ever an `int` clamped to 1.._MAX_QUERY_LIMIT here; never a string (SR-047).
+    """
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= _MAX_QUERY_LIMIT:
+        raise ValueError(f"limit must be an int in 1..{_MAX_QUERY_LIMIT}")
+    return limit
+
+
+def _checked(sql: str, params: tuple[object, ...]) -> QueryBuilder:
+    assert_bind_count(sql, params)
+    return QueryBuilder(sql, params)
 
 
 #: `bar_<family>` table names are built from this closed allowlist, never
@@ -70,24 +92,24 @@ def build_read_klines(
         "SELECT * FROM klines WHERE symbol = $1 AND interval = $2 "
         "AND ts >= $3 AND ts < $4 ORDER BY ts"
     )
+    params: tuple[object, ...] = (sym, interval, rng.start_us, rng.end_us)
     if limit is None:
-        return QueryBuilder(sql, (sym, interval, rng.start_us, rng.end_us))
+        return _checked(sql, params)
     # Newest `limit` rows (DESC + LIMIT); the repository re-sorts ascending.
-    return QueryBuilder(
-        sql.replace("ORDER BY ts", "ORDER BY ts DESC LIMIT $5"),
-        (sym, interval, rng.start_us, rng.end_us, limit),
+    return _checked(
+        sql.replace("ORDER BY ts", f"ORDER BY ts DESC LIMIT {_inline_limit(limit)}"), params
     )
 
 
 def build_read_funding(sym: str, rng: TimeRange, limit: int) -> QueryBuilder:
     """E24-T02 settled funding series: symbol equality, two-sided ts bound,
-    ts-ordered, hard row cap (`limit` is a validated int, still bound)."""
+    ts-ordered, hard row cap (`limit` validated int, inlined: no PGWire LIMIT slot)."""
     sql = (
-        "SELECT ts, symbol, funding_rate, annualised_pct, interval_min, source "
+        "SELECT ts, symbol, funding_rate, annualised_pct, interval_min, source "  # noqa: S608  # nosec B608 reason=int-limit-clamped-by-_inline_limit owner=@CandleViewer/backend
         "FROM funding_rates WHERE symbol = $1 AND ts >= $2 AND ts < $3 "
-        "ORDER BY ts LIMIT $4"
+        f"ORDER BY ts LIMIT {_inline_limit(limit)}"
     )
-    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us, limit))
+    return _checked(sql, (sym, rng.start_us, rng.end_us))
 
 
 def build_read_big_trades(sym: str, rng: TimeRange, min_notional: float) -> QueryBuilder:

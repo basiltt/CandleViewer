@@ -15,10 +15,10 @@ def test_build_read_klines_without_limit_is_unchanged() -> None:
     assert q.params == ("BTCUSDT", "1", 0, 10)
 
 
-def test_build_read_klines_limit_is_bound_and_keeps_newest() -> None:
+def test_build_read_klines_limit_is_inlined_and_keeps_newest() -> None:
     q = build_read_klines("BTCUSDT", "1", TimeRange(start_us=0, end_us=10), 5)
-    assert q.sql.endswith("ORDER BY ts DESC LIMIT $5")
-    assert q.params == ("BTCUSDT", "1", 0, 10, 5)
+    assert q.sql.endswith("ORDER BY ts DESC LIMIT 5")
+    assert q.params == ("BTCUSDT", "1", 0, 10)
 
 
 async def test_fake_repository_limit_keeps_newest_ascending() -> None:

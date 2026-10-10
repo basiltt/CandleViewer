@@ -317,3 +317,77 @@ async def test_read_bars_order_by_ts_then_index_executes_on_real_questdb(
         assert await conn.fetch(sql, *params) == []
     finally:
         await conn.close()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_read_klines_limit_executes_on_real_questdb(
+    questdb_container: tuple[str, int, int],
+) -> None:
+    """#2168: the klines read (with and without `limit`) must run on real PGWire."""
+    from candleviewer.storage.models import TimeRange
+    from candleviewer.storage.questdb.reader import build_read_klines
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    host, pg_port, ilp_port = questdb_container
+    conn = await _connect(host, pg_port)
+    sink = QuestDbRowSink(f"{host}:{ilp_port}", f"{host}:{pg_port}", _PGWIRE_USER, _PGWIRE_PASSWORD)
+    try:
+        await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
+        rows: list[dict[str, object]] = [
+            {
+                "ts": 1_700_000_000_000_000 + i * 60_000_000, "symbol": "BTCUSDT",
+                "interval": "1", "open": 1.0, "high": 2.0, "low": 0.5, "close": 1.5,
+                "volume": 3.0, "turnover": 4.0, "confirmed": True, "source": "rest",
+            }
+            for i in range(3)
+        ]  # fmt: skip
+        await sink.write_rows("klines", rows, "ts")
+        await sink.stop()
+        await wait_for_row_count(conn, "klines", 3)
+        rng = TimeRange(start_us=0, end_us=2**60)
+        q = build_read_klines("BTCUSDT", "1", rng)
+        assert len(await conn.fetch(q.sql, *q.params)) == 3
+        q = build_read_klines("BTCUSDT", "1", rng, 2)
+        got = await conn.fetch(q.sql, *q.params)
+        assert [r["ts"].timestamp() for r in got] == sorted(
+            (r["ts"].timestamp() for r in got), reverse=True
+        )
+        assert len(got) == 2
+        after = TimeRange(start_us=1_700_000_000_000_000 + 1, end_us=2**60)  # the `after` cursor
+        q = build_read_klines("BTCUSDT", "1", after, 5)
+        assert len(await conn.fetch(q.sql, *q.params)) == 2
+    finally:
+        await conn.close()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_read_funding_limit_executes_on_real_questdb(
+    questdb_container: tuple[str, int, int],
+) -> None:
+    """#2168: the settled-funding read must run on real PGWire."""
+    from candleviewer.storage.models import TimeRange
+    from candleviewer.storage.questdb.reader import build_read_funding
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    host, pg_port, ilp_port = questdb_container
+    conn = await _connect(host, pg_port)
+    sink = QuestDbRowSink(f"{host}:{ilp_port}", f"{host}:{pg_port}", _PGWIRE_USER, _PGWIRE_PASSWORD)
+    try:
+        await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
+        rows: list[dict[str, object]] = [
+            {
+                "ts": 1_700_000_000_000_000 + i * 28_800_000_000, "symbol": "BTCUSDT",
+                "funding_rate": 0.0001, "annualised_pct": 10.0, "interval_min": 480,
+                "source": "history",
+            }
+            for i in range(3)
+        ]  # fmt: skip
+        await sink.write_rows("funding_rates", rows, "ts")
+        await sink.stop()
+        await wait_for_row_count(conn, "funding_rates", 3)
+        q = build_read_funding("BTCUSDT", TimeRange(start_us=0, end_us=2**60), 2)
+        assert len(await conn.fetch(q.sql, *q.params)) == 2
+    finally:
+        await conn.close()

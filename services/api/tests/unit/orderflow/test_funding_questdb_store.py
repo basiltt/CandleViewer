@@ -66,7 +66,7 @@ async def test_read_settled_binds_all_params_and_maps_rows() -> None:
     out = await store.read_settled("BTCUSDT", TimeRange(start_us=1, end_us=2), 7)
     assert out[0].interval_min == 240 and out[0].funding_rate == Decimal("0.0001")
     sql, params = reader.sql[0]
-    assert "$4" in sql and "LIMIT" in sql and params == ("BTCUSDT", 1, 2, 7)
+    assert sql.endswith("LIMIT 7") and "$4" not in sql and params == ("BTCUSDT", 1, 2)
     with pytest.raises(ValueError):
         await store.read_settled("BTC;DROP", TimeRange(start_us=1, end_us=2), 7)
 
@@ -79,4 +79,8 @@ def test_schema_registered_with_dedup_ddl_and_symbol_tags() -> None:
         5,
     )
     assert line.startswith("funding_rates,symbol=BTCUSDT,source=history ")
-    assert build_read_funding("BTCUSDT", TimeRange(start_us=1, end_us=2), 3).params[3] == 3
+    assert build_read_funding("BTCUSDT", TimeRange(start_us=1, end_us=2), 3).params == (
+        "BTCUSDT",
+        1,
+        2,
+    )
