@@ -243,7 +243,8 @@ def test_unknown_frame_type_after_auth_is_err(world: _World) -> None:
         _auth(ws)
         ws.send_json({"t": "bogus", "id": "x"})
         assert _recv(ws)["p"]["code"] == "frame_malformed"
-        ws.send_json({"t": "resync", "id": "r"})  # E17-S03 scope: accepted, ignored
+        ws.send_json({"t": "resync", "id": "r"})  # E17-S03: handled; no `ch` -> malformed
+        assert _recv(ws)["p"]["code"] == "frame_malformed"
         ws.send_json({"t": "ping", "id": "p"})
         assert _recv(ws)["t"] == "pong"
 

@@ -226,7 +226,8 @@ def test_sub_snapshot_false_needs_from_seq() -> None:
     (r,) = _sub(conn, "trades.BTCUSDT", snapshot=False)
     assert r["error"]["field"] == "from_seq"
     (r,) = _sub(conn, {"ch": "trades.BTCUSDT", "opts": {"from_seq": 4}}, snapshot=False)
-    assert r["ok"] and r["snapshot_pending"] is False
+    # §7.6: continuity cannot be proven (no snapshot source) -> accepted, snapshot forced.
+    assert r["ok"] and r["snapshot_pending"] is True and r["snapshot_forced"] is True
     (r,) = _sub(conn, "ticker.BTCUSDT", snapshot="yes")
     assert r["error"]["field"] == "snapshot"
 
@@ -335,7 +336,7 @@ def test_ctl_identity_change_forces_resnapshot() -> None:
     sub.seq, sub.snapshot_pending = 10, False
     ok = _ctl(conn, "heatmap.BTCUSDT", {"time_bucket_ms": 1000})
     assert ok["p"]["resnapshot"] is True and ok["p"]["effective"]["time_bucket_ms"] == 1000
-    assert (sub.seq, sub.snapshot_pending) == (0, True)
+    assert (sub.seq, sub.snapshot_pending, sub.pending_reason) == (10, True, "reconfigure")
     again = _ctl(conn, "heatmap.BTCUSDT", {"time_bucket_ms": 1000})
     assert "resnapshot" not in again["p"]  # unchanged identity -> no re-snapshot
 
