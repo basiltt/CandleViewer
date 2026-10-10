@@ -18,6 +18,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol, cast
 
+from candleviewer.domain.sql_names import assert_bind_count, ts_param
 from candleviewer.storage.models import TimeRange
 from candleviewer.storage.sql_identifiers import checked_identifier
 
@@ -28,6 +29,27 @@ class QueryBuilder:
 
     sql: str
     params: tuple[object, ...]
+
+
+#: Callers page with `limit + 1` over a validated `limit <= MAX_LIMIT`.
+#: `storage` may not import `bars` (import-linter), so the cap is mirrored here and a unit test pins
+#: it to `bars.limits.MAX_LIMIT + 1`.
+_MAX_QUERY_LIMIT = 5_001
+
+
+def _inline_limit(limit: int) -> int:
+    """QuestDB PGWire has no `LIMIT $n` bind slot (#2168), so the int is inlined.
+
+    Only ever an `int` clamped to 1.._MAX_QUERY_LIMIT here; never a string (SR-047).
+    """
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= _MAX_QUERY_LIMIT:
+        raise ValueError(f"limit must be an int in 1..{_MAX_QUERY_LIMIT}")
+    return limit
+
+
+def _checked(sql: str, params: tuple[object, ...]) -> QueryBuilder:
+    assert_bind_count(sql, params)
+    return QueryBuilder(sql, params)
 
 
 #: `bar_<family>` table names are built from this closed allowlist, never
@@ -46,13 +68,13 @@ def build_read_bars(sym: str, family: str, param: str, rng: TimeRange) -> QueryB
         f"SELECT * FROM {table} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 - table from _BAR_FAMILIES allowlist, not user input
         "AND ts >= $3 AND ts < $4 ORDER BY ts"
     )
-    return QueryBuilder(sql, (sym, param, rng.start_us, rng.end_us))
+    return QueryBuilder(sql, (sym, param, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 def build_read_trades(sym: str, rng: TimeRange) -> QueryBuilder:
     """Shape #4-adjacent plain trade range read."""
     sql = "SELECT * FROM trades WHERE symbol = $1 AND ts >= $2 AND ts < $3 ORDER BY ts"
-    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us))
+    return QueryBuilder(sql, (sym, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 def build_first_trade(sym: str) -> QueryBuilder:
@@ -70,24 +92,24 @@ def build_read_klines(
         "SELECT * FROM klines WHERE symbol = $1 AND interval = $2 "
         "AND ts >= $3 AND ts < $4 ORDER BY ts"
     )
+    params: tuple[object, ...] = (sym, interval, ts_param(rng.start_us), ts_param(rng.end_us))
     if limit is None:
-        return QueryBuilder(sql, (sym, interval, rng.start_us, rng.end_us))
+        return _checked(sql, params)
     # Newest `limit` rows (DESC + LIMIT); the repository re-sorts ascending.
-    return QueryBuilder(
-        sql.replace("ORDER BY ts", "ORDER BY ts DESC LIMIT $5"),
-        (sym, interval, rng.start_us, rng.end_us, limit),
+    return _checked(
+        sql.replace("ORDER BY ts", f"ORDER BY ts DESC LIMIT {_inline_limit(limit)}"), params
     )
 
 
 def build_read_funding(sym: str, rng: TimeRange, limit: int) -> QueryBuilder:
     """E24-T02 settled funding series: symbol equality, two-sided ts bound,
-    ts-ordered, hard row cap (`limit` is a validated int, still bound)."""
+    ts-ordered, hard row cap (`limit` validated int, inlined: no PGWire LIMIT slot)."""
     sql = (
-        "SELECT ts, symbol, funding_rate, annualised_pct, interval_min, source "
+        "SELECT ts, symbol, funding_rate, annualised_pct, interval_min, source "  # noqa: S608  # nosec B608 reason=int-limit-clamped-by-_inline_limit owner=@CandleViewer/backend
         "FROM funding_rates WHERE symbol = $1 AND ts >= $2 AND ts < $3 "
-        "ORDER BY ts LIMIT $4"
+        f"ORDER BY ts LIMIT {_inline_limit(limit)}"
     )
-    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us, limit))
+    return _checked(sql, (sym, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 def build_read_big_trades(sym: str, rng: TimeRange, min_notional: float) -> QueryBuilder:
@@ -96,7 +118,7 @@ def build_read_big_trades(sym: str, rng: TimeRange, min_notional: float) -> Quer
         "SELECT * FROM trades WHERE symbol = $1 AND notional > $2 "
         "AND ts >= $3 AND ts < $4 ORDER BY ts"
     )
-    return QueryBuilder(sql, (sym, min_notional, rng.start_us, rng.end_us))
+    return QueryBuilder(sql, (sym, min_notional, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 def build_latest_ticker(sym: str) -> QueryBuilder:
@@ -108,7 +130,7 @@ def build_latest_ticker(sym: str) -> QueryBuilder:
 def build_read_heatmap_trail(sym: str, since_ts_us: int) -> QueryBuilder:
     """Shape #6 (DOM heatmap trail): `WHERE symbol=$1 AND ts > now()-60s`."""
     sql = "SELECT * FROM heatmap_cells WHERE symbol = $1 AND ts > $2 ORDER BY ts"
-    return QueryBuilder(sql, (sym, since_ts_us))
+    return QueryBuilder(sql, (sym, ts_param(since_ts_us)))
 
 
 def build_read_book_snapshot_at(sym: str, ts_us: int) -> QueryBuilder:
@@ -117,13 +139,13 @@ def build_read_book_snapshot_at(sym: str, ts_us: int) -> QueryBuilder:
     sql = (
         "SELECT * FROM orderbook_snapshots WHERE symbol = $1 AND ts <= $2 ORDER BY ts DESC LIMIT 1"
     )
-    return QueryBuilder(sql, (sym, ts_us))
+    return QueryBuilder(sql, (sym, ts_param(ts_us)))
 
 
 def build_read_book_deltas(sym: str, rng: TimeRange) -> QueryBuilder:
     """Shape #7 (replay seek), deltas-forward half."""
     sql = "SELECT * FROM orderbook_deltas WHERE symbol = $1 AND ts >= $2 AND ts < $3 ORDER BY ts"
-    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us))
+    return QueryBuilder(sql, (sym, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 def build_read_orderflow_metrics(sym: str, metric: str, rng: TimeRange) -> QueryBuilder:
@@ -140,7 +162,7 @@ def build_read_orderflow_metrics(sym: str, metric: str, rng: TimeRange) -> Query
         "stoprun_score, absorption_score FROM orderflow_metrics "
         "WHERE symbol = $1 AND ts >= $2 AND ts < $3 ORDER BY ts"
     )
-    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us))
+    return QueryBuilder(sql, (sym, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 def build_read_profile(sym: str, profile_kind: str, period_ref: str) -> QueryBuilder:
@@ -160,7 +182,9 @@ def build_read_footprint_cells(
         "SELECT * FROM footprint_cells WHERE symbol = $1 AND bar_family = $2 "
         "AND bar_param = $3 AND ts >= $4 AND ts < $5 ORDER BY ts"
     )
-    return QueryBuilder(sql, (sym, bar_family, bar_param, rng.start_us, rng.end_us))
+    return QueryBuilder(
+        sql, (sym, bar_family, bar_param, ts_param(rng.start_us), ts_param(rng.end_us))
+    )
 
 
 def build_asof_trades_to_tickers(sym: str, rng: TimeRange) -> QueryBuilder:
@@ -170,7 +194,7 @@ def build_asof_trades_to_tickers(sym: str, rng: TimeRange) -> QueryBuilder:
         "FROM trades t ASOF JOIN tickers tk ON (symbol) "
         "WHERE t.symbol = $1 AND t.ts >= $2 AND t.ts < $3 ORDER BY t.ts"
     )
-    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us))
+    return QueryBuilder(sql, (sym, ts_param(rng.start_us), ts_param(rng.end_us)))
 
 
 class PgWireConnection(Protocol):

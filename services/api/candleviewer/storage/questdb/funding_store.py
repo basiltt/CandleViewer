@@ -16,6 +16,7 @@ from candleviewer.domain.funding import (
     PredictedFundingRefused,
     SettledFunding,
 )
+from candleviewer.domain.sql_names import ts_us_from_row
 from candleviewer.storage.models import TimeRange
 from candleviewer.storage.questdb.ilp_writer import IlpWriter
 from candleviewer.storage.questdb.reader import QuestDbReader, build_read_funding
@@ -50,7 +51,7 @@ class QuestDbFundingStore:
         rows = await self._reader.run(build_read_funding(symbol, rng, limit))
         return [
             SettledFunding(
-                ts_us=int(str(r["ts"])),
+                ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 funding_rate=Decimal(repr(float(str(r["funding_rate"])))),
                 interval_min=int(str(r["interval_min"])),

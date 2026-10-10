@@ -41,6 +41,8 @@ def ts_param(us: int) -> datetime:
 
     Exact to the microsecond (`EPOCH_NAIVE + timedelta`, never a float division).
     """
+    if isinstance(us, bool) or not isinstance(us, int):
+        raise TypeError("ts_param expects an int (epoch µs)")
     return EPOCH_NAIVE + timedelta(microseconds=us)
 
 
@@ -55,3 +57,24 @@ def ts_us_from_row(value: object) -> int:
         delta = value - EPOCH
         return (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
     return int(str(value))
+
+
+_PLACEHOLDER = re.compile(r"\$(\d+)")
+
+
+class SqlBindMismatch(ValueError):
+    """The SQL's `$n` placeholders and the bind list disagree (caught before the server)."""
+
+
+def assert_bind_count(sql: str, params: tuple[object, ...] | list[object]) -> None:
+    """Raise `SqlBindMismatch` unless the distinct `$n` set is exactly `$1..$len(params)`.
+
+    One O(n) pass over `sql`. QuestDB PGWire does not treat `LIMIT $n` as a bind slot
+    (#2168), so such a query shows up here as an extra param.
+    """
+    found = {int(m) for m in _PLACEHOLDER.findall(sql)}
+    expected = set(range(1, len(params) + 1))
+    if found != expected:
+        raise SqlBindMismatch(
+            f"SQL has placeholders {sorted(found)} but {len(params)} bind value(s) were given"
+        )
