@@ -67,3 +67,14 @@ Negative / risks:
 - Restore drill: restore a database backup on a machine without the KEK and confirm no key can be decrypted and the app refuses trading mode.
 - Rotation drill: full 90-day rotation executed once before Live enablement (R4) as a PRR item.
 - Pen-test before Live enablement covers key handling explicitly.
+
+## Amendment 1 (2026-10-10, E27-K01 #832)
+
+Refines Design §1; does not reverse it. Detail: `docs/plan/spikes/e27-kek.md`.
+- Injection is a **read-once handle** (`CV_KEK_HANDLE`, default `/run/secrets/cv_kek`), not an
+  environment variable: env values are visible via `docker inspect` and `/proc/*/environ`.
+- VPS custody: `systemd-creds` `LoadCredentialEncrypted` (TPM2 when available); `age` file `0600` fallback.
+- Config: `CV_KEK_SOURCE` (`handle`|`file`|`none`), `CV_KEK_HANDLE`, `CV_KEK_VERSION`; `file` with
+  `CV_ENV=live` is fatal (`kek_source_not_permitted`).
+- Each KEK version has a non-secret key check value; rotation re-wraps DEKs per row by `kek_version`.
+- KEK unavailable ⇒ `Degraded`, signing refused, order routes 403 (fail closed).
