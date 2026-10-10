@@ -13,6 +13,7 @@ import re
 
 import pytest
 
+from candleviewer.domain.sql_names import ts_param
 from candleviewer.storage.models import TimeRange
 from candleviewer.storage.questdb import reader
 
@@ -76,7 +77,7 @@ def test_build_asof_join_uses_asof_join_keyword() -> None:
 
 def test_build_read_heatmap_trail_filters_symbol_and_since_ts() -> None:
     qb = reader.build_read_heatmap_trail("BTCUSDT", 5_000)
-    assert qb.params == ("BTCUSDT", 5_000)
+    assert qb.params == ("BTCUSDT", ts_param(5_000))
     assert "symbol = $1" in qb.sql
     assert "ts > $2" in qb.sql
 

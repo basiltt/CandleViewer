@@ -3,6 +3,7 @@ the newest rows; the fake repository mirrors it."""
 
 from __future__ import annotations
 
+from candleviewer.domain.sql_names import ts_param
 from candleviewer.storage.models import TimeRange
 from candleviewer.storage.questdb.reader import build_read_klines
 from candleviewer.storage.repositories.rows import KlineRow
@@ -12,13 +13,13 @@ from candleviewer.storage.testing import FakeMarketDataRepository
 def test_build_read_klines_without_limit_is_unchanged() -> None:
     q = build_read_klines("BTCUSDT", "1", TimeRange(start_us=0, end_us=10))
     assert q.sql.endswith("ORDER BY ts") and "LIMIT" not in q.sql
-    assert q.params == ("BTCUSDT", "1", 0, 10)
+    assert q.params == ("BTCUSDT", "1", ts_param(0), ts_param(10))
 
 
 def test_build_read_klines_limit_is_inlined_and_keeps_newest() -> None:
     q = build_read_klines("BTCUSDT", "1", TimeRange(start_us=0, end_us=10), 5)
     assert q.sql.endswith("ORDER BY ts DESC LIMIT 5")
-    assert q.params == ("BTCUSDT", "1", 0, 10)
+    assert q.params == ("BTCUSDT", "1", ts_param(0), ts_param(10))
 
 
 async def test_fake_repository_limit_keeps_newest_ascending() -> None:

@@ -15,6 +15,7 @@ import re
 from collections.abc import Callable, Sequence
 from decimal import Decimal
 
+from candleviewer.domain.sql_names import ts_us_from_row
 from candleviewer.storage.models import TierHint, TimeRange
 from candleviewer.storage.questdb.ilp_writer import IlpWriter
 from candleviewer.storage.questdb.reader import (
@@ -196,7 +197,7 @@ class QuestDbMarketDataRepository:
         rows = await self._reader.run(build_read_bars(sym, family, param, rng))
         return [
             BarRow(
-                ts_us=int(str(r["ts"])),
+                ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 family=family,
                 param=str(r["bar_param"]),
@@ -220,10 +221,10 @@ class QuestDbMarketDataRepository:
         self._check_symbol(sym)
         rows = await self._reader.run(build_read_klines(sym, interval, rng, limit))
         if limit is not None:
-            rows = sorted(rows, key=lambda r: int(str(r["ts"])))
+            rows = sorted(rows, key=lambda r: ts_us_from_row(r["ts"]))
         return [
             KlineRow(
-                ts_us=int(str(r["ts"])),
+                ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 interval=interval,
                 open=str(r["open"]),
@@ -241,7 +242,7 @@ class QuestDbMarketDataRepository:
     async def first_trade_us(self, sym: str) -> int | None:
         self._check_symbol(sym)
         rows = await self._reader.run(build_first_trade(sym))
-        return int(str(rows[0]["ts"])) if rows else None
+        return ts_us_from_row(rows[0]["ts"]) if rows else None
 
     async def read_trades(
         self, sym: str, rng: TimeRange, tier: TierHint = "auto"
@@ -250,7 +251,7 @@ class QuestDbMarketDataRepository:
         rows = await self._reader.run(build_read_trades(sym, rng))
         return [
             TradeRow(
-                ts_us=int(str(r["ts"])),
+                ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 price=str(r["price"]),
                 qty=str(r["size"]),
@@ -273,7 +274,7 @@ class QuestDbMarketDataRepository:
         bids = tuple(tuple(pair) for pair in json.loads(str(r["bids"]))[:depth])
         asks = tuple(tuple(pair) for pair in json.loads(str(r["asks"]))[:depth])
         return BookSnapshotRow(
-            ts_us=int(str(r["ts"])),
+            ts_us=ts_us_from_row(r["ts"]),
             symbol=str(r["symbol"]),
             seq=int(str(r["update_id"])),
             bids=bids,
@@ -287,7 +288,7 @@ class QuestDbMarketDataRepository:
         rows = await self._reader.run(build_read_book_deltas(sym, rng))
         return [
             BookDeltaRow(
-                ts_us=int(str(r["ts"])),
+                ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 seq=int(str(r["update_id"])),
                 side=str(r["side"]),
@@ -319,7 +320,7 @@ class QuestDbMarketDataRepository:
         rows = await self._reader.run(build_read_orderflow_metrics(sym, metric, rng))
         return [
             OrderflowMetricRow(
-                ts_us=int(str(r["ts"])),
+                ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 metric=metric,
                 value=str(r[metric]),
@@ -339,7 +340,7 @@ class QuestDbMarketDataRepository:
         rows = await self._reader.run(build_read_footprint_cells(sym, "time", "1m", rng))
         return [
             FootprintCellRow(
-                bar_ts_us=int(str(r["ts"])),
+                bar_ts_us=ts_us_from_row(r["ts"]),
                 symbol=str(r["symbol"]),
                 price_level=str(r["price"]),
                 bid_qty=str(r["bid_volume"]),
@@ -355,7 +356,7 @@ class QuestDbMarketDataRepository:
             return None
         r = rows[0]
         return TickerRow(
-            ts_us=int(str(r["ts"])),
+            ts_us=ts_us_from_row(r["ts"]),
             symbol=str(r["symbol"]),
             last_price=str(r["last_price"]),
             mark_price=str(r["mark_price"]),
