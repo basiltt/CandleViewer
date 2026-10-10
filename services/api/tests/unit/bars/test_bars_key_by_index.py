@@ -149,3 +149,13 @@ async def test_builder_cold_start_index_reset_keeps_ts_order_across_pages() -> N
     store.rows[("new", 0)] = _row(b, ts=2_000, index=0)  # cold start: index back to 0
     page = await _page(store, 3)
     assert [r["ts"] for r in page] == [1_000, 1_100, 2_000]
+
+
+def test_range_query_bind_count_matches_placeholders() -> None:
+    """Docker-free guard: QuestDB rejects a param/placeholder mismatch (asyncpg InterfaceError)."""
+    from candleviewer.bars.reader import build_range_query
+
+    for after in (None, 7):
+        sql, params = build_range_query("volume", SYM, "vol:1500", 0, 10, after, 5)
+        assert sorted(set(re.findall(r"\$(\d+)", sql))) == [str(i + 1) for i in range(len(params))]
+        assert sql.endswith("LIMIT 5")

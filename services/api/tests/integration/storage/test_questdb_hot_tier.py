@@ -287,10 +287,10 @@ async def test_bars_sink_writes_row_readable_over_pgwire(
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_read_bars_order_by_generation_index_executes_on_real_questdb(
+async def test_read_bars_order_by_ts_then_index_executes_on_real_questdb(
     questdb_container: tuple[str, int, int],
 ) -> None:
-    """#2016: `index` is reserved in QuestDB; the reader's ORDER BY must run, not just build."""
+    """#2016: the reader's `ORDER BY ts, "index"` and bind count must run on a real QuestDB."""
     from candleviewer.bars.reader import build_range_query
     from candleviewer.storage.questdb.wiring import QuestDbRowSink
 

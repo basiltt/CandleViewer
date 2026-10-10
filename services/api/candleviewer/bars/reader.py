@@ -92,9 +92,11 @@ def build_range_query(
     start = from_us if after_us is None else max(from_us, after_us + 1)
     sql = (
         f"SELECT * FROM bars_{kind} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 reason=table-from-closed-allowlist owner=@CandleViewer/backend
-        f"AND ts >= $3 AND ts < $4 ORDER BY {_ORDER_BY} LIMIT $5"
+        f"AND ts >= $3 AND ts < $4 ORDER BY {_ORDER_BY} LIMIT {int(limit)}"
     )
-    return sql, (symbol, bar_param, start, to_us, limit)
+    # QuestDB 8.x does not count `LIMIT $n` as a bind slot (asyncpg: "server expects 4
+    # arguments"), so the validated-int `limit` (1..MAX_LIMIT, checked above) is inlined.
+    return sql, (symbol, bar_param, start, to_us)
 
 
 @dataclass(slots=True)

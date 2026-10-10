@@ -274,7 +274,8 @@ async def _sched_noop(sym: str, h: str, lo: int, hi: int) -> None:
 
 def test_range_query_is_parameterised_and_bounded() -> None:
     sql, params = build_range_query("time", "X'; DROP", "5m", 0, 10, 4, 100)
-    assert "DROP" not in sql and params == ("X'; DROP", "5m", 5, 10, 100)
+    assert "DROP" not in sql and params == ("X'; DROP", "5m", 5, 10)
+    assert sql.endswith("LIMIT 100") and len(params) == len(set(re.findall(r"\$\d+", sql)))
     with pytest.raises(ValueError):
         build_range_query("evil", "X", "5m", 0, 1, None, 1)
     with pytest.raises(ValueError):

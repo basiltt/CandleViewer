@@ -88,14 +88,15 @@ _STORE = _rows()
 
 
 class _Fetch:
-    """Evaluates `build_range_query`'s params: (symbol, bar_param, start, to, limit)."""
+    """Evaluates `build_range_query`'s params: (symbol, bar_param, start, to); limit is inlined."""
 
     def __init__(self) -> None:
         self.calls = 0
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
         self.calls += 1
-        symbol, bar_param, start, to, limit = params
+        symbol, bar_param, start, to = params
+        limit = int(sql.rsplit("LIMIT ", 1)[1])
         rows = [r for r in _STORE.get(str(bar_param), []) if r["symbol"] == symbol
                 and int(str(start)) <= int(str(r["ts"])) < int(str(to))]  # fmt: skip
         return rows[: int(str(limit))]
