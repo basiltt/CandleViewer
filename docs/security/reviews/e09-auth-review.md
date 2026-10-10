@@ -58,12 +58,12 @@ named) · **OPEN** (missing, and no owning ticket was found, so it needs triage)
 ## 2. Findings triage
 
 Dates are when the item was raised. "Due" is a review-by date that the owner still has to confirm.
-No item is marked accepted: an accepted risk needs a dated Owner signature, and there is none.
+An accepted risk needs a dated Owner signature. Only F-2 carries one (Owner record 2026-10-09 on #1778); every other open item is not accepted.
 
 | Id | Source | Item | STRIDE | Severity | Owner | Tracking | Raised / due | Status |
 |---|---|---|---|---|---|---|---|---|
 | F-1 | E09-X02 | No SR-041 double-submit CSRF token; relies on SameSite=Strict + Origin allow-list + bearer header | Tampering | Medium | Architect | #2090 | 2026-10-09 / 2026-10-23 | Open (fix or Owner-signed acceptance) |
-| F-2 | E09-X02 | Access tokens not bound to IP/UA; theft detected only on refresh reuse (AC-SES-06) | Spoofing | Low–Medium | Architect + Owner | #2145; #1778 Owner record 2026-10-09 | 2026-10-09 | **Accepted design decision** (Owner, #1778 record 2026-10-09): SR-012 stores IP/UA but does not bind; no change. Residual bearer-theft window bounded by the 12 min access TTL and refresh-reuse detection |
+| F-2 | E09-X02 | Access tokens not bound to IP/UA; theft detected only on refresh reuse (repro: abuse case AC-SES-06 in `docs/security/abuse-cases/e09-auth.md`) | Spoofing | Low–Medium | Architect + Owner | #2145; #1778 Owner record 2026-10-09 | 2026-10-09 | **Accepted design decision** (Owner, #1778 record 2026-10-09): SR-012 stores IP/UA but does not bind; no change. Residual bearer-theft window bounded by the 12 min access TTL and refresh-reuse detection |
 | A-1 | #2083 | `audit:read` grants misaligned with 04 §7.2 / SR-067 | Information disclosure | High (P0) | Security | #2083 → PR #2095 | 2026-10-08 | Fixed (merged) |
 | X3-1 | E09-X03 | ZAP authenticated scan needs CI fixture secrets | — (gate coverage) | Medium | Owner | #1778 item D | 2026-10-04 | Open |
 | X3-2 | E09-X03 | Git-history gitleaks scan and ZAP end-to-end not run locally | — (gate coverage) | Low | DevSecOps | `auth-security-gates.md` status notes | 2026-10-09 | Open; CI run evidence needed |
