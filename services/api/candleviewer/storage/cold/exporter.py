@@ -49,6 +49,8 @@ from candleviewer.storage.cold.writer import (
 from candleviewer.storage.errors import StorageExportVerifyFailed, StorageSchemaDrift
 from candleviewer.storage.models import ExportRun, StreamKind, TimeRange
 
+logger = structlog.get_logger(__name__)
+
 _PART_RE = re.compile(r"^part-(\d{4})\.parquet$")
 
 #: Default wall-clock bound for one partition export (C-2.18: every external
@@ -197,9 +199,7 @@ class ColdExporter:
         for entry in existing:
             same_range = (entry.range_start_us, entry.range_end_us) == (rng.start_us, rng.end_us)
             if same_range and (paths.partition_dir / entry.file).is_file():
-                structlog.get_logger(__name__).info(
-                    "cold_export_skip_already_done", partition=rel_dir
-                )
+                logger.info("cold_export_skip_already_done", partition=rel_dir)
                 return ExportRun(
                     run_id=entry.export_run_id,
                     symbol=symbol,
@@ -278,9 +278,7 @@ class ColdExporter:
         _fire_hook(AFTER_MANIFEST)
         storage_export_rows_total.labels(stream=stream.value, result="ok").inc(row_count)
         storage_export_bytes_total.labels(stream=stream.value).inc(dest.stat().st_size)
-        structlog.get_logger(__name__).info(
-            "cold_export_done", partition=rel_dir, file=file_name, rows=row_count
-        )
+        logger.info("cold_export_done", partition=rel_dir, file=file_name, rows=row_count)
         return ExportRun(
             run_id=run_id,
             symbol=symbol,
