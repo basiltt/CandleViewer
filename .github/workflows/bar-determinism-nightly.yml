@@ -30,13 +30,20 @@ jobs:
         # Every `harness`-marked test under tests/unit/bars (E12-T04 heavy lane + the full BI-1/BI-5
         # sweeps moved here by #2177) — the PR lane deselects the marker.
         run: uv run pytest tests/unit/bars -m harness -q -p no:randomly --no-cov
+      - name: Conformance bank, heavy tapes (E12-Q02; dense + gap, full matrix, chunk equivalence)
+        id: conformance
+        working-directory: services/api
+        if: always() && steps.sync.outcome == 'success'
+        env:
+          CV_CONFORMANCE_SUMMARY: conformance-summary.json
+        run: uv run pytest tests/unit/bars/test_conformance_bank.py tests/unit/bars/test_conformance_behaviour.py -m harness -q -p no:randomly --no-cov
       - name: Full harness (1M trades, BI-1..BI-6, reference, throughput vs baseline)
         id: harness
         working-directory: services/api
         if: always() && steps.sync.outcome == 'success'
         run: uv run python -m bench.bar_determinism.run --n 1000000 --out bar-determinism.json
       - name: Open ticket on invariant violation or throughput regression
-        if: failure() && (steps.harness.outcome == 'failure' || steps.harness_tests.outcome == 'failure') && steps.sync.outcome == 'success'
+        if: failure() && (steps.harness.outcome == 'failure' || steps.conformance.outcome == 'failure' || steps.harness_tests.outcome == 'failure') && steps.sync.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

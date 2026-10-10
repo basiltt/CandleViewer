@@ -214,6 +214,13 @@ recorder captures replace it once E16 lands. Hence the 1.2 M-print day does not 
 | `newlist-2026-09-04` | Listed mid-day, recording starts 11:17Z | **to be recorded — owner: E12-Q02** | none (C/E/F cases blocked) |
 | `edge-ticks` | Synthetic: exact-threshold volume, exact-range, exact-brick crossings | **to be recorded — owner: E12-Q02** (synthetic generator, seeded) | hand tapes quoted in each case |
 
+**E12-Q02 bank** (`packages/fixtures/golden/bars/conformance/`, `MANIFEST.toml`): five *synthetic* tapes (seeded
+generator, exception #1778 A; dense is capped at 200k prints, not 1.2 M) plus a golden per (tape, pair) for the
+matrix through the live `BarBuilderSet`. `renko:atr:14` (ADR-0033) and `heikin_ashi:5` (not a builder) are recorded
+as rejected pairs. **Golden update workflow:** `make golden-update` (dry run + diff summary);
+`make golden-update WRITE=1 REASON="why"` writes; refused under CI, without a reason, or without a `BUILD_VERSIONS`
+bump for a changed kind. Review the `git diff --stat` in the PR.
+
 No payloads are invented here. Expected values come from the independent oracle (§0), committed by E12-Q02.
 Each fixture needs a README line (source, date, symbol, env, redaction) per C-13.5.
 
