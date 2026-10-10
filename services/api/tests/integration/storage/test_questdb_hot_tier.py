@@ -433,3 +433,64 @@ async def test_trades_and_deltas_readers_bind_datetime_ts_on_real_questdb(
         await conn.fetch(q.sql, *q.params)  # executes (table may be empty)
     finally:
         await conn.close()
+
+
+@pytest.mark.asyncio
+async def test_bar_writer_row_lands_on_real_questdb(
+    questdb_container: tuple[str, int, int],
+) -> None:
+    """#2198: rows produced by the production `BarWriter` path (tape + kline) must commit.
+
+    A SYMBOL column sent as an ILP field is rejected by QuestDB (nothing ever commits), which
+    hand-built-row tests cannot see.
+    """
+    from decimal import Decimal
+
+    from candleviewer.bars.kline_rows import KLINE_SOURCE
+    from candleviewer.bars.models import Bar, BarSpec
+    from candleviewer.bars.rows import bar_row
+    from candleviewer.bars.writer import BarWriter
+
+    spec = BarSpec(kind="time", interval_ms=300_000)
+    bar = Bar.model_validate(
+        dict(
+            spec_hash=spec.spec_hash, symbol="BTCUSDT", index=3, open_time=1_700_000_000_000_000,
+            close_time=1_700_000_299_999_999, open=Decimal("100.1"), high=Decimal("101"),
+            low=Decimal("99.5"), close=Decimal("100.5"), volume=Decimal("10"),
+            buy_volume=Decimal("6"), sell_volume=Decimal("4"), delta=Decimal("2"),
+            min_delta=Decimal("-1"), max_delta=Decimal("3"), trade_count=7,
+            turnover=Decimal("1001"), vwap=Decimal("100.3"), closed=True, partial=False,
+            gap_before=False,
+        )
+    )  # fmt: skip
+    host, pg_port, ilp_port = questdb_container
+    conn = await _connect(host, pg_port)
+    try:
+        await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
+        ilp = IlpWriter(_AsyncpgTcpIlpTransport(host, ilp_port), ALL_SCHEMAS)
+        await ilp.start()
+
+        class _Sink:
+            async def write_rows(
+                self, table: str, rows: list[dict[str, object]], ts_us_key: str
+            ) -> None:
+                await ilp.write_rows(table, rows, ts_us_key)
+                await ilp.flush(table)
+
+        writer = BarWriter(_Sink())
+        await writer.start()
+        await writer.submit([bar], spec, source="tape")
+        kline_bar = bar.model_copy(update={"index": 4, "open_time": 1_700_000_300_000_000})
+        kline_row = bar_row(kline_bar, spec, source=KLINE_SOURCE)
+        await writer.submit_rows([kline_row], spec, source=KLINE_SOURCE)
+        await writer.stop()
+        await ilp.stop()
+
+        await wait_for_row_count(conn, "bars_time", 2)
+        wal = dict((await conn.fetch("SELECT * FROM wal_tables() WHERE name = 'bars_time'"))[0])
+        assert int(wal["sequencerTxn"]) > 0
+        assert wal.get("errorTag") in ("", None)
+        got = await conn.fetch("SELECT index, source FROM bars_time ORDER BY index")
+        assert [(int(r["index"]), r["source"]) for r in got] == [(3, "tape"), (4, KLINE_SOURCE)]
+    finally:
+        await conn.close()

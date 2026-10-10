@@ -30,7 +30,7 @@ _COLUMN_RE = re.compile(
 #: `ALTER TABLE t ADD COLUMN IF NOT EXISTS name TYPE [CAPACITY n] [CACHE];` (additive batches).
 _ALTER_ADD_RE = re.compile(
     r"ALTER\s+TABLE\s+(?P<table>\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?"
-    r"(?P<col>\w+)\s+[A-Z0-9_]+(?:\(\d+\))?(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*;",
+    r"(?P<col>\w+)\s+(?P<type>[A-Z0-9_]+)(?:\(\d+\))?(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*;",
     re.IGNORECASE,
 )
 
@@ -45,6 +45,7 @@ class TableDef:
     partition_by: str
     dedup_keys: tuple[str, ...]
     source_file: str
+    symbol_columns: tuple[str, ...] = ()
 
 
 def _strip_comments(sql_body: str) -> str:
@@ -72,6 +73,7 @@ def parse_ddl_file(path: Path) -> list[TableDef]:
     for match in _CREATE_RE.finditer(text):
         body = _strip_comments(match.group("body"))
         columns: list[str] = []
+        symbols: list[str] = []
         for raw_col in _split_columns(body):
             # `open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE` lands as one
             # token after comma-splitting collapses the intentional multi-decl
@@ -80,6 +82,8 @@ def parse_ddl_file(path: Path) -> list[TableDef]:
             col_match = _COLUMN_RE.match(raw_col)
             if col_match:
                 columns.append(col_match.group("name").lower())
+                if col_match.group("type").upper() == "SYMBOL":
+                    symbols.append(col_match.group("name").lower())
         dedup_raw = match.group("dedup") or ""
         dedup_keys = tuple(k.strip().strip('"').lower() for k in dedup_raw.split(",") if k.strip())
         tables.append(
@@ -90,6 +94,7 @@ def parse_ddl_file(path: Path) -> list[TableDef]:
                 partition_by=match.group("partition").upper(),
                 dedup_keys=dedup_keys,
                 source_file=path.name,
+                symbol_columns=tuple(symbols),
             )
         )
     return tables
@@ -120,5 +125,10 @@ def _apply_alters(tables: list[TableDef], dir_path: Path) -> list[TableDef]:
             table = by_name.get(m.group("table").lower())
             col = m.group("col").lower()
             if table is not None and col not in table.columns:
-                by_name[table.name] = replace(table, columns=(*table.columns, col))
+                symbols = table.symbol_columns
+                if m.group("type").upper() == "SYMBOL":
+                    symbols = (*symbols, col)
+                by_name[table.name] = replace(
+                    table, columns=(*table.columns, col), symbol_columns=symbols
+                )
     return [by_name[t.name] for t in tables]
