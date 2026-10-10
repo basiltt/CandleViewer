@@ -1,6 +1,6 @@
 # Bar conformance bank (E12-Q02)
 
-Five named tapes, each a **synthetic, deterministic** stand-in (exception #1778 A): real Bybit
+Five named tapes, each a **synthetic, deterministic** stand-in (exception #1778 A): real exchange
 symbol-day recordings do not exist yet (recorder E16, epic #42 comment 6095472425). They are
 generated from the E12-T04 seeded generator (`services/api/bench/bar_determinism/tapes.py`) and
 **must be replaced by recorder captures** when E16 ships. `MANIFEST.toml` records, per tape: source

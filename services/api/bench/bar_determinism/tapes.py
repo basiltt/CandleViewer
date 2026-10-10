@@ -1,6 +1,6 @@
 """The five E12-Q02 conformance tapes (deterministic SYNTHETIC stand-ins, exception #1778 A).
 
-Real Bybit symbol-day recordings do not exist yet (recorder E16 not shipped), so each named tape
+Real exchange symbol-day recordings do not exist yet (recorder E16 not shipped), so each named tape
 is built from the E12-T04 seeded generator (`generator.iter_trades`) with the characteristics the
 test plan (`qa/plans/e12-bars-and-series-test-plan.md` §8.2) names. They are committed as
 gzip'd JSONL under `packages/fixtures/golden/bars/conformance/tapes/` and MUST be replaced by
