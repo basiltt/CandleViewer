@@ -135,7 +135,9 @@ def _sub(ws: Any, ch: str, accounts: list[uuid.UUID] | None = None) -> dict[str,
 
 def test_ws_e2e_permissions_sub_check_and_live_role_change(env: tuple[TestClient, _World]) -> None:
     client, w = env
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        ws.send_json({"t": "hello", "id": "h"})
+        assert ws.receive_json()["t"] == "welcome"
         ws.send_json({"t": "auth", "id": "a", "p": {"access_token": "mgr-token"}})
         ok = ws.receive_json()
         assert ok["t"] == "auth_ok"
@@ -166,13 +168,16 @@ def test_ws_e2e_bad_token_closes_4401_and_frames_before_auth_refused(
     env: tuple[TestClient, _World],
 ) -> None:
     client, _ = env
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
         ws.send_json({"t": "hello", "id": "h"})
         assert ws.receive_json()["t"] == "welcome"
         ws.send_json({"t": "ping", "id": "p"})
         assert ws.receive_json()["t"] == "pong"
         ws.send_json({"t": "sub", "id": "s", "p": {"topics": ["book.X"]}})
         assert ws.receive_json()["p"]["code"] == "not_authenticated"
+        for _ in range(2):  # §4.3: attempts 1-2 get `err auth_failed`, the 3rd closes
+            ws.send_json({"t": "auth", "id": "a", "p": {"access_token": "nope"}})
+            assert ws.receive_json()["p"]["code"] == "auth_failed"
         ws.send_json({"t": "auth", "id": "a", "p": {"access_token": "nope"}})
         bye = ws.receive_json()
         assert bye["t"] == "bye" and bye["p"]["reason"] == "auth_failed"
@@ -202,7 +207,9 @@ def test_ws_e2e_last_owner_demotion_409_is_audited(env: tuple[TestClient, _World
 def test_ws_e2e_session_revocation_closes_socket(env: tuple[TestClient, _World]) -> None:
     client, _ = env
     hub = client.app.state.revocation_hub  # type: ignore[attr-defined]  # Starlette app typed as ASGIApp
-    with client, client.websocket_connect("/ws") as ws:
+    with client, client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        ws.send_json({"t": "hello", "id": "h"})
+        assert ws.receive_json()["t"] == "welcome"
         ws.send_json({"t": "auth", "id": "a", "p": {"access_token": "mgr-token"}})
         assert ws.receive_json()["t"] == "auth_ok"
         ws.send_json({"t": "unsub", "id": "u", "p": {"topics": ["orders"]}})

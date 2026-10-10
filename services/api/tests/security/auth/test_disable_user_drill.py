@@ -111,9 +111,15 @@ def _recv(ws: Any) -> dict[str, Any]:
     return frame
 
 
-def _auth_ws(ws: Any, token: str) -> dict[str, Any]:
-    ws.send_json({"t": "auth", "id": "a", "p": {"access_token": token}})
-    return _recv(ws)
+def _auth_ws(ws: Any, token: str, attempts: int = 1) -> dict[str, Any]:
+    """`hello` then `attempts` x `auth` (§4.3: a failure closes on the 3rd attempt)."""
+    ws.send_json({"t": "hello", "id": "h"})
+    assert _recv(ws)["t"] == "welcome"
+    frame: dict[str, Any] = {}
+    for _ in range(attempts):
+        ws.send_json({"t": "auth", "id": "a", "p": {"access_token": token}})
+        frame = _recv(ws)
+    return frame
 
 
 def test_disable_user_drill_terminates_sessions_sockets_and_pending_actions(env: Any) -> None:
@@ -126,7 +132,7 @@ def test_disable_user_drill_terminates_sessions_sockets_and_pending_actions(env:
     env.run(env.step_up.record_pending, str(a.session_id), "users")
     assert env.run(env.step_up.pending_action_class, str(a.session_id)) == "users"
 
-    with env.client.websocket_connect("/ws") as ws:
+    with env.client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
         ok = _auth_ws(ws, a.access_token)
         assert ok["t"] == "auth_ok"
         ws.send_json({"t": "sub", "id": "s", "p": {"topics": [{"ch": "book.BTCUSDT.50"}]}})
@@ -161,8 +167,8 @@ def test_disable_user_drill_revoked_token_cannot_reopen_a_socket(env: Any) -> No
     user = str(uuid.uuid4())
     minted = env.run(env.sessions.mint, user)
     env.run(env.disable, user)
-    with env.client.websocket_connect("/ws") as ws:
-        bye = _auth_ws(ws, minted.access_token)
+    with env.client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        bye = _auth_ws(ws, minted.access_token, attempts=3)
         assert (bye["t"], bye["p"]["reason"]) == ("bye", "auth_failed")
 
 

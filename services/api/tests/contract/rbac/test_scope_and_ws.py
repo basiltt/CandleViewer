@@ -242,7 +242,14 @@ def _recv(ws: Any) -> dict[str, Any]:
     return frame
 
 
+def _hello(ws: Any) -> None:
+    """§4.2: `hello` -> `welcome` precedes everything else (E17-S01)."""
+    ws.send_json({"t": "hello", "id": "h"})
+    assert _recv(ws)["t"] == "welcome"
+
+
 def _auth(ws: Any, actor: str) -> dict[str, Any]:
+    _hello(ws)
     ws.send_json({"t": "auth", "id": "a", "p": {"access_token": f"tok-{actor}"}})
     return _recv(ws)
 
@@ -276,9 +283,11 @@ def test_every_topic_family_x_actor_matches_the_matrix(
     row = _TOPICS[family]
     expected = row["outcomes"][actor]
     account = GRANTED if row["scope"] == "granted_accounts" else None
-    with world.client.websocket_connect("/ws") as ws:
+    with world.client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
         if actor != "unauthenticated":
             assert _auth(ws, actor)["t"] == "auth_ok"
+        else:
+            _hello(ws)
         result = _sub(ws, row["sample"], account)
     observed = "sub_ok" if result["ok"] else result["error"]["code"]
     assert observed == expected, f"topic {family} as {actor}: expected {expected}, got {observed}"
@@ -300,7 +309,7 @@ def test_non_entitled_role_gets_forbidden_not_a_silent_empty_subscription(world:
 def test_in_flight_subscription_gets_revoked_when_the_grant_is_withdrawn(world: World) -> None:
     """Grant revoked mid-connection: `revoked` frame, then a resubscribe is denied (§9.5)."""
     mgr = user_id_of("manager_with_grant")
-    with world.client.websocket_connect("/ws") as ws:
+    with world.client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
         assert _auth(ws, "manager_with_grant")["t"] == "auth_ok"
         assert _sub(ws, "orders", GRANTED)["ok"] is True
         world.resolver.revoked.add("manager_with_grant")  # the owner withdraws the grant ...

@@ -42,9 +42,18 @@ def _client(**kw: Any) -> TestClient:
     return TestClient(app)
 
 
+def _hello(ws: Any) -> None:
+    ws.send_json({"t": "hello", "id": "h"})
+    assert ws.receive_json()["t"] == "welcome"
+
+
 @pytest.mark.parametrize("payload", [{}, {"access_token": 7}, None, "x"])
-def test_gateway_auth_without_string_token_closes_4401(payload: Any) -> None:
-    with _client().websocket_connect("/ws") as ws:
+def test_gateway_auth_without_string_token_fails_and_third_closes_4401(payload: Any) -> None:
+    with _client().websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        _hello(ws)
+        for _ in range(2):
+            ws.send_json({"t": "auth", "id": "a", "p": payload})
+            assert ws.receive_json()["p"]["code"] == "auth_failed"
         ws.send_json({"t": "auth", "id": "a", "p": payload})
         bye = ws.receive_json()
         assert (bye["t"], bye["p"]["reason"]) == ("bye", "auth_failed")
@@ -53,27 +62,19 @@ def test_gateway_auth_without_string_token_closes_4401(payload: Any) -> None:
     assert exc.value.code == 4401
 
 
-def test_gateway_non_object_and_non_json_frames_are_ignored() -> None:
-    with _client().websocket_connect("/ws") as ws:
+def test_gateway_non_object_and_non_json_frames_are_err_then_ping_still_served() -> None:
+    with _client().websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        _hello(ws)
         ws.send_json([1, 2])
-        ws.send_text("not json")
+        assert ws.receive_json()["p"]["code"] == "frame_malformed"
         ws.send_json({"t": "ping", "id": "p"})
-        assert ws.receive_json() == {"t": "pong", "id": "p"}
+        pong = ws.receive_json()
+        assert (pong["t"], pong["id"]) == ("pong", "p")
 
 
-def test_gateway_unauthenticated_socket_hits_deadline_4401() -> None:
-    with _client(auth_timeout_s=0.05).websocket_connect("/ws") as ws:
-        ws.send_json({"t": "hello", "id": "h"})
-        assert ws.receive_json()["t"] == "welcome"
-        bye = ws.receive_json()  # blocks until the server-side deadline fires
-        assert bye["p"]["reason"] == "auth_timeout"
-        with pytest.raises(WebSocketDisconnect) as exc:
-            ws.receive_json()
-    assert exc.value.code == 4401
-
-
-def test_gateway_authenticated_socket_has_no_auth_deadline() -> None:
-    with _client(auth_timeout_s=0.05).websocket_connect("/ws") as ws:
+def test_gateway_authenticated_socket_unsub_ok() -> None:
+    with _client().websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        _hello(ws)
         ws.send_json({"t": "auth", "id": "a", "p": {"access_token": "ok"}})
         assert ws.receive_json()["t"] == "auth_ok"
         ws.send_json({"t": "unsub", "id": "u", "p": {"topics": ["book.X", 3]}})
@@ -82,12 +83,14 @@ def test_gateway_authenticated_socket_has_no_auth_deadline() -> None:
 
 @pytest.mark.parametrize("binary", [False, True])
 def test_gateway_oversized_frame_closes_1009_before_parse(binary: bool) -> None:
-    with _client(max_frame_bytes=64).websocket_connect("/ws") as ws:
+    with _client(max_frame_bytes=64).websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
         blob = '{"t":"ping","id":"' + "x" * 100 + '"}'
         if binary:
             ws.send_bytes(blob.encode())
         else:
             ws.send_text(blob)
+        bye = ws.receive_json()  # S11: bye precedes every server-initiated close
+        assert (bye["t"], bye["p"]["reason"], bye["p"]["code"]) == ("bye", "frame_too_big", 1009)
         with pytest.raises(WebSocketDisconnect) as exc:
             ws.receive_json()
     assert exc.value.code == limits.CLOSE_TOO_BIG
@@ -167,7 +170,7 @@ def test_roles_changed_stalled_socket_is_evicted_and_does_not_block_others() -> 
 
 
 def test_gateway_client_disconnect_before_auth_cleans_up() -> None:
-    with _client().websocket_connect("/ws") as ws:
+    with _client().websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
         ws.send_json({"t": "hello", "id": "h"})
         assert ws.receive_json()["t"] == "welcome"
     # context exit = client close frame -> server leaves the loop without error
@@ -180,7 +183,8 @@ def test_gateway_evict_hook_sends_slow_consumer_and_closes_4429() -> None:
         make_ws_router(authenticate=_authenticate, registry=reg, revocation_hub=RevocationHub())
     )
     client = TestClient(app)
-    with client, client.websocket_connect("/ws") as ws:
+    with client, client.websocket_connect("/ws", subprotocols=["cv.v1.json"]) as ws:
+        _hello(ws)
         ws.send_json({"t": "auth", "id": "a", "p": {"access_token": "ok"}})
         assert ws.receive_json()["t"] == "auth_ok"
         (_, _, evict) = reg._conns[USER][0]
