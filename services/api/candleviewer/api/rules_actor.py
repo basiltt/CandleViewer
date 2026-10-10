@@ -8,6 +8,7 @@ exactly once by the transition that uses it).
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Callable
 from typing import Any
 
@@ -15,6 +16,7 @@ from fastapi import Request
 
 from candleviewer.audit.models import AuditOutcome
 from candleviewer.auth.errors import AuthError, StepUpRequired
+from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.rules.manager import Actor
 
 STEP_UP_CLASS = "live_enablement"
@@ -87,6 +89,15 @@ class SessionRulesActorResolver:
             return None
         if user.get("status") != "active":
             return None
+        try:
+            # Sanctioned owner decision; unknown roles raise -> no actor (fail closed).
+            snapshot = PrincipalSnapshot(
+                user_id=uuid.UUID(str(record.user_id)),
+                roles=frozenset(str(r) for r in (user.get("roles") or ())),
+                permissions=frozenset(),
+            )
+        except ValueError:
+            return None
         session_id = str(record.id)
         step_up = self._step_up
 
@@ -105,7 +116,7 @@ class SessionRulesActorResolver:
             session_id=session_id,
             perms=frozenset(str(p) for p in info.get("permissions", ())),
             granted_accounts=frozenset(str(a) for a in info.get("account_scope", ())),
-            is_owner="owner" in (user.get("roles") or ()),
+            is_owner=snapshot.is_owner,
             step_up_fresh=True,  # the authoritative check is `consume` (one-shot, no grace)
             consume_step_up=consume,
         )

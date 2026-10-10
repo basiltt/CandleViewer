@@ -262,7 +262,7 @@ class InviteService:
         method_id: str,
         code: str,
         source_ip: str,
-        audit_downgrade: DowngradeAudit | None = None,
+        audit_downgrade: DowngradeAudit,
     ) -> tuple[InviteRecord, tuple[str, ...]]:
         """Verify the first TOTP code and activate the account. Returns the
         invite (role) and the one-time recovery codes."""
@@ -291,8 +291,10 @@ class InviteService:
         if not _is_viewer_role(stored_role):
             # Legacy invite minted before #2109: never grant more than viewer.
             # Audit first (C-2.9, write-ahead): if the audit write fails, nothing changes.
-            if audit_downgrade is not None:
-                await audit_downgrade(record, stored_role)
+            # The hook is a required argument; a falsy value still fails closed.
+            if audit_downgrade is None:
+                raise InviteRejected("enrollment_invalid")
+            await audit_downgrade(record, stored_role)
             await self._repo.downgrade_to_viewer(record.user_id)
             record = record.model_copy(
                 update={"role": InviteRole.VIEWER.value, "downgraded_from": stored_role}

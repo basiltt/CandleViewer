@@ -37,6 +37,9 @@ def test_create_app_binds_postgres_rule_store_not_in_memory() -> None:
     assert isinstance(app.state.app_context.rules._store, PostgresRuleStore)
 
 
+_UID = "00000000-0000-4000-8000-000000000001"
+
+
 async def test_actor_consume_refuses_without_fresh_step_up() -> None:
     """The hard-coded `step_up_fresh=True` is safe only because `consume` is the real check."""
     from types import SimpleNamespace
@@ -48,7 +51,7 @@ async def test_actor_consume_refuses_without_fresh_step_up() -> None:
 
     class _Sessions:
         async def authenticate_access_token(self, token: str, touch: bool = True) -> object:
-            return SimpleNamespace(user_id="u1", id="s1")
+            return SimpleNamespace(user_id=_UID, id="s1")
 
     class _Identity:
         async def user(self, uid: str) -> dict[str, object]:
@@ -103,3 +106,45 @@ async def test_service_sink_records_simulation_for_simulating_rule() -> None:
     await asyncio.gather(*svc._tasks)
     assert (await m.set_mode(rid, "armed", owner, "k2"))["mode"] == "armed"
     await svc.stop(1.0)
+
+
+def _resolver(roles: list[str]) -> object:
+    from types import SimpleNamespace
+
+    from candleviewer.api.rules_actor import SessionRulesActorResolver
+
+    class _Sessions:
+        async def authenticate_access_token(self, token: str, touch: bool = True) -> object:
+            return SimpleNamespace(user_id=_UID, id="s1")
+
+    class _Identity:
+        async def user(self, uid: str) -> dict[str, object]:
+            return {"status": "active", "roles": roles}
+
+        async def session_info(self, uid: str) -> dict[str, object]:
+            return {"permissions": [], "account_scope": []}
+
+    return SessionRulesActorResolver(lambda: _Sessions(), lambda: object(), _Identity())
+
+
+async def _resolve(roles: list[str]) -> object:
+    from starlette.requests import Request
+
+    req = Request({"type": "http", "headers": [(b"authorization", b"Bearer t")]})
+    return await _resolver(roles).resolve(req)  # type: ignore[attr-defined]  # test helper
+
+
+async def test_actor_owner_role_sets_is_owner() -> None:
+    actor = await _resolve(["owner"])
+    assert actor is not None and actor.is_owner is True  # type: ignore[attr-defined]
+
+
+async def test_actor_non_owner_roles_not_owner() -> None:
+    for roles in (["manager"], ["viewer"], []):
+        actor = await _resolve(roles)
+        assert actor is not None and actor.is_owner is False  # type: ignore[attr-defined]
+
+
+async def test_actor_unknown_role_fails_closed() -> None:
+    assert await _resolve(["owner", "superadmin"]) is None
+    assert await _resolve(["Owner"]) is None
