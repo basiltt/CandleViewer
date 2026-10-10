@@ -1,8 +1,10 @@
 """Recorded-day golden bar files for the determinism harness (E12-T04, BI-4).
 
-Fixture day: `packages/fixtures/bybit/2026-10-05/ws/clean_publicTrade_BTCUSDT.jsonl`
-(542 public prints, 3 h, BTCUSDT, tick 0.1; provenance in
-`packages/fixtures/golden/bars/determinism/README.md`).
+Fixture day: the recorded-corpus BTCUSDT trade tape already used by the time-bar golden test
+(`tests.unit.bars.test_time_builder_golden.CORPUS`), 542 public prints, 3 h, tick 0.1; provenance
+in `packages/fixtures/golden/bars/determinism/README.md`. It is decoded only through the
+exchange adapter's production parser via `tests._corpus` (C-2.2): this module never touches
+venue field names, topics or paths.
 Its sha256 is pinned in `manifest.json`, so a changed fixture fails the golden test, not silently
 moves the goldens.
 
@@ -27,6 +29,9 @@ from pathlib import Path
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS
 from candleviewer.exchange.base.models import TradeEvent
+from candleviewer.exchange.base.trade_print import TradePrint
+from tests import _corpus
+from tests.unit.bars.test_time_builder_golden import CORPUS
 
 from . import comparator, invariants
 from .generator import TICK
@@ -36,9 +41,7 @@ _EID = uuid.UUID(int=0xE12F)
 REPO = Path(__file__).resolve().parents[4]
 GOLDEN_DIR = REPO / "packages" / "fixtures" / "golden" / "bars" / "determinism"
 MANIFEST = GOLDEN_DIR / "manifest.json"
-FIXTURE_REL = "ws/clean_publicTrade_BTCUSDT.jsonl"
-# nosemgrep: cv-adapter-isolation,cv-bybit-vocabulary-leak reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31  # noqa: E501
-FIXTURE = REPO / "packages" / "fixtures" / "bybit" / "2026-10-05" / FIXTURE_REL
+FIXTURE = _corpus.corpus_path(CORPUS)
 
 #: Golden matrix: every builder kind, the parameters the recorded day exercises.
 GOLDEN_SPECS: dict[str, BarSpec] = {
@@ -59,31 +62,29 @@ def fixture_sha256() -> str:
 
 
 def load_tape() -> list[TradeEvent]:
-    """The fixture day as `TradeEvent`s, in file order (`seq` = position). Public trades only:
-    each frame is a `publicTrade.*` push whose records carry time, side, size, price, id."""
+    """The fixture day as `TradeEvent`s, in file order (`seq` = position), decoded by the
+    adapter's parser. Anything that is not a trade print is an error, not silently skipped."""
     out: list[TradeEvent] = []
-    for frame in FIXTURE.read_text(encoding="utf-8").splitlines():
-        doc = json.loads(frame)
-        if not str(doc.get("topic", "")).startswith("publicTrade."):
-            raise ValueError(f"unexpected frame in the fixture day: {doc.get('topic')!r}")
-        for rec in doc["data"]:
-            price, qty = Decimal(rec["p"]), Decimal(rec["v"])
+    for frame in _corpus.frames(CORPUS):
+        for p in _corpus.normalize(frame):
+            if not isinstance(p, TradePrint):
+                raise TypeError(f"unexpected event in the fixture day: {type(p).__name__}")
             out.append(
                 TradeEvent.model_construct(
                     schema_version=1,
                     event_id=_EID,
-                    ts_event=int(rec["T"]) * 1000,
-                    ts_ingest=int(rec["T"]) * 1000,
+                    ts_event=p.ts_event_us,
+                    ts_ingest=p.ts_event_us,
                     source="replay",
                     category="linear",
-                    symbol=rec["s"],
-                    trade_id=rec["i"],
-                    price=price,
-                    qty=qty,
-                    side="buy" if rec["S"] == "Buy" else "sell",
-                    is_block_trade=bool(rec.get("BT", False)),
-                    price_ticks=int(price / TICK),
-                    notional=price * qty,
+                    symbol=p.symbol,
+                    trade_id=p.trade_id,
+                    price=p.price,
+                    qty=p.qty,
+                    side=p.side,
+                    is_block_trade=p.is_block_trade,
+                    price_ticks=int(p.price / TICK),
+                    notional=p.price * p.qty,
                     seq=len(out),
                 )
             )
@@ -136,7 +137,7 @@ def write(p: RegenPlan, reason: str) -> None:
     for label, lines in p.changed.items():
         path(label).write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     doc = {
-        "fixture": f"packages/fixtures/bybit/2026-10-05/{FIXTURE_REL}",
+        "fixture": str(FIXTURE.relative_to(REPO).as_posix()),
         "fixture_sha256": fixture_sha256(),
         "build_versions": dict(sorted(BUILD_VERSIONS.items())),
         "specs": {k: v.spec_hash for k, v in GOLDEN_SPECS.items()},
