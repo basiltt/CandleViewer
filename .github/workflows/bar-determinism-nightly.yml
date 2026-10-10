@@ -1,7 +1,9 @@
 name: bar-determinism-nightly
 # E12-T04: full bar-builder determinism harness — 1M seeded synthetic trades x the standard spec
 # matrix (all six builders), BI-1..BI-6 + reference cross-check, and rebuild throughput vs the
-# committed baseline (WARN > 10 %, FAIL > 25 %). The PR-gate subset (100k trades) runs inside the
+# committed baseline (WARN > 10 %, FAIL > 25 % - but only when the runner OS matches the
+# baseline's; the committed baseline is Windows dev hardware, so on ubuntu every drop only WARNs
+# until a Linux baseline is re-recorded on the CI runner, tracked in #2167). The PR-gate subset (100k trades) runs inside the
 # normal backend pytest job; this nightly is not a new required check (C-9.1 owns that list), and
 # a failure here is treated as a build break (ticket opened). Offline: no exchange egress (C-13.5).
 on:
@@ -33,7 +35,7 @@ jobs:
         run: |
           gh issue create --title "bars: nightly determinism harness failed ($(date -u +%F))" \
             --label perf --label area/ingestion --label qa \
-            --body "bar-determinism-nightly failed (invariant violation or >25% throughput drop). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Artifact: bar-determinism-results."
+            --body "bar-determinism-nightly failed (invariant violation, or >25% throughput drop vs a same-OS baseline). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Artifact: bar-determinism-results."
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         if: always()
         with:

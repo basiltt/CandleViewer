@@ -116,6 +116,28 @@ def run(factory: Factory, spec: BarSpec, tape: Sequence[TradeEvent]) -> list[Bar
     return final_bars(ups + flush(b, tape))
 
 
+def fixed_cuts(factory: Factory, spec: BarSpec, tape: Sequence[TradeEvent]) -> list[int]:
+    """Deterministic BI-5 cut points at the hard edges: just before and just after the first
+    volume-bar split (the remainder sits in the open bar at the cut) and the first renko
+    reversal (direction + anchor in flight). Empty for other kinds or when none occurs."""
+    if spec.kind not in ("volume", "renko"):
+        return []
+    b = factory(spec)
+    prev_dir = 0
+    for i, t in enumerate(tape):
+        closes = [u.bar for u in b.on_trade(t) if u.kind == "close"]
+        hit = False
+        if spec.kind == "volume":
+            hit = t.qty > Decimal(spec.param_value) or len(closes) > 1
+        for c in closes:
+            d = 1 if c.close > c.open else -1
+            hit = hit or (spec.kind == "renko" and prev_dir == -d)
+            prev_dir = d
+        if hit:
+            return [c for c in (i, i + 1) if 0 < c < len(tape)]
+    return []
+
+
 def run_with_cuts(
     factory: Factory, spec: BarSpec, tape: Sequence[TradeEvent], cuts: Sequence[int]
 ) -> list[Bar]:
@@ -245,7 +267,8 @@ def check(
 
     if cuts and len(tape) > 1:
         rng = random.Random(seed if seed is not None else 0)  # noqa: S311 - reproducible cuts
-        points = sorted(rng.sample(range(1, len(tape)), min(cuts, len(tape) - 1)))
+        random_points = rng.sample(range(1, len(tape)), min(cuts, len(tape) - 1))
+        points = sorted(set(random_points) | set(fixed_cuts(fac, spec, tape)))
         d = comparator.compare(bars, run_with_cuts(fac, spec, tape, points))
         if d:
             out.append(

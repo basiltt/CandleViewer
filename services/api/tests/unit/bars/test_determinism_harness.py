@@ -99,14 +99,52 @@ def test_generator_emits_every_adversarial_pattern() -> None:
     )  # rapid reversals
 
 
-def test_generator_is_offline_by_construction() -> None:
-    src = Path(generator.__file__).read_text(encoding="utf-8")
-    mods = set()
-    for node in ast.walk(ast.parse(src)):
+_NETWORK = {
+    "socket",
+    "ssl",
+    "http",
+    "urllib",
+    "urllib3",
+    "requests",
+    "httpx",
+    "aiohttp",
+    "websockets",
+    "websocket",
+    "asyncio",
+    "ftplib",
+    "smtplib",
+    "telnetlib",
+    "xmlrpc",
+}
+
+
+def _imports(path: Path) -> set[str]:
+    mods: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
         if isinstance(node, ast.Import):
             mods |= {a.name.split(".")[0] for a in node.names}
         elif isinstance(node, ast.ImportFrom) and node.module:
             mods.add(node.module.split(".")[0])
+    return mods
+
+
+def test_harness_package_has_no_network_imports() -> None:
+    files = sorted(Path(generator.__file__).parent.glob("*.py"))
+    assert len(files) >= 8
+    for f in files:
+        bad = _imports(f) & _NETWORK
+        assert not bad, f"{f.name} imports {bad}"
+
+
+def test_fixed_bi5_cuts_hit_a_renko_reversal_and_a_volume_split() -> None:
+    t = tape(PR_GATE_SEED, 20_000)
+    for label in ("renko:10", "volume:0.25"):
+        assert invariants.fixed_cuts(invariants.make_builder, invariants.STANDARD_SPECS[label], t)
+
+
+def test_generator_is_offline_by_construction() -> None:
+    src = Path(generator.__file__).read_text(encoding="utf-8")
+    mods = _imports(Path(generator.__file__))
     assert mods <= {
         "__future__",
         "random",
