@@ -283,3 +283,33 @@ async def test_bars_sink_writes_row_readable_over_pgwire(
         await wait_for_row_count(conn, "bars_time", 1)
     finally:
         await conn.close()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_read_bars_order_by_generation_index_executes_on_real_questdb(
+    questdb_container: tuple[str, int, int],
+) -> None:
+    """#2016: `index` is reserved in QuestDB; the reader's ORDER BY must run, not just build."""
+    from candleviewer.bars.reader import build_range_query
+    from candleviewer.storage.questdb.wiring import QuestDbRowSink
+
+    host, pg_port, ilp_port = questdb_container
+    conn = await _connect(host, pg_port)
+    sink = QuestDbRowSink(f"{host}:{ilp_port}", f"{host}:{pg_port}", _PGWIRE_USER, _PGWIRE_PASSWORD)
+    try:
+        await run_migrations(_AsyncpgExecutor(conn), DDL_DIR)
+        base: dict[str, object] = {
+            "symbol": "BTCUSDT", "bar_param": "vol:1500", "ts": 1_700_000_000_000_000,
+            "open": 1.0, "high": 2.0, "low": 0.5, "close": 1.5, "volume": 1500.0,
+            "is_closed": True, "generation": 0,
+        }  # fmt: skip
+        rows = [{**base, "index": i} for i in (2, 0, 1)]  # same ts: only the index differs
+        await sink.write_rows("bars_volume", rows, "ts")
+        await sink.stop()
+        await wait_for_row_count(conn, "bars_volume", 3)
+        sql, params = build_range_query("volume", "BTCUSDT", "vol:1500", 0, 2**60, None, 10)
+        got = await conn.fetch(sql, *params)
+        assert [r["index"] for r in got] == [0, 1, 2]
+    finally:
+        await conn.close()

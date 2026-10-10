@@ -21,6 +21,7 @@ import structlog
 from candleviewer.bars.metrics import bars_tape_read_degraded_total
 from candleviewer.bars.models import BarSpec
 from candleviewer.bars.rows import BUILD_VERSIONS, bar_param_for, row_checksum
+from candleviewer.domain.sql_names import column_identifier
 from candleviewer.observability.metrics import Counter
 
 
@@ -68,6 +69,10 @@ class BarPage:
     dropped: int = 0  # rows withheld (checksum mismatch or missing)
 
 
+#: `index` is a QuestDB reserved word: quoted via the shared helper (#2016), never hand-written.
+_ORDER_BY = ", ".join(column_identifier(c) for c in ("generation", "index", "ts"))
+
+
 def build_range_query(
     kind: str,
     symbol: str,
@@ -84,7 +89,7 @@ def build_range_query(
     start = from_us if after_us is None else max(from_us, after_us + 1)
     sql = (
         f"SELECT * FROM bars_{kind} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 reason=table-from-closed-allowlist owner=@CandleViewer/backend
-        "AND ts >= $3 AND ts < $4 ORDER BY generation, index, ts LIMIT $5"
+        f"AND ts >= $3 AND ts < $4 ORDER BY {_ORDER_BY} LIMIT $5"
     )
     return sql, (symbol, bar_param, start, to_us, limit)
 

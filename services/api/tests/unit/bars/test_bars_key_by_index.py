@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 from pathlib import Path
 
@@ -31,7 +32,7 @@ class _DedupStore:
             self.rows[tuple(r[k] for k in KEY)] = r
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
-        assert "ORDER BY generation, index, ts" in sql
+        assert 'ORDER BY generation, "index", ts' in sql
 
         def order(r: dict[str, object]) -> tuple[int, int, int]:
             return (int(str(r["generation"])), int(str(r["index"])), int(str(r["ts"])))
@@ -81,3 +82,32 @@ def test_ddl_dir_recreates_all_six_bars_tables_keyed_by_generation_and_index() -
         assert t.dedup_keys == KEY and t.source_file == "0004_bars_key_by_index.sql"
         assert t.partition_by == "MONTH" and t.ts_col == "ts"
         assert {"generation", "index", "source", "row_checksum"} <= set(t.columns)
+
+
+def test_read_query_quotes_every_reserved_bare_identifier() -> None:
+    """Docker-free guard for the #2016 class of bug: a reserved word used bare is rejected by a
+    real QuestDB but accepted by every in-memory fake."""
+    import re
+
+    from candleviewer.bars.reader import build_range_query
+    from candleviewer.storage.sql_identifiers import QUESTDB_RESERVED, column_identifier
+
+    assert column_identifier("index") == '"index"' and column_identifier("ts") == "ts"
+    sql, _ = build_range_query("volume", SYM, "vol:1500", 0, 10, None, 5)
+    order = sql.split("ORDER BY", 1)[1].split("LIMIT", 1)[0]
+    where = sql.split("WHERE", 1)[1].split("ORDER BY", 1)[0]
+    bare = re.findall(r"(?<!\")\b([A-Za-z_]\w*)\b(?!\")", order)
+    bare += re.findall(r"\b(\w+)\s*(?:=|>=|<)\s*\$", where)
+    assert bare and not [w for w in bare if w.lower() in QUESTDB_RESERVED], bare
+    assert '"index"' in order
+
+
+def test_ddl_quotes_every_reserved_column_name() -> None:
+    from candleviewer.storage.sql_identifiers import QUESTDB_RESERVED
+
+    text = (ROOT / "backend/db/questdb/0004_bars_key_by_index.sql").read_text("utf-8")
+    code = "\n".join(line.split("--", 1)[0] for line in text.splitlines())
+    for name in QUESTDB_RESERVED:
+        assert not re.search(
+            rf"^\s+{name}\s+(?:TIMESTAMP|SYMBOL|DOUBLE|LONG|INT|BOOLEAN)", code, re.M | re.I
+        ), name
