@@ -374,6 +374,65 @@ def test_ctl_on_replay_only_subscription_resolves_it() -> None:
     assert _ctl(conn, "trades.BTCUSDT", {"throttle_ms": 100})["t"] == "ctl_ok"
 
 
+def _scope_of(conn: ConnectionAuthz, ch: str) -> tuple[Any, ...]:
+    sub = conn.find(ch)
+    assert sub is not None
+    return (
+        sub.accounts,
+        sub.opts.get("exchange_account_ids"),
+        sub.opts.get("symbols"),
+        sub.opts.get("rule_ids"),
+        sub.effective.get("exchange_account_ids"),
+        sub.symbols,
+        frozenset(sub.upstream),
+    )
+
+
+@pytest.mark.parametrize(
+    ("ch", "opts", "key", "value"),
+    [
+        # Out-of-scope account (the IDOR widening attempt) and an in-scope one.
+        ("positions", {"exchange_account_ids": [str(A)]}, "exchange_account_ids", [str(B)]),
+        ("positions", {"exchange_account_ids": [str(A)]}, "exchange_account_ids", [str(A)]),
+        ("positions", {"exchange_account_ids": [str(A)]}, "exchange_account_ids", [str(A), str(B)]),
+        ("orders", {"exchange_account_ids": [str(A)]}, "symbols", ["BTCUSDT"]),
+        ("ticker", {"symbols": ["BTCUSDT"]}, "symbols", ["ETHUSDT"]),
+        ("ticker", {"symbols": ["BTCUSDT"]}, "symbols", ["BTCUSDT"]),
+        ("liquidations", {"symbols": ["BTCUSDT"]}, "symbols", ["ETHUSDT"]),
+        ("rules", {"exchange_account_ids": [str(A)]}, "rule_ids", [str(uuid.UUID(int=7))]),
+        ("rules", {"exchange_account_ids": [str(A)]}, "exchange_account_ids", [str(B)]),
+    ],
+)
+def test_ctl_cannot_change_subscription_scope(
+    ch: str, opts: dict[str, Any], key: str, value: Any
+) -> None:
+    perms = MGR_PERMS | {Permission.RULES_READ}
+    conn = ConnectionAuthz(_mgr(A, perms=perms), _services())
+    (r,) = _sub(conn, {"ch": ch, "opts": opts})
+    assert r["ok"], r
+    before = _scope_of(conn, ch)
+    err = _ctl(conn, ch, {key: value})
+    assert (err["t"], err["p"]["code"], err["p"]["field"]) == ("err", "invalid_options", key)
+    # Mixed with a legal retune, the whole ctl is still refused and nothing changes.
+    err = _ctl(conn, ch, {"throttle_ms": 500, key: value})
+    assert (err["p"]["code"], err["p"]["field"]) == ("invalid_options", key)
+    assert _scope_of(conn, ch) == before
+    if ch == "positions":
+        assert conn.subs == {("positions", A)}
+
+
+def test_ctl_keys_and_scope_keys_are_disjoint() -> None:
+    from candleviewer.ws.topics import CTL_KEYS, SCOPE_OPTIONS
+
+    every_scope_key = SCOPE_OPTIONS | {"exchange_account_ids", "symbols", "rule_ids"}
+    assert not (CTL_KEYS & every_scope_key)
+    # Every scope-bearing option any family declares is covered by SCOPE_OPTIONS.
+    from candleviewer.ws.topics import FAMILIES
+
+    declared = {k for f in FAMILIES.values() for k in f.options}
+    assert declared & every_scope_key <= SCOPE_OPTIONS
+
+
 # -- live revocation (§9.5) ----------------------------------------------------------------------
 
 

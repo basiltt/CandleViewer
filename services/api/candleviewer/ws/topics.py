@@ -37,6 +37,10 @@ PROFILE_KINDS: Final = frozenset({"volume", "delta", "tpo"})
 IDENTITY_OPTIONS: Final = frozenset({"depth", "price_grouping", "metrics", "time_bucket_ms"})
 #: §13.6 `ctl` schema keys (universal + identity + the two tunables).
 CTL_KEYS: Final = frozenset({"throttle_ms", "coalesce", "paused", "min_size"} | IDENTITY_OPTIONS)
+#: Options that select WHICH data a subscription may see (accounts, symbols, rules). They are
+#: fixed at `sub` time, where they are authorised; `ctl` must never change them (no scope
+#: widening by retune). Disjoint from `CTL_KEYS` by construction (asserted in tests).
+SCOPE_OPTIONS: Final = frozenset({"exchange_account_ids", "symbols", "rule_ids"})
 
 Segment = Literal["symbol", "depth", "bar_type", "param", "profile_kind"]
 OptKind = Literal["int", "number", "bool", "enum", "decimal", "uuids", "symbols", "strings", "str"]

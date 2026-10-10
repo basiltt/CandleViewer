@@ -50,6 +50,7 @@ from candleviewer.ws.topics import (
     CTL_KEYS,
     FAMILIES,
     IDENTITY_OPTIONS,
+    SCOPE_OPTIONS,
     UNIVERSAL,
     ParsedTopic,
     TopicError,
@@ -427,6 +428,8 @@ class ConnectionAuthz:
             if key == "paused" and isinstance(body[key], bool):
                 changes[key] = body[key]
                 continue
+            if key in SCOPE_OPTIONS:  # scope is authorised at `sub` only; never widened here
+                raise TopicError("invalid_options", f"'{key}' cannot be changed by ctl.", key)
             spec = allowed.get(key) if key in CTL_KEYS else None
             if spec is None:
                 raise TopicError("invalid_options", f"Unknown ctl option '{str(key)[:40]}'.", key)
