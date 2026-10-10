@@ -33,7 +33,7 @@ async def test_same_ts_renko_bricks_page_by_key_on_real_questdb(
     `/market/bars` read path) and the expanded keyset predicate -> [0], [1], [2], then done."""
     from candleviewer.bars.models import BarSpec
     from candleviewer.bars.reader import BarReader, row_key
-    from candleviewer.bars.rows import bar_param_for, row_checksum
+    from candleviewer.bars.rows import bar_param_for
     from candleviewer.storage.questdb.wiring import QuestDbRowSink
 
     host, pg_port, ilp_port = questdb_container
@@ -46,14 +46,18 @@ async def test_same_ts_renko_bricks_page_by_key_on_real_questdb(
         base: dict[str, object] = {
             "symbol": "BTCUSDT", "bar_param": bar_param_for(spec), "ts": ts, "open": 1.0,
             "high": 2.0, "low": 0.5, "close": 1.5, "volume": 3.0, "is_closed": True,
-            "generation": 0, "source": "tape",
+            "generation": 0,
         }  # fmt: skip
+        # Same shape as #2126's passing write: no `source`/`row_checksum` (a pre-0003 legacy
+        # row, trusted by the reader). `source` is a SYMBOL column but `_BAR_TAG_COLUMNS` omits
+        # it, so the ILP writer emits it as an unquoted field and QuestDB drops the line.
         rows = [{**base, "index": i} for i in (2, 0, 1)]
-        for r in rows:
-            r["row_checksum"] = row_checksum(r)
         await sink.write_rows("bars_renko", rows, "ts")
         await sink.stop()
         await wait_for_row_count(conn, "bars_renko", 3)
+        wal = await conn.fetchrow("SELECT * FROM wal_tables() WHERE name = 'bars_renko'")
+        assert wal is not None and not wal["suspended"], f"bars_renko WAL suspended: {wal}"
+        assert int(wal["sequencerTxn"]) > 0, f"no ILP commit reached bars_renko: {dict(wal)}"
 
         class _Conn:
             async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
