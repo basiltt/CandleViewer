@@ -107,7 +107,10 @@ def test_heavy_tape_matches_every_golden_through_the_fanout(name: str) -> None:
         summary[label] = len(actual)
     out = os.environ.get("CV_CONFORMANCE_SUMMARY")
     if out:  # nightly uploads this per-run artefact
-        Path(out).write_text(json.dumps({name: summary}, sort_keys=True), encoding="utf-8")
+        path = Path(out)
+        merged = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        merged[name] = summary  # one entry per heavy tape; later tapes must not clobber earlier
+        path.write_text(json.dumps(merged, sort_keys=True), encoding="utf-8")
 
 
 @pytest.mark.parametrize(
