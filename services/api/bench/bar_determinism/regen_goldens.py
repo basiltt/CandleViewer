@@ -20,7 +20,11 @@ from . import goldens
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true", help="write the regenerated golden files")
-    ap.add_argument("--reason", default="", help="why the output legitimately changed")
+    ap.add_argument(
+        "--reason",
+        default=os.environ.get("CV_GOLDEN_REASON", ""),
+        help="why the output legitimately changed",
+    )
     ap.add_argument(
         "--suite",
         choices=("determinism", "conformance", "all"),

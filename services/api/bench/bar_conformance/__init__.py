@@ -1,10 +1,8 @@
-"""E12-T04 bar-builder determinism harness (`24-internal-schemas.md` §3.4, BI-1..BI-6).
+"""E12-Q02 bar-builder golden conformance suite (`24-internal-schemas.md` §3.3/§3.4).
 
-Test infrastructure only: nothing under `candleviewer/` imports this package.
-- `generator`  seeded, offline synthetic `TradeEvent` tapes with adversarial patterns;
-- `reference`  independent, naive builders written from the §3.3 spec text (the oracle);
-- `invariants` BI-1..BI-6 checks + reference cross-check, returning named `Violation`s;
-- `comparator` field-by-field, plain-text bar diff (index, field, expected, actual);
-- `goldens`    recorded-day golden files and the only (explicit) regeneration path;
-- `throughput` per-builder rebuild throughput vs the committed baseline (extends E12-K01).
+Test infrastructure only: nothing under `candleviewer/` imports this package. It extends the
+E12-T04 harness in `bench.bar_determinism` (generator, comparator, tapes) and is separate
+because it needs `asyncio` to drive the live `BarBuilderSet`.
+- `runner`  feeds tapes through the `BarBuilderSet` fan-out and explains the first divergence;
+- `bank`    plans/writes the tapes, goldens and `MANIFEST.toml` (explicit regeneration only).
 """

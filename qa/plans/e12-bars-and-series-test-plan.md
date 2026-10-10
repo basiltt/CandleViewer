@@ -218,7 +218,7 @@ recorder captures replace it once E16 lands. Hence the 1.2 M-print day does not 
 generator, exception #1778 A; dense is capped at 200k prints, not 1.2 M) plus a golden per (tape, pair) for the
 matrix through the live `BarBuilderSet`. `renko:atr:14` (ADR-0033) and `heikin_ashi:5` (not a builder) are recorded
 as rejected pairs. **Golden update workflow:** `make golden-update` (dry run + diff summary);
-`make golden-update WRITE=1 REASON="why"` writes; refused under CI, without a reason, or without a `BUILD_VERSIONS`
+`make golden-update WRITE=1 CV_GOLDEN_REASON="why"` writes; refused under CI, without a reason, or without a `BUILD_VERSIONS`
 bump for a changed kind. Review the `git diff --stat` in the PR.
 
 No payloads are invented here. Expected values come from the independent oracle (§0), committed by E12-Q02.

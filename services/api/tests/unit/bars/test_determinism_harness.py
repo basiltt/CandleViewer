@@ -159,6 +159,17 @@ def test_harness_package_has_no_network_imports() -> None:
         assert not bad, f"{f.name} imports {bad}"
 
 
+def test_conformance_package_has_no_network_imports() -> None:
+    """E12-Q02 sibling of the guard above: `asyncio` (in-process bus) is the only exception."""
+    pkg = Path(generator.__file__).parent.parent / "bar_conformance"
+    files = sorted(pkg.glob("*.py"))
+    assert len(files) >= 3
+    for f in files:
+        bad = _imports(f) & (_NETWORK - {"asyncio"})
+        assert not bad, f"{f.name} imports {bad}"
+    assert not any(m in _NETWORK for m in _imports(pkg / "bank.py"))
+
+
 def test_fixed_bi5_cuts_hit_a_renko_reversal_and_a_volume_split() -> None:
     t = tape(PR_GATE_SEED, PR_GATE_N)
     for label in ("renko:10", "volume:0.25"):

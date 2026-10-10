@@ -25,7 +25,7 @@ typed. Matrix: `time:1 time:5 time:1d tick:100 tick:1000 vol:50 range:20 delta:5
 
 ```
 make golden-update                                  # dry run: diff summary, exit 1 if anything differs
-make golden-update WRITE=1 REASON="why it changed"  # writes
+make golden-update WRITE=1 CV_GOLDEN_REASON="why it changed"  # writes
 ```
 
 Refused under `CI`, without a reason, and when a builder kind's output changed without a

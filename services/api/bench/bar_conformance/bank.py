@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import tomllib
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from bench.bar_determinism import tapes
@@ -27,8 +28,8 @@ class Plan:
     manifest: str = ""
 
 
-def _rel(p: object) -> str:
-    return p.relative_to(tapes.REPO).as_posix()  # type: ignore[attr-defined,no-any-return]
+def _rel(p: Path) -> str:
+    return p.relative_to(tapes.REPO).as_posix()
 
 
 def recorded_versions() -> dict[str, int]:
