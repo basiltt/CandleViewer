@@ -13,13 +13,13 @@ from itertools import pairwise
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from prometheus_client import REGISTRY
 
 from bench.bar_conformance import runner as cf
 from bench.bar_determinism import comparator, generator, tapes
 from bench.bar_determinism.generator import TICK, GenConfig
 from candleviewer.bars import rows
 from candleviewer.bars.models import Bar, BarSpec
-from candleviewer.bars.time_builder import bars_late_trade_dropped_total
 from candleviewer.exchange.base.models import TradeEvent
 from candleviewer.ingestion.trade_stream import DedupeRing
 
@@ -110,7 +110,10 @@ def _t(ts_s: float, px: str = "100", qty: str = "1", seq: int = 0, tid: str | No
 
 
 def _dropped(reason: str) -> float:
-    return float(bars_late_trade_dropped_total.labels(symbol=SYM, reason=reason)._value.get())
+    v = REGISTRY.get_sample_value(
+        "bars_late_trade_dropped_total", {"symbol": SYM, "reason": reason}
+    )
+    return float(v or 0.0)
 
 
 def _full(tape: list[TradeEvent], spec: BarSpec) -> list[cf.Update]:
@@ -235,7 +238,13 @@ _NON_TIME = {k: v for k, v in SPECS.items() if v.kind != "time"}
 @given(_CFG)
 def test_properties_hold_for_arbitrary_tapes(cfg: GenConfig) -> None:
     tape = generator.generate(cfg)
-    specs = {**SPECS, "vol:2": BarSpec(kind="volume", volume_threshold=Decimal(2))}
+    specs = {
+        **SPECS,
+        "vol:2": BarSpec(kind="volume", volume_threshold=Decimal(2)),
+        # Generated sizes are ~0.02, so delta:500 never closes here; a small threshold makes the
+        # first-crossing assertion below fire (non-vacuous).
+        "delta:0.05": BarSpec(kind="delta", delta_threshold=Decimal("0.05")),
+    }
     got = asyncio.run(cf.run_set(tape, specs, SYM, chunk=300))
     total = sum((t.qty for t in tape), Decimal(0))
     for label, bars in got.items():
@@ -268,4 +277,7 @@ def test_properties_hold_for_arbitrary_tapes(cfg: GenConfig) -> None:
                 if abs(run) >= thr:
                     want.append((n, run))
                     run, n = Decimal(0), 0
-            assert [(b.trade_count, b.delta) for b in bars if b.closed] == want, label
+            got_closed = [(b.trade_count, b.delta) for b in bars if b.closed]
+            assert got_closed == want, label
+            if label == "delta:0.05":
+                assert want, "first-crossing check must fire (non-vacuous)"
