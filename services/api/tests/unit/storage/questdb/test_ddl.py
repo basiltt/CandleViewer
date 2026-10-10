@@ -63,3 +63,17 @@ def test_alter_parser_accepts_bracketed_types(tmp_path: Path) -> None:
     )
     (table,) = parse_ddl_dir(tmp_path)
     assert table.columns == ("ts", "a", "note", "tag")
+
+
+def test_alter_add_column_symbol_is_reported_as_symbol(tmp_path: Path) -> None:
+    (tmp_path / "0001.sql").write_text(
+        "CREATE TABLE IF NOT EXISTS t (\n  ts TIMESTAMP,\n  a SYMBOL CAPACITY 8 CACHE\n"
+        ") TIMESTAMP(ts) PARTITION BY DAY WAL;\n"
+        "ALTER TABLE t ADD COLUMN source SYMBOL CAPACITY 8 CACHE;\n"
+        "ALTER TABLE t ADD COLUMN IF NOT EXISTS note VARCHAR(32);\n"
+        "ALTER TABLE t ADD COLUMN IF NOT EXISTS n DOUBLE;\n",
+        encoding="utf-8",
+    )
+    (table,) = parse_ddl_dir(tmp_path)
+    assert table.columns == ("ts", "a", "source", "note", "n")
+    assert table.symbol_columns == ("a", "source")
