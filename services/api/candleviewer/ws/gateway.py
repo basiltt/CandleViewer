@@ -68,6 +68,7 @@ from candleviewer.ws.permissions import (
 )
 from candleviewer.ws.permissions import handle_sub as _handle_sub
 from candleviewer.ws.revocation import RevocationHub
+from candleviewer.ws.sequencing import TopicEmitter
 
 WS_PATH = "/ws"
 SYSTEM_TOPIC: Final = "system"
@@ -102,8 +103,6 @@ def _wall_ms() -> int:
 
 _CLOSE = object()  # writer sentinel: the next queue item is the close code
 _WRITER_DONE: Final = "cv-ws-writer-done"  # cancel msg: writer finished, stop reading
-#: Valid post-auth frame types served by later E17 stories; ignored here.
-_DEFERRED_TYPES: Final = frozenset({"resync"})
 
 
 class GatewayHub:
@@ -192,6 +191,7 @@ class _Connection:
         self.user_id: uuid.UUID | None = None
         self.session_id: str | None = None
         self.authz: ConnectionAuthz | None = None
+        self.emitter: TopicEmitter | None = None
         self.system_seq = 0
         self.auth_failures = 0
         self.unauth_frames = 0
@@ -395,6 +395,17 @@ def make_ws_router(
                 principal, registry.services, connection_id=conn.connection_id
             )
             registry.register(conn.authz, conn.send, conn.evict, conn.closer)
+            svc = registry.services
+            conn.emitter = TopicEmitter(
+                conn.push,
+                connection_id=conn.connection_id,
+                wall_ms=conn.wall_ms,
+                clock=conn.clock,
+                source=svc.snapshots,
+                cache=svc.snapshot_cache,
+            )
+            if svc.sequencing is not None:
+                svc.sequencing.register(conn.authz, conn.emitter)
             revoked: list[dict[str, Any]] = []
         else:
             # Subscriptions + sequences are kept; only ones the refreshed
@@ -429,6 +440,10 @@ def make_ws_router(
         if isinstance(client_ms, int) and not isinstance(client_ms, bool):
             p["rtt_hint_ms"] = max(0, now_ms - client_ms)
         conn.push(_reply("pong", frame.get("id"), ts=now_ms, p=p))
+
+    def flush(conn: _Connection) -> None:
+        if conn.authz is not None and conn.emitter is not None:
+            conn.emitter.flush_pending(list(conn.authz.by_id.values()))
 
     async def dispatch(conn: _Connection, frame: Any) -> None:
         kind = frame.get("t") if isinstance(frame, dict) else None
@@ -479,14 +494,16 @@ def make_ws_router(
             await _handle_sub(conn.authz, frame, conn.send, now_ms=conn.wall_ms())
             if conn.authz.by_id and conn.lifecycle.can(ConnEvent.SUB_OK):
                 conn.lifecycle.fire(ConnEvent.SUB_OK)
+            flush(conn)  # §7.1: the `snap` follows `sub_ok`, before any `d`
         elif kind == "unsub" and conn.authz is not None:
             # §5.3 idempotent; §6.2 `system` is permanent (refused, stays attached).
             results = handle_unsub(conn.authz, frame)
             conn.push(_reply("unsub_ok", fid, ts=conn.wall_ms(), p={"results": results}))
         elif kind == "ctl" and conn.authz is not None:
             conn.push(handle_ctl(conn.authz, frame, conn.wall_ms()))
-        elif kind in _DEFERRED_TYPES:
-            pass  # E17-S03 / E17-T03 scope
+            flush(conn)  # `ctl_ok { resnapshot }` then the `reconfigure` snap
+        elif kind == "resync" and conn.authz is not None and conn.emitter is not None:
+            conn.emitter.client_resync(conn.authz, frame)
         else:
             conn.violation(fid)
 
@@ -588,6 +605,8 @@ def make_ws_router(
                     await ws.close(code=int(CLOSE_REASONS["internal_error"][0]))
             gateway_hub.discard(conn)
             if conn.authz is not None:
+                if registry.services.sequencing is not None:
+                    registry.services.sequencing.unregister(conn.authz)
                 registry.unregister(conn.authz)
             if conn.session_id is not None:
                 revocation_hub.unregister(conn.session_id, conn.closer)

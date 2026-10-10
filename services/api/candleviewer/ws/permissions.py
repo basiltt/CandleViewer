@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import asyncio
+import collections
 import contextlib
 import itertools
 import time
@@ -45,6 +46,12 @@ from candleviewer.ws.revocation import (
     revoked_frame,
     user_disabled_bye,
     ws_revoked_total,
+)
+from candleviewer.ws.sequencing import (
+    RESYNC_MAX_PER_WINDOW,
+    SequencingHub,
+    SnapshotCache,
+    SnapshotSource,
 )
 from candleviewer.ws.topics import (
     CTL_KEYS,
@@ -108,6 +115,11 @@ class SubscriptionServices:
     audit: AuditSink | None = None
     clock: Callable[[], float] = time.monotonic
     instrument_known: Callable[[str], bool] | None = None
+    #: E17-S03: owning-module snapshot port and shared render cache; `None` until wired, in
+    #: which case subscriptions stay `snapshot_pending` and no `snap` is emitted.
+    snapshots: SnapshotSource | None = None
+    snapshot_cache: SnapshotCache = field(default_factory=SnapshotCache)
+    sequencing: SequencingHub | None = None
 
 
 def topic_family(topic: str) -> str:
@@ -161,6 +173,12 @@ class Subscription:
     snapshot_pending: bool = True
     upstream: tuple[UpstreamKey, ...] = ()
     bar_lease: tuple[str, str] | None = None  # (spec_hash, symbol)
+    #: §7.4 reason the pending `snap` will carry (E17-S03).
+    pending_reason: str = "initial"
+    #: §7.5 client-resync times (monotonic s); bounded to the 5-per-minute window.
+    resyncs: collections.deque[float] = field(
+        default_factory=lambda: collections.deque(maxlen=RESYNC_MAX_PER_WINDOW)
+    )
 
     @property
     def ch(self) -> str:
@@ -290,6 +308,7 @@ class ConnectionAuthz:
         if not snapshot and "from_seq" not in opts:
             raise TopicError("invalid_options", "snapshot false needs from_seq.", "from_seq")
         accounts = self._authorise(topic, opts)
+        forced = False
         effective = effective_options(topic, opts)
         if accounts:
             effective["exchange_account_ids"] = sorted(str(a) for a in accounts)
@@ -306,6 +325,8 @@ class ConnectionAuthz:
             rs,
             snapshot_pending=snapshot,
         )
+        if not snapshot and not self._continuity(sub):
+            sub.snapshot_pending = forced = True  # §7.6: continuity unproven -> snap anyway
         held: set[str] = set()
         for s in self.by_id.values():
             held |= s.symbols
@@ -316,10 +337,27 @@ class ConnectionAuthz:
             "ch": topic.ch,
             "ok": True,
             "sub_id": sub.sub_id,
-            "snapshot_pending": snapshot,
+            "snapshot_pending": sub.snapshot_pending,
             "effective": effective,
         }
+        if forced:
+            result["snapshot_forced"] = True
         return result, sub
+
+    def _continuity(self, sub: Subscription) -> bool:
+        source = self.services.snapshots
+        if source is None:
+            return False
+        from_ts = sub.opts.get("from_ts_ms")
+        return source.continuity(sub, from_ts if isinstance(from_ts, int) else None)
+
+    def subscriptions_named(self, ch: str) -> list[Subscription]:
+        return [self.by_id[sid] for sid in sorted(self._by_topic.get(ch, ()))]
+
+    def revoke(self, sub: Subscription, reason: RevokedReason, now_ms: int) -> dict[str, Any]:
+        """Drop one subscription and return its `revoked` frame (e.g. §7.5 resync loop)."""
+        self._drop(sub)
+        return self._revoked(sub, reason, now_ms)
 
     def _authorise(self, topic: ParsedTopic, opts: Mapping[str, Any]) -> frozenset[uuid.UUID]:
         """Permission, then §6.2 silent narrowing. Raises `forbidden` / `account_scope_denied`."""
@@ -445,7 +483,8 @@ class ConnectionAuthz:
             effective["exchange_account_ids"] = sorted(str(a) for a in sub.accounts)
         sub.opts, sub.effective = opts, effective
         if resnapshot:
-            sub.seq, sub.snapshot_pending = 0, True  # E17-S03 emits the fresh `snap`
+            # S3: the sequence continues (never reused); the gateway emits the `snap`.
+            sub.snapshot_pending, sub.pending_reason = True, "reconfigure"
         echoed = {k: v for k, v in effective.items() if k in changes or k == "throttle_ms"}
         return echoed, resnapshot
 
