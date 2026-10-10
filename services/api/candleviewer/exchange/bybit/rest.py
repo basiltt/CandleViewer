@@ -41,6 +41,7 @@ from candleviewer.exchange.bybit.metrics import (
     bybit_rest_latency_seconds,
     bybit_rest_requests_total,
 )
+from candleviewer.exchange.bybit.models import ServerTime
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
 from candleviewer.exchange.bybit.signer import BybitSigner
 
@@ -249,6 +250,11 @@ class BybitRestClient:
         return await self._request(
             "GET", path, params=params, body=None, endpoint_class=endpoint_class, signed=False
         )
+
+    async def server_time(self) -> ServerTime:
+        """Exchange server time from the public `/v5/market/time` endpoint, parsed through
+        the validated `ServerTime` model (malformed payload -> `UnknownStateError`)."""
+        return ServerTime.from_response(await self.get_public("/v5/market/time"))
 
     async def signed_request(
         self,
