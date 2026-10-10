@@ -52,6 +52,8 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "auth.recovery_codes_exhausted",
         "auth.recovery_codes_regenerated",
         "auth.password_change",
+        "ws.subscribe.denied",
+        "ws.subscription.revoked",
         "users.create",
         "users.invited",
         "users.invite_redeemed",

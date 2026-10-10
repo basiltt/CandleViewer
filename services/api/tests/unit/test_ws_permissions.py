@@ -43,10 +43,17 @@ def test_subscribe_checked_per_topic() -> None:
     assert check_subscribe(s, "system") is None
 
 
+def _add(conn: ConnectionAuthz, ch: str, account: uuid.UUID | None = None) -> dict[str, Any]:
+    entry: dict[str, Any] = {"ch": ch}
+    if account is not None:
+        entry["opts"] = {"exchange_account_ids": [str(account)]}
+    return conn.admit(entry)[0]
+
+
 def test_downgrade_pushes_frame_revokes_and_refuses_orders() -> None:
     conn = ConnectionAuthz(_snap("manager", MGR))
-    conn.subscribe("book.BTCUSDT")
-    conn.subscribe("orders", exchange_account_id=ACC)
+    assert _add(conn, "book.BTCUSDT.50")["ok"]
+    assert _add(conn, "orders", ACC)["ok"]
     assert conn.may_submit_order()
     frames = conn.apply_snapshot(_snap("viewer", frozenset({Permission.MARKETDATA_READ})), 1)
     assert frames[0]["t"] == "permission_change"
@@ -54,7 +61,7 @@ def test_downgrade_pushes_frame_revokes_and_refuses_orders() -> None:
     assert [(f["t"], f["ch"]) for f in frames[1:]] == [("revoked", "orders")]
     assert frames[1]["p"]["reason"] == "permission_revoked"
     assert not conn.may_submit_order()
-    assert conn.topics == {"book.BTCUSDT"}
+    assert conn.topics == {"book.BTCUSDT.50"}
 
 
 OTHER = uuid.uuid4()
@@ -82,7 +89,7 @@ def test_owner_needs_an_account_id_but_any_account_is_allowed() -> None:
 
 def test_lost_account_grant_revokes_subscription_with_scope_reason() -> None:
     conn = ConnectionAuthz(_mgr((AccountGrant(ACC, True, True, False),)))
-    assert isinstance(conn.subscribe("orders", exchange_account_id=ACC), Allow)
+    assert _add(conn, "orders", ACC)["ok"]
     frames = conn.apply_snapshot(_mgr(()), 5)
     assert [(f["t"], f.get("ch")) for f in frames] == [
         ("permission_change", None),
@@ -95,7 +102,7 @@ def test_lost_account_grant_revokes_subscription_with_scope_reason() -> None:
 def test_owner_unaffected_by_grant_snapshot_refresh() -> None:
     o = PrincipalSnapshot(uuid.UUID(int=3), frozenset({"owner"}), ALL)
     conn = ConnectionAuthz(o)
-    conn.subscribe("orders", exchange_account_id=OTHER)
+    assert _add(conn, "orders", OTHER)["ok"]
     assert conn.apply_snapshot(o, 1)[1:] == []
     assert conn.topics == {"orders"}
 
@@ -114,11 +121,24 @@ def _run_sub(conn: ConnectionAuthz, entry: Any) -> dict[str, Any]:
 def test_handle_sub_rejects_malformed_and_partial_account_lists() -> None:
     conn = ConnectionAuthz(_mgr((AccountGrant(ACC, True, True, False),)))
     bad = {"ch": "orders", "opts": {"exchange_account_ids": ["not-a-uuid"]}}
-    assert _run_sub(conn, bad)["error"]["code"] == "bad_request"
+    assert _run_sub(conn, bad)["error"] == {
+        "code": "invalid_options",
+        "message": "Option 'exchange_account_ids' is out of range.",
+        "field": "exchange_account_ids",
+    }
     assert _run_sub(conn, {"ch": "orders", "opts": {"exchange_account_ids": []}})["ok"] is False
-    mixed = {"ch": "orders", "opts": {"exchange_account_ids": [str(ACC), str(OTHER)]}}
-    assert _run_sub(conn, mixed)["error"]["code"] == "account_scope_denied"
+    assert (
+        _run_sub(conn, {"ch": "orders", "opts": {"exchange_account_ids": [str(OTHER)]}})["error"][
+            "code"
+        ]
+        == "account_scope_denied"
+    )
     assert conn.subs == set()
+    # §6.2: a partially out-of-scope list is silently narrowed, never an error.
+    mixed = {"ch": "orders", "opts": {"exchange_account_ids": [str(ACC), str(OTHER)]}}
+    res = _run_sub(conn, mixed)
+    assert res["ok"] and res["effective"]["exchange_account_ids"] == [str(ACC)]
+    assert conn.subs == {("orders", ACC)}
 
 
 def test_registry_without_connections_is_noop() -> None:

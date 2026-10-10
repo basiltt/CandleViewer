@@ -113,26 +113,30 @@ async def _collect_sub(authz: ConnectionAuthz, topics: list[Any]) -> list[dict[s
     return results
 
 
+def _many(start: int, n: int) -> list[str]:
+    """`n` distinct public topics on ONE symbol (the 40-symbol cap is a separate limit)."""
+    return [f"bars.BTCUSDT.tick.{i}" for i in range(start + 1, start + n + 1)]
+
+
 def test_sub_over_subscription_cap_is_rejected_and_set_does_not_grow() -> None:
     authz = _viewer()
     for start in range(0, limits.MAX_SUBSCRIPTIONS, limits.MAX_TOPICS_PER_SUB):
-        topics = [f"book.S{i}" for i in range(start, start + limits.MAX_TOPICS_PER_SUB)]
+        topics = _many(start, limits.MAX_TOPICS_PER_SUB)
         assert all(r["ok"] for r in asyncio.run(_collect_sub(authz, topics)))
-    assert len(authz.subs) == limits.MAX_SUBSCRIPTIONS
-    res = asyncio.run(_collect_sub(authz, ["book.extra", "book.S0"]))
+    assert len(authz.by_id) == limits.MAX_SUBSCRIPTIONS
+    before = dict(authz.by_id)
+    res = asyncio.run(_collect_sub(authz, ["book.BTCUSDT.50", "bars.BTCUSDT.tick.1"]))
     assert res[0]["error"]["code"] == "subscription_limit"
-    assert res[1]["ok"] is True  # re-subscribing an existing topic needs no new slot
-    assert len(authz.subs) == limits.MAX_SUBSCRIPTIONS
-    assert authz.subscribe("book.extra2") is not None
-    assert ("book.extra2", None) not in authz.subs
+    assert res[1]["error"]["code"] == "duplicate_subscription"  # existing subs untouched
+    assert authz.by_id == before
 
 
 def test_sub_frame_with_too_many_topics_rejects_the_excess() -> None:
     authz = _viewer()
-    topics = [f"book.T{i}" for i in range(limits.MAX_TOPICS_PER_SUB + 3)]
+    topics = _many(0, limits.MAX_TOPICS_PER_SUB + 3)
     res = asyncio.run(_collect_sub(authz, topics))
     assert [r["error"]["code"] for r in res if not r["ok"]] == ["too_many_topics"] * 3
-    assert len(authz.subs) == limits.MAX_TOPICS_PER_SUB
+    assert len(authz.by_id) == limits.MAX_TOPICS_PER_SUB
     assert asyncio.run(_collect_sub(authz, "notalist")) == []  # type: ignore[arg-type]  # malformed frame
 
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, Final, Literal
 
 import structlog
 
@@ -35,6 +35,70 @@ ws_revocation_close_failures_total = Counter(
     "ws_session_revocation_close_failures_total",
     "WebSocket closes that failed during session revocation (socket may remain open).",
 )
+
+#: §9.5 / §13.6 closed `revoked.reason` set - no internal detail ever leaks through it.
+RevokedReason = Literal[
+    "permission_revoked",
+    "account_scope_changed",
+    "user_disabled",
+    "session_revoked",
+    "key_revoked",
+    "account_disabled",
+    "replay_session_ended",
+    "resync_rate_limited",
+    "topic_removed",
+]
+CLOSE_USER_DISABLED: Final = 4403
+
+ws_revoked_total = Counter(
+    "cv_ws_revoked_total", "WS subscriptions revoked mid-connection.", labelnames=("reason",)
+)
+
+_REVOKED_MESSAGES: Final[dict[str, str]] = {
+    "permission_revoked": "Access to this data was withdrawn.",
+    "account_scope_changed": "Access to one or more accounts was withdrawn.",
+    "user_disabled": "Your user was disabled.",
+    "session_revoked": "Your session was ended.",
+    "key_revoked": "The account's API key was revoked.",
+    "account_disabled": "The account was disabled.",
+    "replay_session_ended": "The replay session ended.",
+    "resync_rate_limited": "Too many resyncs on this topic.",
+    "topic_removed": "This topic is no longer available.",
+}
+
+
+def revoked_frame(
+    ch: str,
+    reason: RevokedReason,
+    *,
+    now_ms: int,
+    removed_accounts: list[str] | None = None,
+    resubscribe_allowed: bool = False,
+) -> dict[str, Any]:
+    """§9.5 `revoked` frame; `reason` is from the closed set, the message is fixed copy."""
+    p: dict[str, Any] = {
+        "reason": reason,
+        "message": _REVOKED_MESSAGES[reason],
+        "resubscribe_allowed": resubscribe_allowed,
+    }
+    if removed_accounts:
+        p["removed_accounts"] = removed_accounts
+    return {"t": "revoked", "ch": ch, "ts": now_ms, "p": p}
+
+
+def user_disabled_bye(now_ms: int) -> dict[str, Any]:
+    """§9.5: the disabled user's sockets get `bye user_disabled` then close 4403."""
+    return {
+        "t": "bye",
+        "ts": now_ms,
+        "p": {
+            "code": CLOSE_USER_DISABLED,
+            "reason": "user_disabled",
+            "message": "Your user was disabled.",
+            "reconnect": False,
+        },
+    }
+
 
 Closer = Callable[[dict[str, Any], int], Awaitable[None]]  # (bye frame, close code)
 

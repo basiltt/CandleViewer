@@ -21,6 +21,8 @@ from __future__ import annotations
 MAX_INBOUND_FRAME_BYTES = 256 * 1024
 MAX_TOPICS_PER_SUB = 50
 MAX_SUBSCRIPTIONS = 200
+#: §16.2 / welcome `limits.max_symbols_per_connection`; excess -> `subscription_limit`.
+MAX_SYMBOLS_PER_CONNECTION = 40
 AUTH_TIMEOUT_S = 10.0
 FANOUT_SEND_TIMEOUT_S = 2.0
 

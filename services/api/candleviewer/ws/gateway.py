@@ -59,7 +59,13 @@ from candleviewer.ws.lifecycle import (
 )
 from candleviewer.ws.lifecycle import bye_frame as lifecycle_bye
 from candleviewer.ws.limits import AUTH_TIMEOUT_S, MAX_INBOUND_FRAME_BYTES
-from candleviewer.ws.permissions import ConnectionAuthz, ConnectionRegistry, auth_ok_payload
+from candleviewer.ws.permissions import (
+    ConnectionAuthz,
+    ConnectionRegistry,
+    auth_ok_payload,
+    handle_ctl,
+    handle_unsub,
+)
 from candleviewer.ws.permissions import handle_sub as _handle_sub
 from candleviewer.ws.revocation import RevocationHub
 
@@ -97,7 +103,7 @@ def _wall_ms() -> int:
 _CLOSE = object()  # writer sentinel: the next queue item is the close code
 _WRITER_DONE: Final = "cv-ws-writer-done"  # cancel msg: writer finished, stop reading
 #: Valid post-auth frame types served by later E17 stories; ignored here.
-_DEFERRED_TYPES: Final = frozenset({"ctl", "resync"})
+_DEFERRED_TYPES: Final = frozenset({"resync"})
 
 
 class GatewayHub:
@@ -385,8 +391,10 @@ def make_ws_router(
             revocation_hub.register(session_id, conn.closer)
         conn.session_id, conn.user_id = session_id, user_id
         if conn.authz is None:
-            conn.authz = ConnectionAuthz(principal)
-            registry.register(conn.authz, conn.send, conn.evict)
+            conn.authz = ConnectionAuthz(
+                principal, registry.services, connection_id=conn.connection_id
+            )
+            registry.register(conn.authz, conn.send, conn.evict, conn.closer)
             revoked: list[dict[str, Any]] = []
         else:
             # Subscriptions + sequences are kept; only ones the refreshed
@@ -468,15 +476,15 @@ def make_ws_router(
             else:
                 conn.push(build_ws_error("not_authenticated", id=_str_or_none(fid)))
         elif kind == "sub" and conn.authz is not None:
-            await _handle_sub(conn.authz, frame, conn.send)
-            if conn.authz.subs and conn.lifecycle.can(ConnEvent.SUB_OK):
+            await _handle_sub(conn.authz, frame, conn.send, now_ms=conn.wall_ms())
+            if conn.authz.by_id and conn.lifecycle.can(ConnEvent.SUB_OK):
                 conn.lifecycle.fire(ConnEvent.SUB_OK)
         elif kind == "unsub" and conn.authz is not None:
-            body = frame.get("p")
-            for ch in (body.get("topics") if isinstance(body, dict) else None) or []:
-                if isinstance(ch, str) and ch != SYSTEM_TOPIC:  # §6.2: system is permanent
-                    conn.authz.unsubscribe(ch)
-            conn.push(_reply("unsub_ok", fid))
+            # §5.3 idempotent; §6.2 `system` is permanent (refused, stays attached).
+            results = handle_unsub(conn.authz, frame)
+            conn.push(_reply("unsub_ok", fid, ts=conn.wall_ms(), p={"results": results}))
+        elif kind == "ctl" and conn.authz is not None:
+            conn.push(handle_ctl(conn.authz, frame, conn.wall_ms()))
         elif kind in _DEFERRED_TYPES:
             pass  # E17-S03 / E17-T03 scope
         else:

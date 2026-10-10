@@ -130,6 +130,21 @@ def test_topic_matrix_is_total_over_the_ws_registry_and_agrees_with_it() -> None
     assert DECLARED_WS_ROUTES == {"/ws"}, "a new WS route needs its own matrix section"
 
 
+def test_topic_matrix_is_total_over_registry_patterns_both_ways() -> None:
+    """E17-S02: every `(topic pattern, permission)` pair in the declarative registry maps to a
+    matrix row with the same permission, every row is reached by some pattern, and every row's
+    `sample` parses to its own family."""
+    from candleviewer.ws.topics import TOPIC_REGISTRY, parse_topic
+
+    families = {pattern.split(".", 1)[0] for pattern, _ in TOPIC_REGISTRY}
+    assert families == set(_TOPICS), sorted(families ^ set(_TOPICS))
+    for pattern, permission in TOPIC_REGISTRY:
+        row = _TOPICS[pattern.split(".", 1)[0]]
+        assert row["permission"] == permission, pattern
+    for fam, row in _TOPICS.items():
+        assert parse_topic(row["sample"]).family.family == fam, fam
+
+
 def test_vocabulary_single_source_check_exists_and_passes() -> None:
     """Consumes E09-T03's `rbac_vocabulary_single_source`; fails loudly if it is gone."""
     try:

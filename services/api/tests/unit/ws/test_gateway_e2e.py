@@ -143,7 +143,8 @@ def test_ws_e2e_permissions_sub_check_and_live_role_change(env: tuple[TestClient
         assert ok["t"] == "auth_ok"
         assert ok["p"]["permissions"] == ["marketdata:read", "orders:read"]
         assert ok["p"]["account_scope"] == [str(ACC)]
-        assert _sub(ws, "audit.all")["error"]["code"] == "forbidden"
+        assert _sub(ws, "audit.all")["error"]["code"] == "unknown_topic"  # §10.2
+        assert _sub(ws, "positions", [ACC])["error"]["code"] == "forbidden"  # no positions:read
         assert _sub(ws, "orders")["error"]["code"] == "account_scope_denied"  # account-less
         assert _sub(ws, "orders", [OTHER_ACC])["error"]["code"] == "account_scope_denied"
         assert _sub(ws, "orders", [ACC])["ok"] is True
