@@ -52,6 +52,7 @@ CORRUPT_DIR = "corrupt"
 _READY = "READY"
 _CHECKPOINT = "CHECKPOINT"
 _MANIFEST = "MANIFEST"
+_DAMAGED = "DAMAGED"
 _META = "META"
 _BINARY = getattr(os, "O_BINARY", 0)
 
@@ -399,12 +400,25 @@ class SpillWal:
         payload = orjson.dumps({"ck": merged_index, "total": self.total()})
         _write_atomic(self.runs_dir / _CHECKPOINT, payload, self._fsync)
 
+    def _damaged(self) -> dict[str, list[int]]:
+        try:
+            raw = orjson.loads((self.runs_dir / _DAMAGED).read_bytes())
+        except (OSError, orjson.JSONDecodeError):
+            return {}
+        return {str(k): [int(v[0]), int(v[1])] for k, v in dict(raw).items()}
+
     def verify_runs(self) -> ReplayPrep:
         """Check every run against the manifest (size + CRC). A run that is missing, truncated
         or altered is moved whole to `corrupt/` (still counted in the budget) and reported with
-        its symbols' windows. The checkpoint is then reset (the merge order changed)."""
+        its symbols' windows. The checkpoint is then reset (the merge order changed).
+
+        Crash safety: the damaged windows are durably written to `runs/DAMAGED` *before* any
+        file moves, and are reported from that marker on every call until
+        `ack_damaged()`. A crash between the quarantine and the gap being taken therefore
+        still raises the gap on restart."""
         manifest = self._manifest()
-        prep = ReplayPrep(pending=True)
+        damaged = self._damaged()
+        bad: list[tuple[str, int]] = []
         listed = {p.name for p in self.runs_dir.glob("*.run")}
         for name in sorted(set(manifest) | listed):
             path = self.runs_dir / name
@@ -417,25 +431,34 @@ class SpillWal:
                 )
             if ok:
                 continue
-            size = path.stat().st_size if path.exists() else 0
-            if path.exists():
-                self.corrupt_dir.mkdir(mode=0o700, exist_ok=True)
-                dest = self.corrupt_dir / f"{len(list(self.corrupt_dir.iterdir())):06d}.run.wal"
-                os.replace(path, dest)  # stays counted: corrupt/ is part of the budget
-            prep.corrupt_bytes += size
+            bad.append((name, path.stat().st_size if path.exists() else 0))
             raw_windows = meta.get("windows") if meta is not None else None
             windows = raw_windows if isinstance(raw_windows, dict) else {}
             for symbol, (lo, hi) in windows.items():
-                old = prep.corrupt_windows.get(str(symbol))
                 lo, hi = int(lo), int(hi)
+                old = damaged.get(str(symbol))
                 if old is not None:
                     lo, hi = min(lo, old[0]), max(hi, old[1])
-                prep.corrupt_windows[str(symbol)] = (lo, max(hi, lo + 1))
-            manifest.pop(name, None)
-        if prep.corrupt_bytes or set(manifest) != listed:
+                damaged[str(symbol)] = [lo, max(hi, lo + 1)]
+        prep = ReplayPrep(pending=True)
+        if bad:
+            _write_atomic(self.runs_dir / _DAMAGED, orjson.dumps(damaged), self._fsync)
+            for name, size in bad:
+                path = self.runs_dir / name
+                if path.exists():
+                    self.corrupt_dir.mkdir(mode=0o700, exist_ok=True)
+                    n = len(list(self.corrupt_dir.iterdir()))
+                    os.replace(path, self.corrupt_dir / f"{n:06d}.run.wal")  # stays budgeted
+                prep.corrupt_bytes += size
+                manifest.pop(name, None)
             _write_atomic(self.runs_dir / _MANIFEST, orjson.dumps(manifest), self._fsync)
             self.commit(0)
+        prep.corrupt_windows = {k: (v[0], v[1]) for k, v in damaged.items()}
         return prep
+
+    def ack_damaged(self) -> None:
+        """The writer has taken the damaged windows as gaps: clear the marker."""
+        (self.runs_dir / _DAMAGED).unlink(missing_ok=True)
 
     def iter_replay(self) -> Generator[tuple[int, WalRecord]]:
         """K-way merge of the runs in `exch_ts` order (stable), from the checkpoint onwards.

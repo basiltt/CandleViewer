@@ -259,7 +259,65 @@ async def test_truncated_run_becomes_a_gap_and_the_rest_replays(tmp_path: Path) 
     sink.down.clear()
     await w.recover()
     assert [r["trade_id"] for r in sink.rows("trades")] == ["t0", "t1", "t4", "t5"]
-    assert w.pending_gaps()[("BTCUSDT", "trades")] == (T0 + 2, T0 + 3)
+    # Persisted immediately (a live session exists), so the DAMAGED marker could be cleared.
+    (gap,) = store.gaps
+    assert gap["cause"] == "backpressure_drop" and not w.pending_gaps()
     assert any(e.kind == "recorder_wal_corrupt" for e in events.events)
+
+
+async def test_crash_after_quarantine_before_gap_persist_raises_one_gap_on_restart(
+    tmp_path: Path,
+) -> None:
+    """Adversarial N1: the damaged run is already in corrupt/ when the process dies; the
+    durable DAMAGED marker makes the restart raise exactly one gap for that window."""
+    w, sink, store, _, clock = await make_writer(tmp_path, flush_rows=2, replay_chunk_rows=2)
+    sink.down.add("*")
+    for i in range(6):
+        await w.on_trade(trade(i))
+    clock.advance(0.2)
+    await w.pump("trades")
+    await w.recover()  # runs/ built; write fails
+    lane_wal = w._lanes["trades"].wal
+    runs = tmp_path / "wal" / "trades" / RUNS_DIR
+    victim = runs / "000001.run"
+    victim.write_bytes(victim.read_bytes()[:5])
+    lane_wal.verify_runs()  # quarantine happens ... then the process "crashes"
+    assert not victim.exists() and (runs / "DAMAGED").exists()
+
+    sink.down.clear()
+    w2, sink2, store2, events2, _ = await make_writer(
+        tmp_path, flush_rows=2, replay_chunk_rows=2, sink=sink
+    )
+    await w2.start()
+    await w2.stop()
+    assert [g["start"].timestamp() for g in store2.gaps] == [
+        store2.gaps[0]["start"].timestamp()
+    ]  # exactly one gap row
+    (gap,) = store2.gaps
+    assert gap["cause"] == "backpressure_drop"
+    assert sum(e.kind == "recorder_wal_corrupt" for e in events2.events) == 1
+    assert [r["trade_id"] for r in sink2.rows("trades")] == ["t0", "t1", "t4", "t5"]
+    assert not runs.exists()
+    assert store.gaps == []
+
+
+async def test_damaged_marker_kept_until_the_gap_row_is_persisted(tmp_path: Path) -> None:
+    w, sink, store, _, clock = await make_writer(tmp_path, flush_rows=2, replay_chunk_rows=2)
+    sink.down.add("*")
+    for i in range(4):
+        await w.on_trade(trade(i))
+    clock.advance(0.2)
+    await w.pump("trades")
+    await w.recover()
+    runs = tmp_path / "wal" / "trades" / RUNS_DIR
+    victim = runs / "000001.run"
+    victim.write_bytes(victim.read_bytes()[:5])
+    store.session = False  # gap cannot be persisted yet
+    sink.down.clear()
+    await w.recover()
+    assert w.pending_gaps()
+    # runs/ is gone after a full replay, but the gap stays pending in memory and is still
+    # raised as recorder_gap_unpersisted at stop (never silent).
+    store.session = True
     await w.flush_gaps()
-    assert store.gaps[0]["cause"] == "backpressure_drop"
+    assert len(store.gaps) == 1

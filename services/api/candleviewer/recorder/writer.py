@@ -751,8 +751,16 @@ class StreamWriter:
                 lane.next_replay_at = self._clock() + self._cfg.replay_retry_s
                 logger().error("recorder_replay_io_failed", stream=lane.stream, error=str(exc))
                 return False
-        if verified.corrupt_bytes:
+        # Windows, not bytes: after a crash the damaged file is already in corrupt/ (0 bytes
+        # seen now) but its windows are still pending in runs/DAMAGED.
+        if verified.corrupt_bytes or verified.corrupt_windows:
             await self._corrupt(lane, verified.corrupt_bytes, verified.corrupt_windows)
+            await self.flush_gaps()
+            keys = {(sym, lane.stream) for sym in verified.corrupt_windows}
+            if not keys & self._gaps.keys():
+                # Every window is a persisted row: only now may the durable marker go.
+                async with lane.wal_lock:
+                    await asyncio.to_thread(lane.wal.ack_damaged)
         it = lane.wal.iter_replay()
         try:
             while True:
