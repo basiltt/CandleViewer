@@ -51,6 +51,13 @@ class FakeHot:
     async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
         return dict.fromkeys(self.days[stream][rng.start_us], 10)
 
+    def value_tag(self, rng: TimeRange) -> str:
+        return "v0"
+
+    async def snapshot(self, stream: StreamKind, rng: TimeRange) -> dict[str, tuple[int, str]]:
+        counts = await self.row_counts(stream, rng)
+        return {sym: (n, self.value_tag(rng)) for sym, n in counts.items()}
+
     async def drop_day(self, stream: StreamKind, day_start_us: int) -> None:
         self.dropped.append((stream, day_start_us))
         del self.days[stream][day_start_us]
@@ -389,7 +396,9 @@ async def test_rolloff_late_row_between_export_and_drop_aborts_drop(new_symbol: 
 
     marks, audit = FakeMarks(), Audit()
     report = await _job(hot, FakeArchiver(), marks, audit=audit, events=Ev()).run()
-    assert hot.dropped == [] and audit.rows == []
+    assert hot.dropped == []
+    assert [a for a, _ in audit.rows] == ["retention.purge", "rolloff.drop_aborted"]
+    assert audit.rows[1][1]["reason"] == "count_changed"
     assert report.retained == [(T, day(10), "archive_verification_failed")]
     assert "archive.verification_failed" in emitted
     assert (await marks.get("BTCUSDT", T)).archived_through_us == 0
@@ -547,3 +556,42 @@ async def test_property_phase_crashes_write_failures_late_rows_never_lose_data(
     plan.clear()
     await _job(h, Arch(), marks).run()  # type: ignore[arg-type]
     assert h.days[T] == {}
+
+
+async def test_rolloff_value_change_without_count_change_aborts_drop() -> None:
+    """Dedup upsert rewrote values in place: same count, different fingerprint."""
+
+    class Upserted(FakeHot):
+        n = 0
+
+        def value_tag(self, rng: TimeRange) -> str:
+            self.n += 1
+            return "v0" if self.n == 1 else "v1"
+
+    hot, audit = Upserted({T: {day(10): ["BTCUSDT"]}}), Audit()
+    await _job(hot, FakeArchiver(), FakeMarks(), audit=audit).run()
+    assert hot.dropped == []
+    assert audit.rows[-1] == (
+        "rolloff.drop_aborted",
+        audit.rows[0][1] | {"reason": "values_changed"},
+    )
+
+
+async def test_rolloff_purge_audit_precedes_final_recheck_and_drop() -> None:
+    order: list[str] = []
+
+    class H(FakeHot):
+        async def snapshot(self, stream: StreamKind, rng: TimeRange) -> dict[str, tuple[int, str]]:
+            order.append("snapshot")
+            return await super().snapshot(stream, rng)
+
+        async def drop_day(self, stream: StreamKind, day_start_us: int) -> None:
+            order.append("drop")
+            await super().drop_day(stream, day_start_us)
+
+    class A(Audit):
+        async def write(self, action: str, detail: dict[str, str | int]) -> None:
+            order.append(action)
+
+    await _job(H({T: {day(10): ["BTCUSDT"]}}), FakeArchiver(), FakeMarks(), audit=A()).run()
+    assert order == ["snapshot", "retention.purge", "snapshot", "drop"]

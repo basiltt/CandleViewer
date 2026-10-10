@@ -32,7 +32,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 import structlog
 
-from candleviewer.domain.sql_names import ts_param
+from candleviewer.domain.sql_names import column_identifier, ts_param
 from candleviewer.observability.metrics import Counter, Gauge
 from candleviewer.storage.cold.compactor import IdleGuard
 from candleviewer.storage.cold.exporter import ColdExporter, HotTierSource
@@ -145,6 +145,16 @@ class CanonicalDigest:
         return self._hash.hexdigest()
 
 
+#: Cheap value column per hot table for the pre-drop fingerprint.
+_FINGERPRINT_COLUMN: dict[StreamKind, str] = {
+    StreamKind.TRADES: "size",
+    StreamKind.ORDERBOOK_DELTA: "size",
+    StreamKind.ORDERBOOK_SNAPSHOT: "update_id",
+    StreamKind.TICKERS: "last_price",
+    StreamKind.LIQUIDATIONS: "size",
+}
+
+
 class QuestDbHotPartitions:
     """Hot-tier inventory and partition drop over PGWire (every await bounded)."""
 
@@ -180,6 +190,20 @@ class QuestDbHotPartitions:
         sql = f"SELECT symbol, count() AS n FROM {table} WHERE ts >= $1 AND ts < $2"  # noqa: S608  # nosec B608 - table from TABLE_BY_STREAM allowlist via checked_identifier
         rows = await self._fetch(sql, ts_param(rng.start_us), ts_param(rng.end_us))
         return {str(r["symbol"]): int(str(r["n"])) for r in rows if r.get("symbol")}
+
+    async def snapshot(self, stream: StreamKind, rng: TimeRange) -> dict[str, tuple[int, str]]:
+        table = _hot_table(stream)
+        value = column_identifier(_FINGERPRINT_COLUMN[stream])
+        sql = (
+            f"SELECT symbol, count() AS n, max(ts) AS hi, sum({value}) AS v FROM {table} "  # noqa: S608  # nosec B608 - allowlisted table/column via checked identifiers
+            "WHERE ts >= $1 AND ts < $2"
+        )
+        rows = await self._fetch(sql, ts_param(rng.start_us), ts_param(rng.end_us))
+        return {
+            str(r["symbol"]): (int(str(r["n"])), f"{r.get('hi')}|{r.get('v')}")
+            for r in rows
+            if r.get("symbol")
+        }
 
     async def drop_day(self, stream: StreamKind, day_start_us: int) -> None:
         table = _hot_table(stream)

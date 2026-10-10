@@ -101,6 +101,7 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "retention.change",
         "retention.purge",
         "retention.downsample",
+        "rolloff.drop_aborted",
         "flags.change",
         "settings.change",
         "hotkey.trading_binding_changed",

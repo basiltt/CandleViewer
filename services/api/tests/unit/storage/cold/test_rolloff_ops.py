@@ -427,3 +427,13 @@ async def test_downsampler_defers_partition_under_replay_lease(tmp_path: Path) -
     assert through == 0
     entries = ManifestStore(tmp_path / "_manifests").read(part, tmp_path)
     assert all(e.export_run_id != DOWNSAMPLE_RUN_ID for e in entries)
+
+
+async def test_hot_partitions_snapshot_is_one_query_with_value_fingerprint() -> None:
+    pg = FakePg([{"symbol": "BTCUSDT", "n": 7, "hi": "2026-10-17T23:59", "v": 1.5}])
+    snap = await QuestDbHotPartitions(pg).snapshot(T, day_range())
+    assert snap == {"BTCUSDT": (7, "2026-10-17T23:59|1.5")}
+    assert len(pg.calls) == 1
+    sql, params = pg.calls[0]
+    assert "count()" in sql and "max(ts)" in sql and "sum(size)" in sql and "FROM trades" in sql
+    assert all(isinstance(p, datetime) and p.tzinfo is None for p in params)

@@ -69,7 +69,13 @@ class HotPartitions(Protocol):
     async def symbols_in(self, stream: StreamKind, rng: TimeRange) -> list[str]: ...
 
     async def row_counts(self, stream: StreamKind, rng: TimeRange) -> dict[str, int]:
-        """`COUNT(*)` per symbol for the day — the pre/post snapshot around the drop."""
+        """`COUNT(*)` per symbol for the day."""
+        ...
+
+    async def snapshot(self, stream: StreamKind, rng: TimeRange) -> dict[str, tuple[int, str]]:
+        """Per symbol `(count, value fingerprint)` in ONE query: the fingerprint
+        (max ts + sum of a value column) also catches a dedup upsert that
+        changes values without changing the count."""
         ...
 
     async def drop_day(self, stream: StreamKind, day_start_us: int) -> None: ...
@@ -270,7 +276,7 @@ class RollOffJob:
         retained: dict[str, list[int]] = {}
         for day_start in await self._eligible_days(stream):
             day = TimeRange(start_us=day_start, end_us=day_start + US_PER_DAY)
-            before = await self._hot.row_counts(stream, day)
+            before = await self._hot.snapshot(stream, day)
             symbols = sorted(before)
             if not symbols:  # nothing verified -> never drop (review #2213 E)
                 continue
@@ -283,26 +289,27 @@ class RollOffJob:
                     retained.setdefault(o.symbol, []).append(day_start)
                 report.retained.append((stream, day_start, failed[0].reason))
                 continue
-            # Critical section: re-snapshot immediately before the drop. Any row or
-            # symbol that landed after the verified export -> abort, keep hot, alert.
-            after = await self._hot.row_counts(stream, day)
+            rows = sum(o.rows for o in outcomes)
+            detail: dict[str, str | int] = {
+                "tier": "hot",
+                "stream": stream.value,
+                "symbols": ",".join(symbols),
+                "range_start_us": day.start_us,
+                "range_end_us": day.end_us,
+                "rows": rows,
+            }
+            # Write-ahead audit (C-2.9) BEFORE the final re-check, so only the
+            # DROP round-trip sits between the last snapshot and the drop.
+            await self._audit.write("retention.purge", detail)
+            after = await self._hot.snapshot(stream, day)
             exported = {o.symbol: o.rows for o in outcomes}
-            if after != before or after != exported:
+            counts = {sym: v[0] for sym, v in after.items()}
+            if after != before or counts != exported:
+                reason = "count_changed" if counts != exported else "values_changed"
+                # The purge record is append-only and stands; record the abort.
+                await self._audit.write("rolloff.drop_aborted", detail | {"reason": reason})
                 await self._late_rows(stream, day, symbols, report, retained)
                 continue
-            rows = sum(o.rows for o in outcomes)
-            # Write-ahead audit (C-2.9), then the irreversible drop.
-            await self._audit.write(
-                "retention.purge",
-                {
-                    "tier": "hot",
-                    "stream": stream.value,
-                    "symbols": ",".join(symbols),
-                    "range_start_us": day.start_us,
-                    "range_end_us": day.end_us,
-                    "rows": rows,
-                },
-            )
             await self._hot.drop_day(stream, day_start)
             for o in outcomes:
                 recorder_rolloff_bytes_total.labels(stream=stream.value).inc(o.bytes)
