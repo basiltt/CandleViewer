@@ -69,8 +69,11 @@ class BarPage:
     dropped: int = 0  # rows withheld (checksum mismatch or missing)
 
 
+#: `ts` is primary: the `/market/bars` cursor is a `ts`, so it needs monotonic ts order;
+#: `index` only breaks equal-`ts` ties. `generation` is NOT ordered until #2017 moves the cursor to
+#: `(generation, index)` (NULL-`index` kline rows and index-reset rebuilds would skip rows).
 #: `index` is a QuestDB reserved word: quoted via the shared helper (#2016), never hand-written.
-_ORDER_BY = ", ".join(column_identifier(c) for c in ("generation", "index", "ts"))
+_ORDER_BY = ", ".join(column_identifier(c) for c in ("ts", "index"))
 
 
 def build_range_query(

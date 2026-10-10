@@ -9,6 +9,7 @@ import re
 
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,62}")
 
+#: Provenance: QuestDB 8.x docs, questdb.io/docs/reference/sql/reserved-names/.
 #: QuestDB keywords that cannot be used as a bare column name (a conservative snapshot of the
 #: reserved list in the QuestDB docs; extend, never shrink). The 0004 DDL quotes `"index"` for this
 #: reason (#2016); `column_identifier` is the single place SQL text quotes such names.

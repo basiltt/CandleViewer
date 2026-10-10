@@ -624,7 +624,7 @@ class BarUpdate(BaseModel):
     amended: bool = False   # True only on a `close` re-emitted by a late trade (§3.3c)
 ```
 
-An amend re-emits a bar with the same identity `(bar_param/spec_hash, generation, index)`, so persistence upserts on that identity (the `DEDUP UPSERT KEYS` of 21 §4.8) and the amended row replaces the earlier one (pending #2016: deployed DEDUP keys are still `(ts, symbol, bar_param)` until migration 0004). An amended re-emit from the same source replaces the earlier row; `SourceOverwriteRefused` applies only to a lower-ranked source. The WS publisher must forward `amended` (it is not yet in the 23 §14.3 bar item; E12-T06 #2018 adds it as an optional field).
+An amend re-emits a bar with the same identity `(bar_param/spec_hash, generation, index)`, so persistence upserts on that identity (the `DEDUP UPSERT KEYS` of 21 §4.8) and the amended row replaces the earlier one (landed, migration 0004, #2016: the deployed DEDUP keys are `(ts, symbol, bar_param, generation, index)`). An amended re-emit from the same source replaces the earlier row; `SourceOverwriteRefused` applies only to a lower-ranked source. The WS publisher must forward `amended` (it is not yet in the 23 §14.3 bar item; E12-T06 #2018 adds it as an optional field).
 
 `snapshot()`/`restore()` exist so a restart or a replay seek resumes mid-bar without replaying the whole day. `BuilderState` is a builder-owned blob persisted every 60 s per `(symbol, spec_hash)`. It is versioned orjson JSON (Decimals as strings) with `STATE_VERSION = 1`, checked on `restore()` and rejected with a typed error on mismatch. orjson is used rather than msgpack because msgpack is not a backend dependency and adding one needs a security review.
 

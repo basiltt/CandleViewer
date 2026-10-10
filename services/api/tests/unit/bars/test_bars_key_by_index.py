@@ -29,13 +29,15 @@ class _DedupStore:
 
     async def write_rows(self, table: str, rows: list[dict[str, object]], ts_key: str) -> None:
         for r in rows:
-            self.rows[tuple(r[k] for k in KEY)] = r
+            self.rows[tuple(r[k] for k in KEY)] = r  # NULL index is a valid key part
 
     async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
-        assert 'ORDER BY generation, "index", ts' in sql
+        assert 'ORDER BY ts, "index"' in sql
 
-        def order(r: dict[str, object]) -> tuple[int, int, int]:
-            return (int(str(r["generation"])), int(str(r["index"])), int(str(r["ts"])))
+        def order(r: dict[str, object]) -> tuple[int, int]:
+            # QuestDB sorts NULL first in ASC; `ORDER BY ts, "index"`.
+            idx = r["index"]
+            return (int(str(r["ts"])), -1 if idx is None else int(str(idx)))
 
         return sorted(self.rows.values(), key=order)
 
@@ -105,9 +107,45 @@ def test_read_query_quotes_every_reserved_bare_identifier() -> None:
 def test_ddl_quotes_every_reserved_column_name() -> None:
     from candleviewer.storage.sql_identifiers import QUESTDB_RESERVED
 
-    text = (ROOT / "backend/db/questdb/0004_bars_key_by_index.sql").read_text("utf-8")
-    code = "\n".join(line.split("--", 1)[0] for line in text.splitlines())
-    for name in QUESTDB_RESERVED:
-        assert not re.search(
-            rf"^\s+{name}\s+(?:TIMESTAMP|SYMBOL|DOUBLE|LONG|INT|BOOLEAN)", code, re.M | re.I
-        ), name
+    files = sorted((ROOT / "backend/db/questdb").glob("*.sql"))
+    assert len(files) >= 4
+    for f in files:
+        text = f.read_text("utf-8")
+        code = "\n".join(line.split("--", 1)[0] for line in text.splitlines())
+        for name in QUESTDB_RESERVED:
+            pat = rf"^\s+{name}\s+(?:TIMESTAMP|SYMBOL|DOUBLE|LONG|INT|BOOLEAN)\b"
+            assert not re.search(pat, code, re.M | re.I), (f.name, name)
+
+
+def _row(b: Bar, **kw: object) -> dict[str, object]:
+    row = {**bar_row(b, SPEC), **kw}
+    row["row_checksum"] = row_checksum(row)  # keep the row trustworthy for the reader
+    return row
+
+
+async def _page(store: _DedupStore, limit: int) -> list[dict[str, object]]:
+    return (await BarReader(store, _sched).read_bars(SYM, SPEC, 0, 2**60, limit)).rows
+
+
+@pytest.mark.asyncio
+async def test_null_index_kline_rows_do_not_hide_older_tape_rows_from_page_one() -> None:
+    """(a) NULL-index kline rows sort first under (generation, index, ts) and fill page 1."""
+    b = _closed_bars()[0]
+    store = _DedupStore()
+    store.rows[("tape",)] = _row(b, ts=1_000, index=0)
+    for i in range(3):
+        store.rows[("kline", i)] = _row(b, ts=2_000 + i, index=None)
+    page = await _page(store, 2)
+    assert [r["ts"] for r in page][:2] == [1_000, 2_000]  # older tape row first (limit+1 rows)
+
+
+@pytest.mark.asyncio
+async def test_builder_cold_start_index_reset_keeps_ts_order_across_pages() -> None:
+    """(b) index restarts at 0 with generation unchanged: ts must still lead the order."""
+    b = _closed_bars()[0]
+    store = _DedupStore()
+    store.rows[("old", 0)] = _row(b, ts=1_000, index=5)
+    store.rows[("old", 1)] = _row(b, ts=1_100, index=6)
+    store.rows[("new", 0)] = _row(b, ts=2_000, index=0)  # cold start: index back to 0
+    page = await _page(store, 3)
+    assert [r["ts"] for r in page] == [1_000, 1_100, 2_000]
