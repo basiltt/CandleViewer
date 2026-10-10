@@ -351,7 +351,7 @@ def test_token_expiry_without_reauth_sends_bye_token_expired_4401(world: _World)
         bye = _recv_type(ws, "bye")
         code = _closed(ws)
     assert (bye["p"]["reason"], bye["p"]["reconnect"], code) == ("token_expired", True, 4401)
-    assert world.registry._conns.get(USER) == []  # identity no longer served
+    assert not world.registry._conns.get(USER)  # identity no longer served
 
 
 # -- heartbeats --------------------------------------------------------------------------------
@@ -533,7 +533,7 @@ def test_hub_is_empty_after_every_socket_closes(world: _World) -> None:
             break
         world.client.portal.call(_no_sleep, 0)  # type: ignore[union-attr]  # portal set in ctx
     assert len(world.hub) == 0
-    assert world.registry._conns.get(USER) == []
+    assert not world.registry._conns.get(USER)
 
 
 def test_reauth_with_narrowed_principal_revokes_now_forbidden_subscriptions() -> None:
