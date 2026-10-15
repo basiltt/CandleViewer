@@ -1,21 +1,32 @@
-"""`ReplayClock`: paced playback of one replay session (E26-T03).
+"""`ReplayClock`: paced, gap-aware playback of one replay session (E26-T03).
 
 Plain code on the hot path: it never calls a statechart (C-2.20). The session layer (E26-T01)
-drives it from B12's actions (`28-statechart-catalogue.md` Sec.B12): `start_clock` calls `play()`
-and `stop_clock` calls `pause()`. The layer maps the stop reasons `PlaybackObserver.on_stop` hears
-to B12 events (`range_end` to `RANGE_END`, `error` to `SOURCE_ERROR`).
+drives it from B12's actions (`28-statechart-catalogue.md` Sec.B12): `start_clock` calls `play()`,
+`stop_clock` calls `pause()`, `set_speed` calls `set_speed()`, the `emit_one_step` service calls a
+`step_*` and `seek_and_prime` ends in `reposition()`. The layer maps what the `PlaybackObserver`
+hears to B12 events: a stop to `RANGE_END`/`SOURCE_ERROR`, a backpressure edge to `CONSUMER_SLOW`.
 
 **Ownership.** `async with ReplayClock(...)` opens the session's `asyncio.TaskGroup`
 (`20-architecture.md` Sec.4.1 "TaskGroup: replay sessions"), held by the session's runner task.
 Playback runs as a task of that group. Leaving the block (session destroy) cancels it and closes
 the source exactly once (INV-B12-e), even if the runner is cancelled again meanwhile.
 
-**Pacing.** `replay.pacing` sets each deadline from one anchor, so pacing is drift-free. The
-schedule starts once the first event is read, so a cold source's first read is not lateness. An
-event due within `min_wait_s` goes out without a wait; after `yield_slice_s` of work without one the
-clock yields to the loop (C-2.17). `cursor_us` is the replay time reached and only moves forward
-during playback (INV-B12-b). `now_us()` is the replay "now" for downstream clocks; it never passes
-an event not yet delivered, so a bar never closes ahead of its own trades.
+**Pacing.** `replay.pacing` sets each deadline from one anchor, so pacing is drift-free and a
+speed change is continuous. The schedule starts once the first event is read, so a cold source's
+first read is not lateness. A sink that holds an event back past `max_lag_s` slows the clock
+(re-anchor) instead of a drop or a catch-up burst (24 Sec.13.7, INV-B12-c); the wall time lost
+gives the achieved rate (`stats()`). An event due within `min_wait_s` goes out without a wait;
+after `yield_slice_s` of work without one the clock yields to the loop (C-2.17).
+
+**Steps** (`24-internal-schemas.md` Sec.13.7) deliver at once while not playing: `step_events(n)`
+the next n market events, `step_ms(n)` everything in the next n ms of replay time, and
+`step_bar()` everything until the session's `BarProbe` closes exactly one bar (US-RPL-001). At a
+gap, `stop` ends the step at its boundary; `skip` reports it and steps on.
+
+**Cursor.** `cursor_us` is the replay time reached and only moves forward; only `reposition`
+(a seek, or a loop wrap back to the loop start, US-RPL-008) moves it back (INV-B12-b). `now_us()`
+is the replay "now" for downstream clocks; it never passes an event not yet delivered, so a bar
+never closes ahead of its own trades.
 
 **Failures.** A source `ReplayError` stops playback (`error`) after every event before it, and the
 clock then refuses to play from that source. If the sink raises, playback stops (`error`) with the
@@ -25,8 +36,9 @@ event still pending, and the next `play()` delivers it first: nothing is lost.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import contextvars
-from collections.abc import Coroutine
+from collections.abc import AsyncIterator, Coroutine
 from contextlib import AsyncExitStack
 from types import TracebackType
 from typing import Any, Self
@@ -34,14 +46,16 @@ from typing import Any, Self
 import structlog
 
 from candleviewer.observability import spawn
-from candleviewer.replay.errors import ReplayClockStateError, ReplayError
+from candleviewer.replay.errors import ReplayClockStateError, ReplayError, ReplayRequestInvalid
 from candleviewer.replay.models import ReplayGap, ReplayItem
-from candleviewer.replay.pacing import Pacer
+from candleviewer.replay.pacing import Pacer, RateWindow
 from candleviewer.replay.playback import (
     STEP,
+    BarProbe,
     ClockConfig,
     MonotonicTime,
     PlaybackObserver,
+    PlaybackStats,
     ReplaySink,
     ReplayStream,
     StopReason,
@@ -83,17 +97,25 @@ class ReplayClock:
             raise ValueError("the replay range must end after it starts")
         self._source, self._sink, self._obs, self._time = source, sink, observer, time
         self._cfg = config or ClockConfig()
+        self._range = (start_us, end_us)
         self._end_us, self._cursor, self._speed = end_us, start_us, check_speed(speed)
         self._pending: ReplayItem | None = None
         self._failed: ReplayError | None = None
-        self._drained = self._stop = self._closed = False
+        self._drained = self._stop = self._closed = self._stepping = False
         self._pacer: Pacer | None = None
+        self._window = RateWindow(self._cfg.rate_window_s)
         self._wake = asyncio.Event()
         self._task: asyncio.Task[StopReason] | None = None
         self._stack: AsyncExitStack | None = None
         self._group: asyncio.TaskGroup | None = None
         self._closing: asyncio.Task[None] | None = None
-        self._emitted = 0
+        self._closers: set[asyncio.Task[None]] = set()  # old sources closing after a reposition
+        self._sliced = 0.0  # when a step last yielded
+        self._emitted = self._gaps = 0
+        self._lost_s = 0.0
+        self._backpressured = self._slow_in_window = False
+        #: The session's active-`BarSpec` probe: `step_bar` needs it; every delivery feeds it.
+        self.bar_probe: BarProbe | None = None
 
     async def __aenter__(self) -> Self:
         if self._closed or self._stack is not None:
@@ -138,8 +160,8 @@ class ReplayClock:
         if group is None or self._closed:
             raise ReplayClockStateError("the replay clock is not open")
         if self._failed is not None:
-            raise ReplayClockStateError("the replay source failed: replay cannot continue from it")
-        if self.playing:
+            raise ReplayClockStateError("the replay source failed: reposition (seek) to recover")
+        if self.playing or self._stepping:
             raise ReplayClockStateError("playback is already running or still stopping")
         if self._speed == STEP:
             raise ReplayClockStateError("speed 0 is step mode: step instead of playing")
@@ -156,17 +178,137 @@ class ReplayClock:
             self._wake.set()
             await asyncio.wait({task})
 
+    def set_speed(self, speed: float) -> None:
+        """Change speed (B12 `set_speed`); the current speed again is a no-op. While paced, the
+        schedule continues from its own position, so a change is continuous and never forgives
+        lateness. Leaving the schedule (unbounded, or `STEP`, which pauses) books that lateness as
+        lost time, so it never hides backpressure."""
+        speed = check_speed(speed)
+        if speed == self._speed:
+            return
+        _log().info("replay_speed_changed", speed_from=self._speed, speed_to=speed)
+        self._speed = speed
+        if not self.playing:
+            return
+        now, pacer, pending = self._time.now(), self._pacer, self._pending
+        self._cursor = self._position(now)  # the clamped position: what the session reports
+        if pacer is not None and speed > 0:
+            pacer.set_speed(speed, wall=now, position_us=pacer.position(now))
+        else:
+            if pacer is not None and pending is not None:
+                self._lost_s += max(0.0, now - pacer.due(pending.ts_us))
+            self._pacer = Pacer(speed, wall=now, ts_us=self._cursor) if speed > 0 else None
+            if speed == STEP:
+                self._stop = True
+        self._window.restart(wall=now, lost_s=self._lost_s, position_us=self._cursor)
+        self._wake.set()
+
+    async def step_events(self, count: int = 1) -> StopReason:
+        """Deliver the next `count` market events at once (B12 `emit_one_step`)."""
+        if count < 1:
+            raise ReplayRequestInvalid("a step covers at least one event")
+        async with self._step():
+            for _ in range(count):
+                item = await self._step_item()
+                if not isinstance(item, RecordedEvent):
+                    return "range_end" if item is None else item
+                await self._deliver(item)
+                await self._breathe()
+            return "step"
+
+    async def step_event(self) -> StopReason:
+        """The ticket's `step_event`: `step_events(1)`."""
+        return await self.step_events(1)
+
+    async def step_ms(self, ms: int) -> StopReason:
+        """Deliver everything in the next `ms` of replay time; the cursor lands at its end."""
+        if ms < 1:
+            raise ReplayRequestInvalid("a step covers at least 1 ms")
+        async with self._step():
+            target = min(self._cursor + ms * 1_000, self._end_us)
+            while isinstance(item := await self._step_item(before_us=target), RecordedEvent):
+                await self._deliver(item)
+                await self._breathe()
+            if item == "gap":
+                return "gap"
+            self._cursor = max(self._cursor, target)
+            return "range_end" if self._cursor >= self._end_us else "step"
+
+    async def step_bar(self) -> StopReason:
+        """Deliver until the active `BarSpec` closes exactly one bar: on an event (a count bar)
+        or when replay time reaches its close (a time bar, closed by `BarProbe.tick`)."""
+        probe = self.bar_probe
+        if probe is None:
+            raise ReplayClockStateError("step_bar needs the session's bar probe")
+        async with self._step():
+            probe.tick(self._cursor)  # a close already due at the cursor is not this step's
+            while True:
+                due = probe.due_us()
+                due = None if due is None or due > self._end_us else due
+                item = await self._step_item(before_us=due)
+                if isinstance(item, RecordedEvent):
+                    if await self._deliver(item):
+                        return "step"
+                    await self._breathe()
+                elif item == "gap":
+                    return "gap"
+                elif due is None:
+                    return "range_end"
+                else:  # replay time reaches the open bar's close before any later event
+                    self._cursor = max(self._cursor, due)
+                    probe.tick(due)
+                    return "step"
+
+    async def reposition(
+        self, source: ReplayStream, *, at_us: int, end_us: int | None = None
+    ) -> None:
+        """Continue from `source`, positioned at `at_us`, up to `end_us` (default: the current
+        end). It is the seek hook (B12 `seek_and_prime`, E26-T04, which rebuilds downstream state
+        first) and the loop wrap (US-RPL-008: back to the loop start, `end_us` the loop end). The
+        old source is closed, in its own tracked task, so a caller cancelled meanwhile cannot leave
+        it open. It clears a source failure. Only this moves the cursor back (INV-B12-b). If it is
+        refused (outside the range, while playing or stepping, or once closed), `source` was not
+        taken: the caller still owns it and closes it."""
+        end = self._end_us if end_us is None else end_us
+        if not self._range[0] <= at_us < end <= self._range[1]:
+            raise ReplayRequestInvalid("a reposition must stay inside the session's range")
+        async with self._step(recovering=True):
+            old, self._source = self._source, source
+            self._cursor, self._end_us, self._pending, self._drained = at_us, end, None, False
+            self._failed = None
+            closing = spawn(old.aclose(), name="replay-source-close")
+            self._closers.add(closing)
+            closing.add_done_callback(self._closers.discard)
+            await asyncio.shield(closing)
+
     def now_us(self) -> int:
         """Replay "now" for downstream clocks: one clock for every pane (US-RPL-005)."""
         return self._position(self._time.now())
+
+    def stats(self) -> PlaybackStats:
+        """The session's view: cursor, counters and, while playing, the last window's achieved
+        rate (the SCR-097 speed-limit honesty figure)."""
+        window, live = self._window, self.playing
+        return PlaybackStats(
+            cursor_us=self.now_us(),
+            speed=self._speed,
+            events_emitted=self._emitted,
+            gap_warnings=self._gaps,
+            backpressured=self._backpressured,
+            backpressure_s=self._lost_s,
+            achieved_speed=window.speed if live else None,
+            achieved_ratio=window.ratio if live else None,
+        )
 
     # -- playback ------------------------------------------------------------------------------
     async def _play(self) -> StopReason:
         error: Exception | None = None
         try:
             await self._peek()  # prime: a cold source's first read is not lateness
-            if self._speed > 0:
-                self._pacer = Pacer(self._speed, wall=self._time.now(), ts_us=self._cursor)
+            now = self._time.now()
+            if self._speed > 0:  # the schedule starts once the first event is read
+                self._pacer = Pacer(self._speed, wall=now, ts_us=self._cursor)
+            self._window.restart(wall=now, lost_s=self._lost_s, position_us=self._cursor)
             reason = await self._run()
         except Exception as exc:  # the source failed (`_failed`), or the sink raised: nothing lost
             reason, error = "error", exc
@@ -178,6 +320,9 @@ class ReplayClock:
         finally:  # keep the position reached, even on destroy: the cursor never moves back
             self._cursor = self._position(self._time.now())
             self._pacer = None
+            if self._backpressured:  # backpressure is a state of playback, not of the session
+                self._backpressured = False
+                self._obs.on_backpressure(False)
         self._obs.on_stop(reason, error)
         return reason
 
@@ -200,13 +345,61 @@ class ReplayClock:
             if item is None:
                 self._cursor = self._end_us
                 return "range_end"
-            if isinstance(item, ReplayGap):  # the gap policy lands with E26-T03 slice 4
+            if isinstance(item, ReplayGap):
                 self._pending = None
+                if self._gap(item, now):
+                    return "gap"
                 continue
+            behind = 0.0 if pacer is None else self._check_lag(pacer, item.ts_us, now)
             await self._deliver(item)
+            lost = self._lost_s + behind
+            if self._window.update(
+                wall=now, lost_s=lost, position_us=self._cursor, requested=self._speed
+            ):
+                self._window_closed()
             if now - sliced >= cfg.yield_slice_s:  # catching up without waits: let the loop run
                 await asyncio.sleep(0)
                 sliced = time.now()
+
+    @contextlib.asynccontextmanager
+    async def _step(self, *, recovering: bool = False) -> AsyncIterator[None]:
+        """Steps and repositions run alone: never while playing, never two at once. Only a
+        reposition may follow a source failure."""
+        if self._group is None or self._closed:
+            raise ReplayClockStateError("the replay clock is not open")
+        if self._failed is not None and not recovering:
+            raise ReplayClockStateError("the replay source failed: reposition (seek) to recover")
+        if self.playing or self._stepping:
+            raise ReplayClockStateError("pause playback before stepping")
+        self._stepping, self._sliced = True, self._time.now()
+        try:
+            yield
+        finally:
+            self._stepping = False
+
+    async def _breathe(self) -> None:
+        """A step never waits, so it yields to the loop after `yield_slice_s` of work (C-2.17)."""
+        if self._time.now() - self._sliced >= self._cfg.yield_slice_s:
+            await asyncio.sleep(0)
+            self._sliced = self._time.now()
+
+    async def _step_item(
+        self, *, before_us: int | None = None
+    ) -> RecordedEvent | StopReason | None:
+        """The next market event of a step, if before `before_us`: `"gap"` at a gap the policy
+        stops at, `None` at the bound or the end of the range (nothing past them is consumed). The
+        event stays pending until delivered; a destroy during the step raises."""
+        while True:
+            item = await self._peek()
+            if self._closed:  # destroyed meanwhile: its closed source must not read as range end
+                raise ReplayClockStateError("the replay clock was destroyed during the step")
+            if item is None or (before_us is not None and item.ts_us >= before_us):
+                return None
+            if not isinstance(item, ReplayGap):
+                return item
+            self._pending = None
+            if self._gap(item, self._time.now()):
+                return "gap"
 
     async def _peek(self) -> ReplayItem | None:
         """The next item before the range end, read ahead by one and kept until consumed."""
@@ -225,13 +418,56 @@ class ReplayClock:
             self._pending = item
         return item if item.ts_us < self._end_us else None
 
-    async def _deliver(self, event: RecordedEvent) -> None:
-        """Hand `event` to the sink. It stays pending until the sink returns: if the sink raises,
-        the next `play()` delivers it again instead of losing it."""
+    async def _deliver(self, event: RecordedEvent) -> bool:
+        """Hand `event` to the sink; `True` if it closed a bar of the active probe. It stays pending
+        until the sink returns: if the sink raises, the next `play()` delivers it again."""
         await self._sink.deliver(event)
         self._pending = None
         self._cursor = max(self._cursor, event.ts_us)
         self._emitted += 1
+        probe = self.bar_probe
+        return probe is not None and probe.apply(event)
+
+    def _gap(self, gap: ReplayGap, now: float) -> bool:
+        """Count and report a gap; `True` if the policy stops at it. `skip` compresses the gap's
+        empty time: the clock jumps to its end. A gap belongs to one (symbol, stream), so what
+        other streams recorded inside it arrives in one burst, without waits, never dropped."""
+        self._gaps += 1
+        stop = self._cfg.gap_policy == "stop"
+        self._cursor = max(self._cursor, gap.ts_us)
+        if not stop and self._pacer is not None:
+            self._pacer.skip_to(min(gap.gap_end_us, self._end_us), wall=now)
+        _log().info(
+            "replay_gap",
+            stream=gap.stream.value,
+            cause=gap.cause,
+            gap_start_us=gap.gap_start_us,
+            gap_end_us=gap.gap_end_us,
+            policy=self._cfg.gap_policy,
+        )
+        self._obs.on_gap(gap, stopped=stop)
+        return stop
+
+    def _check_lag(self, pacer: Pacer, ts_us: int, now: float) -> float:
+        """Slow the clock if the event is later than `max_lag_s` behind schedule; returns how far
+        behind it still is (counted in the achieved rate, so it reads smoothly)."""
+        lag = pacer.late(ts_us, wall=now, max_lag_s=self._cfg.max_lag_s)
+        if lag <= self._cfg.max_lag_s:
+            return max(0.0, lag)
+        self._lost_s += lag
+        self._slow_in_window = True
+        if not self._backpressured:
+            self._backpressured = True
+            _log().info("replay_backpressure", active=True)
+            self._obs.on_backpressure(True)
+        return 0.0
+
+    def _window_closed(self) -> None:
+        if self._backpressured and not self._slow_in_window:
+            self._backpressured = False
+            _log().info("replay_backpressure", active=False)
+            self._obs.on_backpressure(False)
+        self._slow_in_window = False
 
     def _position(self, now: float) -> int:
         """While paced: the schedule's position, capped at the next item not yet delivered (the

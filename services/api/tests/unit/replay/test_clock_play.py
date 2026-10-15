@@ -1,26 +1,37 @@
-"""`ReplayClock` playback (E26-T03): faithful drift-free pacing, pause and resume, unbounded mode,
-failures and per-session task ownership. Fake time only (C-13.7)."""
+"""`ReplayClock` playback (E26-T03): faithful drift-free pacing, speed changes, pause and resume,
+unbounded mode, gaps, backpressure, steps, loop wrap, failures and per-session task ownership.
+Fake time only (C-13.7)."""
 
 from __future__ import annotations
 
 import asyncio
 import itertools
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
+from candleviewer.bars.models import BarSpec, BarUpdate
+from candleviewer.bars.time_builder import TimeBarBuilder, bucket_bounds
 from candleviewer.replay import (
     STEP,
     UNBOUNDED,
     ClockConfig,
+    GapPolicy,
     ReplayClock,
     ReplayClockStateError,
+    ReplayGap,
     ReplayItem,
+    ReplayRequestInvalid,
     ReplaySourceUnavailable,
     StopReason,
 )
-from candleviewer.storage.repositories.recorded import RecordedEvent
-from tests.unit.replay._events import SECOND, T0, trade
+from candleviewer.storage.models import StreamKind
+from candleviewer.storage.repositories.recorded import RecordedEvent, RecordedTrade
+from tests.unit.bars._trades import trade as bar_trade
+from tests.unit.replay._events import SECOND, SYM, T0, delta, trade
 from tests.unit.replay._playback import ListStream, RecordingObserver, RecordingSink
 from tests.unit.replay._time import FakeTime
 
@@ -35,7 +46,7 @@ class Rig:
 
 
 def rig(
-    items: list[ReplayItem],
+    items: Sequence[ReplayItem],
     *,
     end_s: int,
     speed: float = 1.0,
@@ -61,6 +72,16 @@ async def settle() -> None:
         await asyncio.sleep(0)
 
 
+async def run_for(time: FakeTime, seconds: float, *, step: float = 0.05) -> None:
+    """Let `seconds` of fake time pass in steps well inside `max_lag_s`, as a punctual sleeper
+    would (one big jump is a 1 s oversleep, which the clock rightly treats as falling behind).
+    It settles first, so a just-started `play()` reads its first event and anchors before."""
+    await settle()
+    for _ in range(round(seconds / step)):
+        time.advance(step)
+        await settle()
+
+
 async def test_one_hour_at_1x_is_faithful_and_drift_free() -> None:
     """Ticket AC 1: every wait oversleeps up to 4 ms, yet the hour ends within 0.5 % of an hour
     and the last event is no later against its schedule than the first."""
@@ -81,19 +102,15 @@ async def test_pause_stops_at_the_reached_position_and_play_resumes_from_it() ->
     r = rig(every_second(10), end_s=10, time=FakeTime(auto=False))
     async with r.clock as clock:
         first = clock.play()
-        await settle()
-        r.time.advance(2.5)
-        await settle()
+        await run_for(r.time, 2.5)
         await clock.pause()
         assert (first.result(), len(r.sink.events)) == ("paused", 3)
         assert clock.now_us() == T0 + 2_500_000
         r.time.advance(100.0)
         second = clock.play()
-        await settle()
-        r.time.advance(0.5)  # t3 is due 0.5 s after resuming at 2.5 s
-        await settle()
+        await run_for(r.time, 0.5)  # t3 is due 0.5 s after resuming at 2.5 s
         assert len(r.sink.events) == 4
-        r.time.advance(7.0)
+        await run_for(r.time, 7.5)
         assert await second == "range_end"
     assert r.sink.events == every_second(10)
 
@@ -160,9 +177,7 @@ async def test_destroying_a_playing_session_keeps_the_cursor_it_reached() -> Non
     r = rig(every_second(5), end_s=5, time=FakeTime(auto=False))
     async with r.clock as clock:
         clock.play()
-        await settle()
-        r.time.advance(2.5)
-        await settle()
+        await run_for(r.time, 2.5)
         assert clock.now_us() == T0 + 2_500_000
     assert r.clock.now_us() == T0 + 2_500_000  # not the last delivered event, 2 s
 
@@ -277,3 +292,378 @@ async def test_the_schedule_starts_after_a_slow_first_read() -> None:
     async with r.clock as clock:
         await clock.play()
     assert [round(b - a, 6) for a, b in itertools.pairwise(r.sink.at)] == [0.1] * 4
+
+
+async def test_speed_change_takes_effect_from_the_current_position() -> None:
+    r = rig(every_second(60), end_s=60, time=FakeTime(auto=False))
+    async with r.clock as clock:
+        task = clock.play()
+        await run_for(r.time, 10.0)
+        assert len(r.sink.events) == 11
+        clock.set_speed(10.0)
+        await run_for(r.time, 1.0)  # 10 s of replay at 10x
+        assert len(r.sink.events) == 21
+        clock.set_speed(STEP)
+        assert await task == "paused"
+    assert r.clock.now_us() == T0 + 20 * SECOND
+
+
+async def test_switching_to_unbounded_mid_playback_stops_waiting() -> None:
+    r = rig(every_second(60), end_s=60, time=FakeTime(auto=False))
+    async with r.clock as clock:
+        task = clock.play()
+        await settle()
+        clock.set_speed(UNBOUNDED)
+        assert await task == "range_end"
+    assert len(r.sink.events) == 60
+
+
+@pytest.mark.parametrize(("policy", "reason"), [("skip", "range_end"), ("stop", "gap")])
+async def test_a_gap_is_counted_reported_and_handled_per_policy(
+    policy: GapPolicy, reason: StopReason
+) -> None:
+    """Ticket AC 5: skip jumps the clock to the gap end; stop pauses at the boundary."""
+    two, end = T0 + 2 * SECOND, T0 + 600 * SECOND
+    marker = ReplayGap(two, "BTCUSDT", StreamKind.TRADES, two, end, "ws_disconnect")
+    items: list[ReplayItem] = [*every_second(2), marker, trade(601 * SECOND, trade_id="after")]
+    r = rig(items, end_s=602, config=ClockConfig(gap_policy=policy))
+    start = r.time.now()
+    async with r.clock as clock:
+        assert await clock.play() == reason
+        assert clock.stats().gap_warnings == 1
+    assert r.obs.gaps == [(marker, policy == "stop")]
+    if policy == "skip":
+        assert r.sink.at[-1] - start == pytest.approx(3.0)  # 598 empty seconds compressed
+    else:
+        assert (len(r.sink.events), r.clock.now_us()) == (2, two)
+
+
+async def _play_sampling(r: Rig, *, recover_after: int = 1 << 30) -> list[float]:
+    """Play to the end, sampling the live achieved ratio; the sink speeds up after
+    `recover_after` events."""
+    ratios: list[float] = []
+    async with r.clock as clock:
+        task = clock.play()
+        while not task.done():
+            await asyncio.sleep(0)
+            if len(r.sink.events) >= recover_after:
+                r.sink.cost_s = 0.0
+            ratio = clock.stats().achieved_ratio
+            if ratio is not None:
+                ratios.append(ratio)
+        assert task.result() == "range_end"
+    return ratios
+
+
+async def test_backpressure_at_half_rate_slows_the_clock_and_drops_nothing() -> None:
+    """Ticket AC 2: at 10x, a consumer needing 20 ms per event accepts half the required rate.
+    Every event still arrives in order and the session reports an achieved rate below 10x."""
+    items = [trade(i * 100_000, trade_id=f"t{i:04}") for i in range(600)]
+    r = rig(items, end_s=60, speed=10.0)
+    r.sink.cost_s = 0.02
+    ratios = await _play_sampling(r)
+    assert r.sink.events == items
+    assert ratios and all(0.4 < ratio < 0.6 for ratio in ratios)
+    stats = r.clock.stats()  # backpressure ends with playback
+    assert (stats.events_emitted, stats.backpressured, r.obs.edges) == (600, False, [True, False])
+    assert stats.backpressure_s > 0
+
+
+async def test_backpressure_clears_once_the_consumer_keeps_up_again() -> None:
+    items = [trade(i * 100_000, trade_id=f"t{i:04}") for i in range(600)]
+    r = rig(items, end_s=60, speed=10.0)
+    r.sink.cost_s = 0.02
+    ratios = await _play_sampling(r, recover_after=200)
+    assert r.obs.edges == [True, False]
+    assert ratios[-1] == 1.0 and not r.clock.stats().backpressured
+
+
+@given(
+    offsets=st.lists(st.integers(0, 30 * SECOND), max_size=40),
+    speed=st.sampled_from([0.5, 1.0, 10.0, 100.0, UNBOUNDED]),
+    cost_ms=st.integers(0, 40),
+)
+def test_playback_never_drops_reorders_or_runs_early_and_the_cursor_never_goes_back(
+    offsets: list[int], speed: float, cost_ms: int
+) -> None:
+    items: list[ReplayItem] = [trade(o, trade_id=f"t{i:03}") for i, o in enumerate(sorted(offsets))]
+
+    async def main() -> tuple[Rig, list[int], float]:
+        r = rig(items, end_s=31, speed=speed)
+        r.sink.cost_s, start, cursors = cost_ms / 1_000, r.time.now(), []
+        async with r.clock as clock:
+            task = clock.play()
+            while not task.done():
+                cursors.append(clock.now_us())
+                await asyncio.sleep(0)
+        return r, cursors, start
+
+    r, cursors, start = asyncio.run(main())
+    assert r.sink.events == items
+    assert cursors == sorted(cursors) and all(T0 <= c <= T0 + 31 * SECOND for c in cursors)
+    if speed > 0:
+        for event, at in zip(r.sink.events, r.sink.at, strict=True):
+            assert at - start >= (event.ts_us - T0) / (speed * SECOND) - 0.001 - 1e-9
+
+
+@pytest.mark.parametrize("resent", [(1.0,), (1.01, 1.0)], ids=["same", "alternating"])
+async def test_speed_resends_never_forgive_lateness_or_hide_backpressure(
+    resent: tuple[float, ...],
+) -> None:
+    """Regression: the UI re-sends a speed after every event while the sink falls 50 ms behind
+    per event. The same speed is a no-op, and a real change re-anchors from the schedule's own
+    position, so the lateness builds up and is booked. Before the fix every re-send forgave it."""
+    time, speeds = FakeTime(), itertools.cycle(resent)
+
+    class ResendingSink(RecordingSink):
+        clock: ReplayClock | None = None
+
+        async def deliver(self, event: RecordedEvent) -> None:
+            await super().deliver(event)
+            if self.clock is not None:
+                self.clock.set_speed(next(speeds))
+
+    sink = ResendingSink(time, cost_s=0.15)
+    items = [trade(i * 100_000, trade_id=f"t{i}") for i in range(30)]
+    r = rig(items, end_s=3, time=time, sink=sink)
+    sink.clock = r.clock
+    async with r.clock as clock:
+        assert await clock.play() == "range_end"
+    assert r.clock.stats().backpressure_s > 0 and r.obs.edges[:1] == [True]
+
+
+async def test_an_event_exactly_at_the_range_end_is_not_delivered() -> None:
+    """The range is half-open: `[start, end)`."""
+    r = rig([*every_second(2), trade(2 * SECOND, trade_id="at-end")], end_s=2, speed=UNBOUNDED)
+    async with r.clock as clock:
+        assert await clock.play() == "range_end"
+    assert r.sink.events == every_second(2)
+
+
+async def test_step_events_delivers_exactly_that_many_at_once() -> None:
+    r = rig(every_second(10), end_s=10, speed=STEP)
+    async with r.clock as clock:
+        assert await clock.step_event() == "step"
+        assert await clock.step_events(3) == "step"
+        assert (len(r.sink.events), clock.now_us()) == (4, T0 + 3 * SECOND)
+        assert await clock.step_events(100) == "range_end"
+    assert (r.sink.events, r.time.waits) == (every_second(10), 0)
+
+
+async def test_step_ms_delivers_its_window_and_lands_the_cursor_at_the_end() -> None:
+    r = rig(every_second(10), end_s=10, speed=STEP)
+    async with r.clock as clock:
+        assert await clock.step_ms(1_500) == "step"
+        assert (len(r.sink.events), clock.now_us()) == (2, T0 + 1_500_000)
+        assert await clock.step_ms(60_000) == "range_end"
+        assert (len(r.sink.events), clock.now_us()) == (10, T0 + 10 * SECOND)
+
+
+class TimeBarProbe:
+    """`BarProbe` over the real `TimeBarBuilder`: every close it reports is the builder's own."""
+
+    def __init__(self, spec: BarSpec) -> None:
+        self.spec, self.builder, self.closes = spec, TimeBarBuilder(spec, SYM), 0
+        self._due: int | None = None
+
+    def due_us(self) -> int | None:
+        return self._due
+
+    def apply(self, event: RecordedEvent) -> bool:
+        if not isinstance(event.payload, RecordedTrade):
+            return False
+        self._due = bucket_bounds(self.spec, event.ts_us)[1]
+        return self._count(self.builder.on_trade(bar_trade(event.ts_us, event.payload.price)))
+
+    def tick(self, now_us: int) -> bool:
+        closed = self._count(self.builder.on_clock(now_us))
+        self._due = None if closed else self._due
+        return closed
+
+    def _count(self, updates: Sequence[BarUpdate]) -> bool:
+        closed = sum(u.kind == "close" for u in updates)
+        self.closes += closed
+        return closed > 0
+
+
+async def test_step_bar_reveals_exactly_one_bar_of_the_active_spec() -> None:
+    """Ticket AC 3: at speed 0 with a 1-minute BarSpec, each step_bar closes exactly one bar of
+    the real builder, and the book events in that minute arrive with its trades."""
+    items = sorted(
+        [*(trade(i * 10 * SECOND, trade_id=f"t{i}") for i in range(30)), delta(25 * SECOND)],
+        key=lambda e: e.ts_us,
+    )
+    r = rig(items, end_s=300, speed=STEP)
+    probe = r.clock.bar_probe = TimeBarProbe(BarSpec(kind="time", interval_ms=60_000))
+    async with r.clock as clock:
+        for minute in (1, 2):
+            assert await clock.step_bar() == "step"
+            assert (probe.closes, clock.now_us()) == (minute, T0 + minute * 60 * SECOND)
+            assert r.sink.events == [e for e in items if e.ts_us < T0 + minute * 60 * SECOND]
+
+
+async def test_steps_refuse_while_playing_bad_sizes_and_a_missing_probe() -> None:
+    r = rig(every_second(5), end_s=5, time=FakeTime(auto=False))
+    async with r.clock as clock:
+        with pytest.raises(ReplayClockStateError, match="bar probe"):
+            await clock.step_bar()
+        clock.play()
+        with pytest.raises(ReplayClockStateError, match="pause playback"):
+            await clock.step_events()
+        await clock.pause()
+        with pytest.raises(ReplayRequestInvalid, match="one event"):
+            await clock.step_events(0)
+        with pytest.raises(ReplayRequestInvalid, match="1 ms"):
+            await clock.step_ms(0)
+
+
+@pytest.mark.parametrize(("policy", "reason", "count"), [("stop", "gap", 2), ("skip", "step", 3)])
+async def test_a_gap_ends_a_step_under_stop_and_is_stepped_over_under_skip(
+    policy: GapPolicy, reason: StopReason, count: int
+) -> None:
+    two = T0 + 2 * SECOND
+    marker = ReplayGap(two, SYM, StreamKind.TRADES, two, T0 + 5 * SECOND, "ws_disconnect")
+    items: list[ReplayItem] = [*every_second(2), marker, trade(6 * SECOND, trade_id="after")]
+    r = rig(items, end_s=10, speed=STEP, config=ClockConfig(gap_policy=policy))
+    async with r.clock as clock:
+        assert await clock.step_events(3) == reason
+        assert await clock.step_ms(1_000) == "step"
+    assert (len(r.sink.events), r.obs.gaps) == (count, [(marker, policy == "stop")])
+
+
+async def test_a_loop_wraps_back_to_its_start_and_plays_the_range_again() -> None:
+    """US-RPL-008: playback stops at the loop end (B12 RANGE_END); the loop-enabled session
+    repositions to the loop start, which is the only way the cursor moves back."""
+    loop = [trade(i * SECOND, trade_id=f"t{i}") for i in range(10, 20)]
+    r = rig([], end_s=60)
+    async with r.clock as clock:
+        await clock.reposition(ListStream(loop), at_us=T0 + 10 * SECOND, end_us=T0 + 20 * SECOND)
+        assert await clock.play() == "range_end"
+        assert clock.now_us() == T0 + 20 * SECOND
+        await clock.reposition(ListStream(loop), at_us=T0 + 10 * SECOND)
+        assert clock.now_us() == T0 + 10 * SECOND
+        assert await clock.play() == "range_end"
+        with pytest.raises(ReplayRequestInvalid, match="inside the session"):
+            await clock.reposition(ListStream([]), at_us=T0 + 20 * SECOND)  # the end is outside
+    assert (r.sink.events, r.stream.closes) == (loop + loop, 1)
+
+
+class CountProbe:
+    """A count bar (a tick bar of `n` events): it closes on an event, never on time."""
+
+    def __init__(self, n: int) -> None:
+        self.n, self.seen = n, 0
+
+    def due_us(self) -> int | None:
+        return None
+
+    def apply(self, event: RecordedEvent) -> bool:
+        self.seen += 1
+        return self.seen % self.n == 0
+
+    def tick(self, now_us: int) -> bool:
+        return False
+
+
+async def test_step_bar_on_a_count_bar_stops_on_the_closing_event() -> None:
+    r = rig(every_second(5), end_s=5, speed=STEP)
+    r.clock.bar_probe = CountProbe(3)
+    async with r.clock as clock:
+        assert await clock.step_bar() == "step"
+        assert len(r.sink.events) == 3
+        assert await clock.step_bar() == "range_end"
+    assert len(r.sink.events) == 5
+
+
+async def test_stop_at_gap_ends_step_ms_and_step_bar_at_the_boundary() -> None:
+    a, b = T0 + SECOND, T0 + 2 * SECOND
+    items: list[ReplayItem] = [
+        trade(0, trade_id="t0"),
+        ReplayGap(a, SYM, StreamKind.TRADES, a, b, "ws_disconnect"),
+        ReplayGap(b, SYM, StreamKind.TICKERS, b, T0 + 3 * SECOND, "ws_disconnect"),
+        trade(4 * SECOND, trade_id="t4"),
+    ]
+    r = rig(items, end_s=5, speed=STEP, config=ClockConfig(gap_policy="stop"))
+    r.clock.bar_probe = CountProbe(10)
+    async with r.clock as clock:
+        assert await clock.step_ms(5_000) == "gap"
+        assert await clock.step_bar() == "gap"
+        assert (len(r.sink.events), clock.now_us()) == (1, b)
+
+
+@pytest.mark.parametrize("kind", ["events", "ms", "bar"])
+async def test_a_long_step_yields_to_the_event_loop(kind: str) -> None:
+    """Regression R3: a 5 000-event step through a CPU-bound sink held the loop for the whole
+    step (151 ms for step_bar over the dense minute); it now yields every time slice."""
+    ticks, time = 0, FakeTime()
+
+    async def ticker() -> None:
+        nonlocal ticks
+        while True:
+            ticks += 1
+            await asyncio.sleep(0)
+
+    background = asyncio.ensure_future(ticker())
+    r = rig(every_second(5_000), end_s=5_000, speed=STEP, time=time, sink=BusySink(time))
+    r.clock.bar_probe = CountProbe(5_000)
+    async with r.clock as clock:
+        if kind == "events":
+            await clock.step_events(5_000)
+        elif kind == "ms":
+            await clock.step_ms(5_000_000)
+        else:
+            await clock.step_bar()
+    background.cancel()
+    assert len(r.sink.events) == 5_000 and ticks >= 1_000
+
+
+async def test_a_destroy_during_a_step_raises_instead_of_reporting_the_range_end() -> None:
+    gate = asyncio.Event()
+
+    class ParkedStream(ListStream):
+        async def __anext__(self) -> ReplayItem:
+            if self._next == 1:  # the step's second read parks
+                await gate.wait()
+            return await super().__anext__()
+
+    r = rig([], end_s=5, speed=STEP, stream=ParkedStream(every_second(5)))
+    async with r.clock as clock:
+        stepping = asyncio.ensure_future(clock.step_events(3))
+        await settle()
+        await clock.aclose()  # the session is destroyed while the step's read is parked
+        gate.set()
+        with pytest.raises(ReplayClockStateError, match="destroyed during the step"):
+            await stepping
+
+
+async def test_steps_refuse_after_a_source_failure_until_a_reposition() -> None:
+    error = ReplaySourceUnavailable(tier="parquet", symbol=SYM, stream=None, reason="io")
+    r = rig([], end_s=5, speed=STEP, stream=ListStream(every_second(5), fail_at=1, error=error))
+    async with r.clock as clock:
+        with pytest.raises(ReplaySourceUnavailable):
+            await clock.step_events(3)
+        with pytest.raises(ReplayClockStateError, match="reposition"):
+            await clock.step_events()
+        await clock.reposition(ListStream(every_second(5)[2:]), at_us=T0 + 2 * SECOND)
+        assert await clock.step_events(3) == "step"
+    assert len(r.sink.events) == 4
+
+
+async def test_a_reposition_closes_the_old_source_even_if_its_caller_is_cancelled() -> None:
+    gate = asyncio.Event()
+
+    class SlowClose(ListStream):
+        async def aclose(self) -> None:
+            await gate.wait()
+            await super().aclose()
+
+    old = SlowClose(every_second(3))
+    r = rig([], end_s=5, speed=STEP, stream=old)
+    async with r.clock as clock:
+        moving = asyncio.ensure_future(clock.reposition(ListStream([]), at_us=T0 + SECOND))
+        await settle()
+        moving.cancel()
+        await settle()
+        gate.set()
+        await settle()
+        assert moving.cancelled() and old.closes == 1
