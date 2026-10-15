@@ -167,6 +167,19 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "ReplayTiers",
         "ReplayWindowTooLarge",
         "SourceTier",
+        # E26-T03: the replay clock's playback ports, config and speeds (24 Sec.13.7).
+        "STEP",
+        "UNBOUNDED",
+        "ClockConfig",
+        "GapPolicy",
+        "LoopTime",
+        "MonotonicTime",
+        "PlaybackObserver",
+        "PlaybackStats",
+        "ReplaySink",
+        "ReplayStream",
+        "StopReason",
+        "check_speed",
     },
 }
 
