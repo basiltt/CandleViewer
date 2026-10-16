@@ -1,8 +1,8 @@
 """The idle lock end to end (#2300; contract info "Idle lock"; Gherkin of the ticket).
 
 The real `create_app()` over the in-memory auth stack of `_stack.py`, so the CSRF guard, the
-idle-lock gate, the read-only guard, the routes and an audit writer that refuses unregistered
-actions all run as deployed. No network, no sleeps (C-13.5, C-13.7).
+idle-lock gate, the read-only guard, the routes, the real B16 chart and an audit writer that
+refuses unregistered actions all run as deployed. No network, no sleeps (C-13.5, C-13.7).
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ from typing import Any, cast
 from fastapi import FastAPI
 
 from candleviewer.api.contract_conformance import load_openapi_spec
+from candleviewer.api.csrf import route_path
+from candleviewer.api.deny_by_default import served_operations
 from candleviewer.api.idle_lock import ungated_operations
 from candleviewer.api.sessions import REFRESH_COOKIE
 from candleviewer.auth.csrf import CSRF_COOKIE
@@ -21,7 +23,7 @@ from candleviewer.auth.models import MintedSession
 from candleviewer.auth.session_service import ACCESS_TOKEN_TTL
 from tests.csrf_helpers import csrf_headers
 
-from ._stack import ORIGIN, Stack
+from ._stack import ORIGIN, PW, Stack
 
 _IDLE_S = 300  # locks while the 12 min access token still lives
 _HTTP = ("get", "put", "post", "patch", "delete")
@@ -135,6 +137,40 @@ def test_the_kill_switch_cannot_be_driven_from_a_locked_session(stack: Stack) ->
     assert len(calls) == 1 and stack.audit.records == []
 
 
+def test_a_locked_session_reads_itself_and_unlocks_with_the_password_only(stack: Stack) -> None:
+    """AC "Unlock with the password only", through the real guards, chart and audit writer."""
+    minted = _session(stack, "returning")
+    _lock(stack)
+    headers = _headers(stack, minted)
+    info = stack.client.get("/auth/session", headers=headers)
+    assert info.status_code == 200 and info.json()["session"]["locked"] is True
+    r = stack.client.post("/auth/unlock", headers=headers, json={"password": PW})
+    assert r.status_code == 200, r.text
+    assert r.json()["session"]["locked"] is False and r.json()["step_up_expires_at"] is None
+    assert [rec["action"] for rec in stack.audit.records] == [
+        "auth.idle_locked",
+        "auth.session_unlocked",
+    ]
+    after = stack.client.get("/auth/sessions", headers=headers)
+    assert after.status_code == 200  # the gate lets the unlocked session through again
+
+
+def test_after_a_reload_the_cookie_alone_unlocks_through_the_csrf_guard(stack: Stack) -> None:
+    minted = _session(stack, "reloaded")
+    stack.clock.now += ACCESS_TOKEN_TTL  # locked, and the access token is gone
+    csrf = csrf_headers(stack.state.csrf_codec, minted.session_id)
+    cookie = f"{csrf['Cookie']}; {REFRESH_COOKIE}={minted.refresh_token}"
+    stack.client.cookies.clear()
+    headers = {**csrf, "Cookie": cookie, "Origin": ORIGIN}
+    assert stack.client.get("/auth/session", headers=headers).json()["session"]["locked"]
+    refresh = stack.client.post("/auth/refresh", headers=headers)
+    assert (refresh.status_code, _code(refresh)) == (401, "session_idle_locked")
+    r = stack.client.post("/auth/unlock", headers=headers, json={"password": PW})
+    assert r.status_code == 200, r.text
+    rotated = stack.client.post("/auth/refresh", headers=headers)
+    assert rotated.status_code == 200, rotated.text
+
+
 def test_an_expired_access_token_of_a_locked_session_stays_unauthenticated(
     stack: Stack,
 ) -> None:
@@ -239,3 +275,16 @@ def test_a_live_access_token_binds_logout_to_its_own_session_whatever_the_cookie
     r = stack.client.post("/auth/logout", headers=headers)
     assert (r.status_code, _code(r)) == (403, "csrf_token_invalid")
     assert _live(stack, mine) and _live(stack, theirs)
+
+
+def test_no_one_click_arm_route_is_served_while_unlock_cannot_invalidate_an_arm_record(
+    stack: Stack,
+) -> None:
+    """Catalogue B16.7 ordering (#2305): an `arm_token` must never outlive an unlock. This app
+    serves `POST /auth/unlock` and has no arm record, so `POST /settings/arm` is not served.
+    #2305 adds the record, its invalidation in the write that lifts a lock
+    (`lift_idle_lock`) and its regression test, and only then replaces this guard."""
+    app = cast(FastAPI, stack.client.app)
+    served = {(method, route_path(path)) for method, path in served_operations(app)}
+    assert ("POST", "/auth/unlock") in served
+    assert not [op for op in served if op[1] == "/settings/arm"]

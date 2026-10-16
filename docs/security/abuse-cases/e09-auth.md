@@ -149,9 +149,12 @@ Evidence for AC-AUD-01/02, all in the CI integration lane (`pytest tests/integra
   `test_truncate_refused_even_for_owner` in `services/api/tests/integration/audit/test_audit_repository.py`.
 
 Evidence for AC-LOCK-01..04 (#2300, `POST /auth/unlock`): router-level tests in
-`services/api/tests/unit/api/idle_lock/`, in `test_unlock.py` unless another file is named. The
-deployed app keeps the route dark until #2300's last slice wires it: `create_app()` passes no unlock
-authority yet, so it answers 503 to everyone.
+`services/api/tests/unit/api/idle_lock/`, in `test_unlock.py` unless another file is named. In the
+deployed app, `CsrfMiddleware` refuses a foreign `Origin` and then hands `POST /auth/unlock` to the
+route's own SR-041 check, as it does refresh (`_ROUTE_CHECKED_PATHS` in `api/csrf.py`). Through
+`create_app()`: `test_a_locked_session_reads_itself_and_unlocks_with_the_password_only` and
+`test_after_a_reload_the_cookie_alone_unlocks_through_the_csrf_guard`
+(`services/api/tests/security/auth/test_idle_lock_http.py`).
 
 - AC-LOCK-01: `test_unlock_with_the_password_lifts_the_lock_and_restamps_the_deadline`,
   `test_unlock_clears_every_step_up_grant_in_the_one_write_that_lifts_the_lock` (no unlock carries

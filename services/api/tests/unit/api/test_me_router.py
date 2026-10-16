@@ -196,11 +196,13 @@ async def test_get_for_a_user_the_identity_store_no_longer_has_is_401(env: _Env,
     _assert_problem(env.client.get(path, headers=headers), 401, "unauthenticated")
 
 
-async def test_a_request_is_activity_that_extends_the_idle_deadline(env: _Env) -> None:
+async def test_a_request_is_never_activity_and_leaves_the_idle_deadline(env: _Env) -> None:
+    """#2300, contract "Idle lock": activity is explicit (only extend and unlock record it)."""
     _, headers, minted = await env.sign_in(idle_timeout_s=600)
+    signed_in_at = env.repo.sessions[str(minted.session_id)].last_seen_at
     env.now += timedelta(minutes=8)
     assert env.client.get(_ME, headers=headers).status_code == 200
-    assert env.repo.sessions[str(minted.session_id)].last_seen_at == env.now
+    assert env.repo.sessions[str(minted.session_id)].last_seen_at == signed_in_at
 
 
 # -- authorisation: `settings:read` for preferences and keymap, none for /me -------------------

@@ -152,11 +152,12 @@ class World:
             chart=SessionChart(),
         )
         self.audit = _Audit()
+        self.auth = _Auth(self.sessions)
 
         app = FastAPI()
         app.include_router(
             make_session_router(
-                _Auth(self.sessions),
+                self.auth,
                 self.audit,
                 identity=_Identity() if identity else None,
                 allowed_origins=frozenset({_ORIGIN}),
