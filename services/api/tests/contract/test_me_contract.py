@@ -29,6 +29,10 @@ _OPERATIONS: dict[str, tuple[str, type[BaseModel] | None]] = {
 }
 _PATHS = list(_OPERATIONS)
 _ROLES = ACTORS[:4]  # every authenticated actor
+#: Every status the three routes answer. 403: no `settings:read`, or no live role for `/me`. 501: no
+#: identity provider is wired (the fake storage backend), answered after authenticating. 503: the
+#: session backend is not active, or failed under the authentication call.
+_ANSWERED = {"200", "401", "403", "422", "501", "503"}
 
 
 @pytest.fixture(scope="module")
@@ -53,8 +57,7 @@ def _response_schema(path: str, status: str) -> Any:
 @pytest.mark.parametrize("path", _PATHS)
 def test_the_operation_declares_every_status_the_route_can_answer(path: str) -> None:
     declared = set(_operation(path)["responses"])
-    expected = {"200", "401", "403", "422"}  # 403: no `settings:read`, or no live role for `/me`
-    assert declared >= expected, f"{path}: the contract lacks {sorted(expected - declared)}"
+    assert declared >= _ANSWERED, f"{path}: the contract lacks {sorted(_ANSWERED - declared)}"
     assert _operation(path)["operationId"] == _OPERATIONS[path][0]
 
 

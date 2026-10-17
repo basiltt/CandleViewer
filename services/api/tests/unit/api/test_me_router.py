@@ -36,11 +36,17 @@ _ACCOUNT = "00000000-0000-4000-8000-00000000000a"
 
 
 def _assert_problem(resp: Any, status: int, code: str) -> dict[str, Any]:
-    """A contract `Problem` (RFC 9457) with the stable `code`, nothing else of the caller."""
+    """A `Problem` (RFC 9457) with the stable `code`, nothing else of the caller, and the answer
+    the contract declares for `status` on the operation `resp` came from (C-6.2): an undeclared
+    status fails here, and so does a body its declared response does not describe."""
     assert resp.status_code == status, resp.text
     assert resp.headers["content-type"].startswith("application/problem+json")
+    path = resp.request.url.path.removeprefix("/api/v1")
+    declared = _SPEC["paths"][path]["get"]["responses"]
+    assert str(status) in declared, f"{path} answers {status}, which the contract does not declare"
     body: dict[str, Any] = resp.json()
-    jsonschema.validate(body, deref(_SPEC, {"$ref": "#/components/schemas/Problem"}))
+    schema = deref(_SPEC, declared[str(status)])["content"]["application/problem+json"]["schema"]
+    jsonschema.validate(body, schema)
     assert body["code"] == code
     return body
 
