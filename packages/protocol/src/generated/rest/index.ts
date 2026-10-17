@@ -9994,6 +9994,7 @@ export interface operations {
           "application/json": components["schemas"]["Backup"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -10238,6 +10239,7 @@ export interface operations {
           "application/json": components["schemas"]["CapacityReport"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   setSubaccountTier: {
@@ -10547,6 +10549,7 @@ export interface operations {
           "application/json": components["schemas"]["AdminOverview"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   compactRecorder: {
@@ -10725,6 +10728,7 @@ export interface operations {
           "application/json": components["schemas"]["SecuritySummary"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   listStatecharts: {
@@ -11033,6 +11037,7 @@ export interface operations {
           "application/json": components["schemas"]["Alert"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
       422: components["responses"]["UnprocessableEntity"];
     };
@@ -11800,6 +11805,7 @@ export interface operations {
         };
       };
       401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
       503: components["responses"]["ServiceUnavailable"];
     };
@@ -12031,6 +12037,7 @@ export interface operations {
           "application/json": components["schemas"]["ChartTemplate"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -12122,6 +12129,7 @@ export interface operations {
           "application/json": components["schemas"]["DetectorConfig"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   setDetectorConfig: {
@@ -12178,6 +12186,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   listDrawings: {
@@ -13086,6 +13095,7 @@ export interface operations {
           "application/json": components["schemas"]["AccountProfile"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -13452,6 +13462,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   listInstruments: {
@@ -13487,6 +13498,7 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      403: components["responses"]["Forbidden"];
       503: components["responses"]["ServiceUnavailable"];
     };
   };
@@ -13511,6 +13523,7 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
       503: components["responses"]["ServiceUnavailable"];
     };
@@ -13535,6 +13548,7 @@ export interface operations {
           "application/json": components["schemas"]["Ticker"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
       503: components["responses"]["ServiceUnavailable"];
     };
@@ -13892,6 +13906,7 @@ export interface operations {
           "application/json": components["schemas"]["JournalTradeDetail"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -13956,6 +13971,7 @@ export interface operations {
           "application/json": components["schemas"]["JournalTradeContext"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -14124,6 +14140,7 @@ export interface operations {
           "application/json": components["schemas"]["DataCoverage"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -14164,6 +14181,7 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
     };
   };
@@ -14291,6 +14309,7 @@ export interface operations {
           "application/json": components["schemas"]["HeatmapResponse"];
         };
       };
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
     };
   };
@@ -14406,6 +14425,7 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
     };
   };
@@ -14516,6 +14536,7 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
     };
   };
@@ -14539,6 +14560,7 @@ export interface operations {
           "application/json": components["schemas"]["RegimeExplanation"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   getTrades: {
@@ -14575,6 +14597,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
     };
   };
@@ -14646,6 +14669,7 @@ export interface operations {
           "application/json": components["schemas"]["EffectiveLimits"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   getMyPreferences: {
@@ -14726,6 +14750,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   revokeMySession: {
@@ -14789,6 +14814,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   getOnboardingChecklist: {
@@ -14809,6 +14835,7 @@ export interface operations {
           "application/json": components["schemas"]["OnboardingChecklist"];
         };
       };
+      403: components["responses"]["Forbidden"];
       422: components["responses"]["UnprocessableEntity"];
     };
   };
@@ -14981,6 +15008,7 @@ export interface operations {
           "application/json": components["schemas"]["OrderWithEvents"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -15084,6 +15112,7 @@ export interface operations {
           "application/json": components["schemas"]["OrderDiagnostics"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -15202,6 +15231,7 @@ export interface operations {
           "application/json": components["schemas"]["Position"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -15653,6 +15683,7 @@ export interface operations {
           "application/json": components["schemas"]["RecordedSymbol"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -15858,6 +15889,7 @@ export interface operations {
           "application/json": components["schemas"]["ReplaySession"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -16110,6 +16142,7 @@ export interface operations {
           "application/json": components["schemas"]["RuleDetail"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -16472,6 +16505,7 @@ export interface operations {
           "application/json": components["schemas"]["RuleVersionDetail"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -16610,6 +16644,7 @@ export interface operations {
         };
         content?: never;
       };
+      403: components["responses"]["Forbidden"];
       /** @description Engine offline - the registry is empty or not wired. */
       503: {
         headers: {
@@ -16656,6 +16691,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   getRuleIrSchema: {
@@ -16678,6 +16714,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   setSessionEnvironment: {
@@ -17037,6 +17074,7 @@ export interface operations {
           "application/json": components["schemas"]["BuildInfo"];
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   postFrontendTelemetry: {
@@ -17169,6 +17207,7 @@ export interface operations {
           "application/json": components["schemas"]["TradeGroup"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
@@ -17882,6 +17921,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   listWatchlists: {
@@ -17904,6 +17944,7 @@ export interface operations {
           };
         };
       };
+      403: components["responses"]["Forbidden"];
     };
   };
   createWatchlist: {
@@ -18230,6 +18271,7 @@ export interface operations {
           "application/json": components["schemas"]["WorkspaceBundle"];
         };
       };
+      403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
     };
   };
