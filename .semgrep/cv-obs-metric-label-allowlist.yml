@@ -42,9 +42,11 @@ rules:
       #   conflict, store_unavailable, required, kind_mismatch, unknown_user,
       #   overrides_not_allowed, gate_evidence_required, https_required, credential_in_url,
       #   string_too_long}; with `flag`, max_series=256.
+      # table (E29-T01, #845): the five tables the OMS repositories write {orders, order_events,
+      #   executions, positions, position_snapshots}, a `Literal` in code; max_series=5.
       - metavariable-regex:
           metavariable: $LABEL
-          regex: "^(?!(action|bucket|cause|endpoint_group|engine|entity_kind|event|filter_class|flag|kind|method|operation|permission|reason|resource|result|route|rule|rule_id|screen|sha256|socket|stage|state|status_class|stream|symbol|tool|topic|transport|trigger_mode|version)$).*$"
+          regex: "^(?!(action|bucket|cause|endpoint_group|engine|entity_kind|event|filter_class|flag|kind|method|operation|permission|reason|resource|result|route|rule|rule_id|screen|sha256|socket|stage|state|status_class|stream|symbol|table|tool|topic|transport|trigger_mode|version)$).*$"
     paths:
       include:
         - "services/api/candleviewer/**"
