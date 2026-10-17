@@ -32,6 +32,7 @@ from fastapi.responses import JSONResponse
 
 from candleviewer.account_fixture_wiring import AccountFixture, build_account_fixture
 from candleviewer.accounts.service import AccountsService
+from candleviewer.admin.account_access import AccountAccessService
 from candleviewer.admin.flags import default_registry
 from candleviewer.admin.http import AdminAreaRefused, admin_area_refused_handler
 from candleviewer.admin.ops.health import AdminHealthService
@@ -1312,6 +1313,12 @@ def create_app(
         user_role_store = build_user_role_store(resolved)
     if account_access_store is None:
         account_access_store = build_account_access_store(resolved, ctx.audit)
+    # #2648 S9c: grant writes and their pushes (drained at shutdown, main.py); positions unknown.
+    access_service: AccountAccessService | None = None
+    if account_access_store is not None:
+        notifier, positions = app.state.ws_events, _NoPositionStore()
+        access_service = AccountAccessService(account_access_store, notifier, positions=positions)
+    app.state.account_access_service = access_service
     # E09-S04: step-up, owner TOTP reset and the read-only write guard.
     app.include_router(
         make_step_up_router(
@@ -1335,6 +1342,7 @@ def create_app(
             ws_registry,
             auth=ctx.auth,
             account_access=account_access_store,
+            access_service=access_service,
         )
     )
     app.include_router(
