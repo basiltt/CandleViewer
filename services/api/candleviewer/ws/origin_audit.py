@@ -102,15 +102,23 @@ class OriginRefusalAudit:
         try:
             await asyncio.wait_for(asyncio.shield(task), self._timeout_s)
         except TimeoutError:
+            # The clock, unless the writer raised `TimeoutError` itself: the task's outcome decides.
+            failure = task.exception() if task.done() and not task.cancelled() else None
+            if failure is not None:
+                self._unavailable(check, failure)
+                return True
             self._tracker.mark_timed_out(task)  # left to finish; the tracker reports a late failure
             _log().warning("auth.ws_origin_refused.audit_slow", check=check.value)
         except asyncio.CancelledError:
             self._tracker.mark_timed_out(task)  # nobody awaits it now; the cancel still propagates
             raise
         except Exception as exc:
-            _log().error(
-                "auth.ws_origin_refused.audit_unavailable",
-                check=check.value,
-                error=type(exc).__name__,
-            )
+            self._unavailable(check, exc)
         return True
+
+    @staticmethod
+    def _unavailable(check: OriginRefusal, exc: BaseException) -> None:
+        """A write that failed: logged by its type only, never its message."""
+        _log().error(
+            "auth.ws_origin_refused.audit_unavailable", check=check.value, error=type(exc).__name__
+        )
