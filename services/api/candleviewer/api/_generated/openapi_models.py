@@ -6,6 +6,7 @@ Source: docs/plan/22-api-openapi.yaml, via datamodel-code-generator.
 
 from __future__ import annotations
 
+from ipaddress import IPv4Address, IPv6Address
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -23,6 +24,7 @@ from pydantic import (
     RootModel,
     SecretStr,
 )
+from typing_extensions import TypeAliasType
 
 
 Decimal = Annotated[
@@ -664,6 +666,39 @@ class CreateApiKeyRequest(BaseModel):
     expected_uid: Annotated[
         str | None,
         Field(description="Must equal the account's `exchange_uid`; mismatch is rejected."),
+    ] = None
+
+
+class PermissionsAdditionalPropertyItem(RootModel[str]):
+    root: Annotated[str, Field(pattern="^[A-Za-z][A-Za-z0-9]{0,63}$")]
+
+
+PermissionsAdditionalProperty = TypeAliasType(
+    "PermissionsAdditionalProperty",
+    Annotated[list[PermissionsAdditionalPropertyItem], Field(max_length=32)],
+)
+
+
+class IpWhitelistItem(RootModel[str]):
+    root: Annotated[str, Field(max_length=49, pattern="^([*]|[0-9A-Fa-f:.]{2,45}(/[0-9]{1,3})?)$")]
+
+
+class KeyVerificationNotRead(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    passed: Literal[False]
+    egress_ip: Annotated[
+        IPv4Address | IPv6Address | None,
+        Field(
+            description="The deployment's configured egress IP (`CV_EGRESS_IP`), the one address a key's IP whitelist may hold; `null` while none is configured. It comes from configuration, never from a request header. It is the address the Owner adds to the key's whitelist at the exchange when the exchange refused the egress IP or `ip_whitelist_matches_egress` is false (US-ACCT-003). Confidential: served only to a caller holding `keys:manage` or `keys:read`, and never written to an audit record or used as a metric label.\n"
+        ),
+    ] = None
+
+
+class KeyExchangeProblem(Problem):
+    exchange: Annotated[
+        Exchange | None, Field(description="Present when the failure originated at Bybit.")
     ] = None
 
 
@@ -5933,19 +5968,35 @@ class KeyVerification(BaseModel):
         Field(description="From the key-info `readOnly` field, which alone decides write access."),
     ] = None
     permissions: Annotated[
-        dict[str, list[str]] | None,
+        dict[str, PermissionsAdditionalProperty] | None,
         Field(
-            description="As reported. Every right must be on the `createApiKey` allow-list (step 2)."
+            description="As reported. Every right must be on the `createApiKey` allow-list (step 2). A group or right whose name is not a plain identifier is left out of the display, though the right is still refused.\n",
+            max_length=32,
         ),
     ] = None
     withdraw_enabled: Annotated[
-        bool, Field(description="Must be false; a true value causes rejection.")
+        bool,
+        Field(
+            description="Must be false; a true value causes rejection. Sent only once the key's rights were read, never as a default (`KeyVerificationNotRead`)."
+        ),
     ]
-    ip_whitelist: list[str] | None = None
+    ip_whitelist: Annotated[
+        list[IpWhitelistItem] | None,
+        Field(
+            description="At most 20 entries, each an address, a range or `*`: any other entry is left out of the display.\n",
+            max_length=20,
+        ),
+    ] = None
     ip_whitelist_matches_egress: Annotated[
         bool | None,
         Field(
             description="True only when the whitelist is non-empty and every entry is the configured egress IP itself (no wildcard, no range)."
+        ),
+    ] = None
+    egress_ip: Annotated[
+        IPv4Address | IPv6Address | None,
+        Field(
+            description="The deployment's configured egress IP (`CV_EGRESS_IP`), the one address a key's IP whitelist may hold; `null` while none is configured. It comes from configuration, never from a request header. It is the address the Owner adds to the key's whitelist at the exchange when the exchange refused the egress IP or `ip_whitelist_matches_egress` is false (US-ACCT-003). Confidential: served only to a caller holding `keys:manage` or `keys:read`, and never written to an audit record or used as a metric label.\n"
         ),
     ] = None
     clock_offset_ms: int | None = None
@@ -5958,6 +6009,14 @@ class ApiKeyWithVerification(BaseModel):
     verification: KeyVerification | None = None
 
 
+class KeyRejectedProblem(Problem):
+    code: Annotated[
+        Literal["validation_failed"],
+        Field(description="Stable machine-readable error code from `x-error-codes`."),
+    ]
+    verification: KeyVerification | KeyVerificationNotRead | None = None
+
+
 class ApiKeyRotation(BaseModel):
     rotation_id: UUID | None = None
     old_key_id: UUID | None = None
@@ -5968,11 +6027,26 @@ class ApiKeyRotation(BaseModel):
 
 
 class KeyTestResult(BaseModel):
-    passed: bool | None = None
+    passed: Annotated[
+        bool | None,
+        Field(
+            description="True only when the verification passed, the REST probe succeeded and, with `include_ws`, the private WS `auth` succeeded.\n"
+        ),
+    ] = None
     checked_at: AwareDatetime | None = None
     rest: Rest | None = None
-    websocket: Websocket | None = None
-    verification: KeyVerification | None = None
+    websocket: Annotated[
+        Websocket | None,
+        Field(
+            description="Omitted when `include_ws` is false: that half did not run, and no `ok: true` is sent for it.\n"
+        ),
+    ] = None
+    verification: Annotated[
+        KeyVerification | KeyVerificationNotRead | None,
+        Field(
+            description="The verification as far as the pipeline got. Omitted when the REST half reached no verdict (a timeout, an outage, a refused signature, a clock outside the `recv_window` or a rate limit): an earlier check's standing result is never shown in its place, because an outage must not read as a pass (SR-E27-18). A key the exchange refused before its rights were read is `KeyVerificationNotRead`.\n"
+        ),
+    ] = None
 
 
 class OrderWithEvents(Order):
