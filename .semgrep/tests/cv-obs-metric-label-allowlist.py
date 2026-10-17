@@ -34,3 +34,7 @@ def ok_flag(reg: object) -> None:
 
 def ok_entity_kind(reg: object) -> None:
     reg.counter("cv_m_total", "help", ("entity_kind",))  # ok: cv-obs-metric-label-allowlist
+
+
+def ok_table(reg: object) -> None:
+    reg.histogram("cv_t_seconds", "help", ("table",))  # ok: cv-obs-metric-label-allowlist
