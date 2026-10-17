@@ -1484,8 +1484,15 @@ is #2780 in the E29-T04 lane.
 
 Key age never refuses (US-ACCT-005). A stale wallet does not refuse an order either: risk-based
 sizing reads `AccountHealthCheck.risk_sizing_available(account_id)` before any wallet figure (§9.3
-step 4), and a stale or missing snapshot answers `false`, which makes risk-based sizing unavailable
-for that account (US-ACCT-008).
+step 4). The answer is `false`, which makes risk-based sizing unavailable for that account
+(US-ACCT-008), for a missing snapshot, and for one older than 10 s whose last REST reconciliation
+attempt failed: a failed or rejected read, or a read that cannot run (no credentials loaded, no
+exchange connection). A snapshot not refreshed for the 60 s reconciliation period counts as a failed
+attempt too, so sizing never uses one older than that. The 10 s `balance_stale` flag is for display
+and does not decide it (the ruling on #837, Option B). So sizing may use a balance up to one
+reconciliation period (60 s) old while the private wallet stream is silent and the reconciliation
+succeeds (E27 threat model KV-T13); each decision on a snapshot older than that period is refused,
+logged with `wallet_snapshot_age_seconds` and counted in `cv_wallet_sizing_old_snapshot_total`.
 
 ### 8.5 Reconciliation algorithm
 
