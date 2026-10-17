@@ -7,11 +7,16 @@ refusals; this module imports neither M3 nor M4 (C-3.1) and holds no credential 
 It applies the E27 threat model (`docs/security/threat-models/E27-accounts.md` §5, SR-E27-04,
 SR-E27-08, SR-E27-18):
 
-- Fund rights (C-2.8, D6): the shared deny-list predicate plus an allow-list. Any other right
-  fails `key_withdraw_permission`, and `withdraw_enabled` is true.
-- Write access comes from the key's read-only flag, UTA from the venue's unified-trade flag.
-- The whitelist is non-empty host addresses, all equal to the configured egress IP. No switch
-  turns this off (C-4.14).
+- Fund rights (C-2.8, D6): the shared deny-list predicate first, then an allow-list. A withdraw
+  or transfer right fails `key_withdraw_permission` and alone sets `withdraw_enabled` (the
+  deny-list refuses a value it cannot judge too: fail closed); every other right outside the
+  allow-list fails `key_permission_not_allowed` (the fiat and card groups move funds with neither
+  word in their names) and leaves it false. Either way the key is refused, withdraw failures first.
+- Write access comes from the key's read-only flag, UTA from the venue's `uta` flag (the contract's
+  `KeyVerification.uta`; the deprecated `unified` is never read).
+- The whitelist is non-empty host addresses, all equal to the configured egress IP. An empty list
+  fails `key_ip_whitelist_missing`; a wildcard, a range or any other address fails
+  `key_ip_whitelist_mismatch` (`createApiKey` step 5). No switch turns this off (C-4.14).
 - An expiry at or before `now` fails `key_expired` (SR-030a: in the future), as does the venue's
   own expired-key refusal; an expiry inside the warning window only warns.
 - Failures and warnings are fixed codes; messages are templates that echo no exchange text.
@@ -56,7 +61,9 @@ class Rule(StrEnum):
     """Failure codes, one per check (`Problem.errors[].rule`)."""
 
     WITHDRAW_PERMISSION = "key_withdraw_permission"
+    PERMISSION_NOT_ALLOWED = "key_permission_not_allowed"
     MISSING_SCOPES = "key_missing_scopes"
+    NOT_READ_ONLY = "key_not_read_only"
     UID_MISMATCH = "key_uid_mismatch"
     NOT_UNIFIED = "key_not_unified"
     IP_WHITELIST_MISSING = "key_ip_whitelist_missing"
@@ -69,8 +76,8 @@ class Rule(StrEnum):
 class VerificationWarning(StrEnum):
     """Advisory codes: attached to the result, never a failure."""
 
-    KEY_EXPIRES_SOON = "key_expires_soon"
-    CLOCK_OFFSET = "clock_offset_high"
+    KEY_EXPIRING_SOON = "key_expiring_soon"
+    CLOCK_SKEW = "clock_skew"
 
 
 class Refusal(StrEnum):
@@ -101,7 +108,7 @@ class KeyFacts(Protocol):
     @property
     def uid(self) -> str: ...
     @property
-    def unified(self) -> bool: ...
+    def uta(self) -> bool: ...
     @property
     def read_only(self) -> bool: ...
     @property
@@ -154,7 +161,7 @@ class VerificationResult:
 
     passed: bool
     uid: str | None = None
-    unified: bool = False
+    uta: bool = False
     permissions: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
     withdraw_enabled: bool = False
     ip_whitelist: tuple[str, ...] = ()
@@ -177,18 +184,25 @@ def _grants_nothing(value: object) -> bool:
     return value is None or (isinstance(value, str | list) and not value)
 
 
-def _outside_allow_list(permissions: Mapping[str, object]) -> list[tuple[str | None, str | None]]:
-    """Every (group, right) the allow-list refuses; `None` where a name is not safe to echo."""
-    found: list[tuple[str | None, str | None]] = []
+def _outside_allow_list(
+    permissions: Mapping[str, object],
+) -> list[tuple[str, object, object]]:
+    """Every right the allow-list refuses, as (group, what the deny-list is asked about it, the
+    right): `[right]` for an entry of a list, the whole value where it is no list (its right is
+    `None`)."""
+    found: list[tuple[str, object, object]] = []
     for group, value in permissions.items():
         if _grants_nothing(value):
             continue
-        allowed = ALLOWED_RIGHTS.get(group)
-        if allowed is None or not isinstance(value, list):
-            rights = value if isinstance(value, list) else [None]
-            found += [(_token(group), _token(right)) for right in rights]
+        if not isinstance(value, list):
+            found.append((group, value, None))
             continue
-        found += [(group, _token(r)) for r in value if not isinstance(r, str) or r not in allowed]
+        allowed = ALLOWED_RIGHTS.get(group)
+        found += [
+            (group, [r], r)
+            for r in value
+            if allowed is None or not isinstance(r, str) or r not in allowed
+        ]
     return found
 
 
@@ -200,15 +214,31 @@ def _right_message(group: str | None, right: str | None) -> str:
     return f"permissions.{group} contains '{right}'"
 
 
-def _fund_right_failures(permissions: Mapping[str, object]) -> list[VerificationFailure]:
-    """C-2.8 gate: the deny-list shared with M2 and the DB CHECK, then the allow-list."""
+def _denied(permissions: Mapping[str, object]) -> bool:
+    """The deny-list shared with M2 and the DB CHECK refuses `permissions`: a withdraw or transfer
+    right, or a value it cannot judge (fail closed)."""
     try:
         reject_withdraw(permissions)
-        offending = _outside_allow_list(permissions)
     except WithdrawPermissionError:
-        offending = _outside_allow_list(permissions) or [(None, None)]
-    messages = dict.fromkeys(_right_message(g, r) for g, r in offending)
-    return [VerificationFailure(Rule.WITHDRAW_PERMISSION, text) for text in sorted(messages)]
+        return True
+    return False
+
+
+def _gate_failures(permissions: Mapping[str, object]) -> list[VerificationFailure]:
+    """Check 2 (C-2.8): the deny-list first, then the allow-list. A right the deny-list refuses
+    fails `key_withdraw_permission`; every other right outside the allow-list fails
+    `key_permission_not_allowed`. Messages are templates, sorted, the first rule's first."""
+    fund: set[str] = set()
+    other: set[str] = set()
+    for group, held, right in _outside_allow_list(permissions):
+        text = _right_message(_token(group), _token(right))
+        (fund if _denied({group: held}) else other).add(text)
+    if not fund and _denied(permissions):  # refused, though no right of it can be named
+        fund.add(_right_message(None, None))
+    return [
+        *(VerificationFailure(Rule.WITHDRAW_PERMISSION, text) for text in sorted(fund)),
+        *(VerificationFailure(Rule.PERMISSION_NOT_ALLOWED, text) for text in sorted(other)),
+    ]
 
 
 def _rights(permissions: Mapping[str, object], group: str) -> set[str]:
@@ -219,7 +249,7 @@ def _rights(permissions: Mapping[str, object], group: str) -> set[str]:
 def _scope_failures(facts: KeyFacts, read_only: bool) -> list[VerificationFailure]:
     """Check 3. Write access is the key's read-only flag (model §5 item 3)."""
     if read_only and not facts.read_only:
-        return [VerificationFailure(Rule.MISSING_SCOPES, "a read-only key has write access")]
+        return [VerificationFailure(Rule.NOT_READ_ONLY, "a read-only key has write access")]
     if read_only:
         return []
     if facts.read_only:
@@ -254,9 +284,10 @@ def _is_network(entry: str) -> bool:
 
 
 def _whitelist(entries: Sequence[str], egress: str | None) -> VerificationFailure | None:
-    """Check 5 (SR-E27-04): non-empty, no wildcard, every entry the egress address."""
+    """Check 5 (SR-E27-04): an empty list is `key_ip_whitelist_missing`; a wildcard, a range or
+    any other address, `key_ip_whitelist_mismatch` (`createApiKey` step 5)."""
     target = _host(egress) if egress else None
-    if not entries or _WILDCARD in entries:
+    if not entries:
         where = f"add {target}" if target else "set the egress IP and add it"
         text = f"the key has no IP whitelist; {where} in the exchange's key settings"
         return VerificationFailure(Rule.IP_WHITELIST_MISSING, text)
@@ -320,17 +351,18 @@ async def verify(
         False,
         key_info_ret_code=0,
         uid=facts.uid,
-        unified=facts.unified,
+        uta=facts.uta,
         permissions=_display(facts.permissions),
         ip_whitelist=shown,
         read_only=facts.read_only,
         expires_at=facts.expires_at,
     )
-    gate = _fund_right_failures(facts.permissions)
+    gate = _gate_failures(facts.permissions)
     if gate:
-        return replace(base, withdraw_enabled=True, failures=tuple(gate))
+        fund_right = any(failure.rule is Rule.WITHDRAW_PERMISSION for failure in gate)
+        return replace(base, withdraw_enabled=fund_right, failures=tuple(gate))
     failures = _scope_failures(facts, read_only)
-    if not facts.unified:
+    if not facts.uta:
         text = "the account is not a unified trading account"
         failures.append(VerificationFailure(Rule.NOT_UNIFIED, text))
     if facts.uid != account.exchange_uid:
@@ -346,7 +378,7 @@ async def verify(
     base = replace(
         base,
         ip_whitelist_matches_egress=ip_failure is None,
-        warnings=(VerificationWarning.KEY_EXPIRES_SOON,) if soon else (),
+        warnings=(VerificationWarning.KEY_EXPIRING_SOON,) if soon else (),
     )
     if failures:
         return replace(base, failures=tuple(failures))
@@ -372,7 +404,7 @@ async def _probe(
     offset = seen.server_time_ms - (seen.sent_at_ms + seen.received_at_ms) // 2
     warnings = base.warnings
     if abs(offset) > policy.clock_warn_ms:
-        warnings += (VerificationWarning.CLOCK_OFFSET,)
+        warnings += (VerificationWarning.CLOCK_SKEW,)
     return replace(
         base,
         passed=True,

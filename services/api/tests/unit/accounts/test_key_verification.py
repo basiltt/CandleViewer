@@ -2,8 +2,10 @@
 
 Facts come from the documented-shape fixtures (`tests/fixtures/key_verification/`) through the
 adapter parsers, and scenarios are fixture edits, so every case runs on the shape production sees.
-`Sources` stands in for slice 2's wiring: it maps an adapter error to `KeyRefused` or
-`VerificationInconclusive` with `key_info.refusal`, and records the order of signed calls.
+`Sources` stands in for slice 2's wiring: it maps an adapter error to `KeyRefused` with
+`key_info.refusal` or to `VerificationInconclusive` carrying the probe table's name
+(`key_info.probe_error`), and records the order of signed calls. Names are the contract's
+(`22-api-openapi.yaml`: `KeyVerification`, `KeyVerificationWarning`, `KeyProbeError`).
 """
 
 from __future__ import annotations
@@ -30,13 +32,14 @@ from candleviewer.accounts.verification import (
     VerificationWarning,
     verify,
 )
-from candleviewer.exchange.base.errors import ExchangeError
+from candleviewer.exchange.base.errors import ExchangeError, TransportError
 from candleviewer.exchange.bybit.key_info import (
     VERDICT_REASONS,
     ApiKeyFacts,
     ProbeFacts,
     parse_key_info,
     parse_probe,
+    probe_error,
     refusal,
 )
 from candleviewer.exchange.bybit.mapping import map_ret_code
@@ -90,7 +93,7 @@ class Sources:
         if isinstance(outcome, ExchangeError):
             verdict = refusal(outcome)
             if verdict is None:
-                raise VerificationInconclusive(type(outcome).__name__)
+                raise VerificationInconclusive(probe_error(outcome))
             raise KeyRefused(Refusal(verdict[0]), verdict[1])
 
     async def key_info(self) -> ApiKeyFacts:
@@ -144,7 +147,7 @@ async def test_compliant_trade_key_passes_with_its_facts() -> None:
     assert result == VerificationResult(
         passed=True,
         uid="1000001",
-        unified=True,
+        uta=True,
         permissions={
             **dict.fromkeys(facts().permissions, ()),
             "ContractTrade": ("Order", "Position"),
@@ -197,25 +200,68 @@ async def test_withdraw_right_is_reported_as_withdraw_enabled() -> None:
     assert (result.passed, result.withdraw_enabled) == (False, True)
 
 
-_GATE_CASES: list[tuple[str, Any]] = [(c[0], c[1]) for c in REFUSED + KNOWN_GAPS]
-_GATE_CASES += [
-    *non_json_cases(),
+#: Withdraw or transfer named in any letter case at any depth, and a value JSON cannot carry (the
+#: deny-list refuses it whatever it says, fail closed): `key_withdraw_permission`.
+_DENIED_CASES: list[tuple[str, Any]] = [(c[0], c[1]) for c in REFUSED]
+_DENIED_CASES += [*non_json_cases(), ("non_text_group_granting_nothing", {**BASE, b"Wallet": []})]
+#: Every other right outside the allow-list, lookalike spellings and the fund-moving groups with
+#: neither word in their names included: `key_permission_not_allowed`.
+_UNLISTED_CASES: list[tuple[str, Any]] = [(c[0], c[1]) for c in KNOWN_GAPS]
+_UNLISTED_CASES += [
     ("spot_right", {**BASE, "Spot": ["SpotTrade"]}),
     ("extra_contract_right", {**BASE, "ContractTrade": ["Order", "Position", "Xfer"]}),
     ("fund_group_other_name", {**BASE, "FiatP2P": ["FiatP2POrder"]}),
     ("scalar_right", {**BASE, "Affiliate": [1]}),
+    ("scalar_right_in_an_allowed_group", {**BASE, "ContractTrade": ["Order", "Position", 1]}),
     ("allowed_group_as_object", {**BASE, "ContractTrade": {"Order": [], "Position": []}}),
-    ("non_text_group_granting_nothing", {**BASE, b"Wallet": []}),
 ]
 
 
 @pytest.mark.parametrize(
-    "permissions", [c[1] for c in _GATE_CASES], ids=[c[0] for c in _GATE_CASES]
+    "permissions", [c[1] for c in _DENIED_CASES], ids=[c[0] for c in _DENIED_CASES]
 )
-async def test_every_refused_or_unlisted_right_fails_the_gate(permissions: Any) -> None:
+async def test_every_withdraw_or_transfer_right_fails_the_gate_as_withdraw_permission(
+    permissions: Any,
+) -> None:
     result, _ = await run(dataclasses.replace(facts(), permissions=permissions))
     verdict = (result.passed, result.withdraw_enabled, set(rules(result)))
     assert verdict == (False, True, {Rule.WITHDRAW_PERMISSION})
+
+
+@pytest.mark.parametrize(
+    "permissions", [c[1] for c in _UNLISTED_CASES], ids=[c[0] for c in _UNLISTED_CASES]
+)
+async def test_every_other_unlisted_right_fails_the_gate_as_permission_not_allowed(
+    permissions: Any,
+) -> None:
+    result, _ = await run(dataclasses.replace(facts(), permissions=permissions))
+    verdict = (result.passed, result.withdraw_enabled, set(rules(result)))
+    assert verdict == (False, False, {Rule.PERMISSION_NOT_ALLOWED})
+
+
+async def test_a_right_outside_the_allow_list_names_itself_in_the_contract_message() -> None:
+    result, _ = await run(facts(permissions={**BASE, "Spot": ["SpotTrade"]}))
+    message = "permissions.Spot contains 'SpotTrade'"
+    assert result.failures == (VerificationFailure(Rule.PERMISSION_NOT_ALLOWED, message),)
+
+
+async def test_fund_rights_come_first_and_each_rules_failures_are_sorted_by_message() -> None:
+    wallet = ["Withdraw", "SubMemberTransferList", "Order", "AccountTransfer", "SubMemberTransfer"]
+    other = {"Zeta": ["Z1"], "Mu": ["M1"], "Alpha": ["A1"], "Kappa": ["K1"], "Beta": ["B1"]}
+    result, calls = await run(facts(permissions={**BASE, **other, "Wallet": wallet}))
+    assert [(f.rule, f.message) for f in result.failures] == [
+        (Rule.WITHDRAW_PERMISSION, "permissions.Wallet contains 'AccountTransfer'"),
+        (Rule.WITHDRAW_PERMISSION, "permissions.Wallet contains 'SubMemberTransfer'"),
+        (Rule.WITHDRAW_PERMISSION, "permissions.Wallet contains 'SubMemberTransferList'"),
+        (Rule.WITHDRAW_PERMISSION, "permissions.Wallet contains 'Withdraw'"),
+        (Rule.PERMISSION_NOT_ALLOWED, "permissions.Alpha contains 'A1'"),
+        (Rule.PERMISSION_NOT_ALLOWED, "permissions.Beta contains 'B1'"),
+        (Rule.PERMISSION_NOT_ALLOWED, "permissions.Kappa contains 'K1'"),
+        (Rule.PERMISSION_NOT_ALLOWED, "permissions.Mu contains 'M1'"),
+        (Rule.PERMISSION_NOT_ALLOWED, "permissions.Wallet contains 'Order'"),
+        (Rule.PERMISSION_NOT_ALLOWED, "permissions.Zeta contains 'Z1'"),
+    ]
+    assert (calls, result.withdraw_enabled) == (["key_info"], True)
 
 
 LOOKALIKE_RIGHT = {**BASE, "Wallet": ["With\u200bdraw"]}
@@ -232,7 +278,7 @@ SPACED_GROUP = {**BASE, "Wal let": ["Order"]}
 )
 async def test_non_canonical_names_get_a_template_message(permissions: Any, message: str) -> None:
     result, _ = await run(dataclasses.replace(facts(), permissions=permissions))
-    assert result.failures == (VerificationFailure(Rule.WITHDRAW_PERMISSION, message),)
+    assert result.failures == (VerificationFailure(Rule.PERMISSION_NOT_ALLOWED, message),)
 
 
 @pytest.mark.parametrize("permissions", [LOOKALIKE_RIGHT, SPACED_GROUP], ids=["right", "group"])
@@ -253,7 +299,6 @@ async def test_groups_that_grant_nothing_pass_the_gate(empty: Any) -> None:
         (False, 0, ["Order"], "permissions.ContractTrade lacks 'Position'"),
         (False, 0, [], "permissions.ContractTrade lacks 'Order', 'Position'"),
         (False, 1, ["Order", "Position"], "the key is read-only; a trade key needs write access"),
-        (True, 0, [], "a read-only key has write access"),
     ],
 )
 async def test_scope_or_write_access_mismatch_fails_check_three(
@@ -262,6 +307,13 @@ async def test_scope_or_write_access_mismatch_fails_check_three(
     key = facts(readOnly=flag, permissions={**BASE, "ContractTrade": contract})
     result, _ = await run(key, read_only=declared)
     assert result.failures == (VerificationFailure(Rule.MISSING_SCOPES, message),)
+
+
+async def test_read_only_key_that_has_write_access_fails_check_three_as_not_read_only() -> None:
+    key = facts(readOnly=0, permissions={**BASE, "ContractTrade": []})
+    result, _ = await run(key, read_only=True)
+    message = "a read-only key has write access"
+    assert result.failures == (VerificationFailure(Rule.NOT_READ_ONLY, message),)
 
 
 @pytest.mark.parametrize("contract", [[], ["Order", "Position"]])
@@ -305,8 +357,9 @@ NO_EGRESS = ip_mismatch("the egress IP is not configured")
     ("ips", "egress", "failure"),
     [
         ([], EGRESS, ip_missing(f"add {EGRESS}")),
-        (["*"], EGRESS, ip_missing(f"add {EGRESS}")),
-        (["*"], None, ip_missing("set the egress IP and add it")),
+        ([], None, ip_missing("set the egress IP and add it")),
+        (["*"], EGRESS, ONLY_EGRESS),
+        (["*"], None, NO_EGRESS),
         ([EGRESS, "198.51.100.1"], EGRESS, ONLY_EGRESS),
         (["203.0.113.0/24"], EGRESS, ONLY_EGRESS),
         (["198.51.100.1"], EGRESS, ONLY_EGRESS),
@@ -347,8 +400,8 @@ async def test_whitelist_display_keeps_addresses_and_the_wildcard_only(
 @pytest.mark.parametrize(
     ("ahead", "warnings"),
     [
-        (timedelta(seconds=1), (VerificationWarning.KEY_EXPIRES_SOON,)),
-        (timedelta(days=13), (VerificationWarning.KEY_EXPIRES_SOON,)),
+        (timedelta(seconds=1), (VerificationWarning.KEY_EXPIRING_SOON,)),
+        (timedelta(days=13), (VerificationWarning.KEY_EXPIRING_SOON,)),
         (timedelta(days=14), ()),
     ],
     ids=["1s", "13d", "14d"],
@@ -383,9 +436,9 @@ async def test_clock_offset_is_exchange_time_minus_the_host_midpoint(offset: int
 @pytest.mark.parametrize(
     ("offset", "warnings"),
     [
-        (-12_000, (VerificationWarning.CLOCK_OFFSET,)),
-        (501, (VerificationWarning.CLOCK_OFFSET,)),
-        (-501, (VerificationWarning.CLOCK_OFFSET,)),
+        (-12_000, (VerificationWarning.CLOCK_SKEW,)),
+        (501, (VerificationWarning.CLOCK_SKEW,)),
+        (-501, (VerificationWarning.CLOCK_SKEW,)),
         (500, ()),
         (-500, ()),
     ],
@@ -468,6 +521,36 @@ async def test_inconclusive_probe_refusal_gives_no_verdict(outcome: ExchangeErro
         await run(probe=outcome)
 
 
+#: The test plan's refusals (#836), each with its own outcome: a verdict about the key (10003,
+#: 10010) or no verdict, named in the contract's `KeyProbeError` words, with no rule.
+NO_VERDICT: dict[str, tuple[ExchangeError, str]] = {
+    "10004": (error(load("error_10004.json")), "auth_error"),
+    "10002": (error(rest("rest/error_10002.json")), "clock_drift"),
+    "10018": (error(rest("rest/error_10018.json")), "rate_limited"),
+    "5xx": (TransportError("HTTP 503"), "service_unavailable"),
+}
+
+
+@pytest.mark.parametrize(("outcome", "name"), NO_VERDICT.values(), ids=list(NO_VERDICT))
+@pytest.mark.parametrize("call", ["key_info", "probe"])
+async def test_a_refusal_without_a_verdict_carries_its_probe_error_name(
+    outcome: ExchangeError, name: str, call: str
+) -> None:
+    args = (outcome, None) if call == "key_info" else (None, outcome)
+    with pytest.raises(VerificationInconclusive) as caught:
+        await run(*args)
+    assert str(caught.value) == name
+
+
+async def test_the_test_plan_refusals_each_have_their_own_outcome() -> None:
+    """A verdict about the key names its rule (10003, 10010), no verdict a `KeyProbeError` word
+    (10004, 10018, a 5xx: `NO_VERDICT`, pinned per call above): five refusals, five outcomes."""
+    verdicts = [await run(REFUSALS[10003]), await run(REFUSALS[10010])]
+    outcomes = [rules(result)[0].value for result, _ in verdicts]
+    outcomes += [NO_VERDICT[name][1] for name in ("10004", "10018", "5xx")]
+    assert len(set(outcomes)) == len(outcomes) == 5
+
+
 async def test_host_clock_step_during_the_probe_is_inconclusive() -> None:
     with pytest.raises(VerificationInconclusive, match="probe_clock_step"):
         await run(probe=probed(sent=T + 10, received=T))
@@ -499,7 +582,7 @@ async def test_result_never_carries_the_reply_key_material() -> None:
 
 def test_result_has_no_credential_field() -> None:
     assert {f.name for f in dataclasses.fields(VerificationResult)} == {
-        "passed", "uid", "unified", "permissions", "withdraw_enabled", "ip_whitelist",
+        "passed", "uid", "uta", "permissions", "withdraw_enabled", "ip_whitelist",
         "ip_whitelist_matches_egress", "clock_offset_ms", "key_info_ret_code", "probe_ret_code",
         "warnings", "failures", "read_only", "can_trade", "expires_at",
     }  # fmt: skip
