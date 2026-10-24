@@ -40,6 +40,11 @@ B1's own admission, and no route reaches it.
 and runs the complete read for it: the key is the admitted request's (`submit.py`) or the stored
 order's (`commands.py`), its account resolved through the command port's `TradingAccounts` before
 any venue read, and no route reaches it.
+`oms/exits.py` (slice 4, S4-C) reads one key's recorded stops in force (`live_for_key`) for an
+amend's ratchet (ruling Q4), and nothing else of this surface: the key is the one of an order its
+own `scope` read in the caller's `AccountScope` (C-12.4, SR-E29-13), or of a row cancel-all
+admitted by account (04 Sec.7.2.2 row 14); it records, settles and sweeps nothing, and no route
+reaches it before that admission.
 """
 
 from __future__ import annotations
@@ -62,6 +67,7 @@ NAMES = re.compile(
 ALLOWED = frozenset(
     {
         "oms/commands.py",
+        "oms/exits.py",
         "oms/fakes.py",
         "oms/idempotency.py",
         "oms/order_steps.py",
